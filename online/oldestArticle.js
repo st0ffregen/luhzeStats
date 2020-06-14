@@ -1,1 +1,0 @@
-var oldestArticle = ["2011-11-08"];

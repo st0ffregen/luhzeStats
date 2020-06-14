@@ -1,1 +1,0 @@
-var ressortTopList = [["Kultur", 249], ["Film", 219], ["Leipzig", 178], ["Kolumne", 131], ["Hochschulpolitik", 128], ["Interview", 81], ["Wissenschaft", 47], ["Perspektive", 43], ["Sport", 42], ["Corona", 40], ["Thema", 33], ["Wahljahr 2019", 33], ["Politik", 29], ["Spezial", 24], ["Service", 20], ["Kommentar", 19], ["Reportage", 19], ["Campuskultur", 18]];
