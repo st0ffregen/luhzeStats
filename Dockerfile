@@ -1,3 +1,3 @@
 FROM php:7.4.7-apache
-COPY src/ /var/www/html
+COPY online/src/ /var/www/html
 EXPOSE 80
