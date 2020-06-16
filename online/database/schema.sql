@@ -1,0 +1,12 @@
+DROP DATABASE IF EXISTS luhzeOnline;
+CREATE DATABASE luhzeOnline;
+
+CREATE TABLE articles (
+	id INT PRIMARY KEY,
+	link VARCHAR(255) NOT NULL,
+	title VARCHAR(255) NOT NULL,
+	author VARCHAR(64) NOT NULL,
+	ressort VARCHAR(64) NOT NULL,
+	created DATE NOT NULL,
+	wordcount INT NOT NULL
+)
