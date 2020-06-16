@@ -1,5 +1,6 @@
 DROP DATABASE IF EXISTS luhzeOnline;
 CREATE DATABASE luhzeOnline;
+USE luhzeOnline;
 
 CREATE TABLE articles (
 	id INT PRIMARY KEY,
