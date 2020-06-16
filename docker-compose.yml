@@ -1,0 +1,23 @@
+version: '3'
+services:
+  web:
+    image: php:7.4-apache
+    ports:
+      - "80:80"
+    links:
+      - db
+    volumes:
+      - ./online/webserver/src:/var/www/html
+
+  db:
+    image: mariadb:10.5
+    restart: always
+    volumes:
+      - ./online/database:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: test
+      MYSQL_DATABASE: database
+    ports:
+      - "8889:3306"
