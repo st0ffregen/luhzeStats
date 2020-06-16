@@ -1,1 +1,1 @@
-var newestArticle = ["2020-06-13"];
+var newestArticle = ["2020-06-14"];
