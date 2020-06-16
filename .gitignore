@@ -5,3 +5,6 @@
 *ibdata1
 *ibtmp1
 *multi-master.info
+/mysql
+/performance_schema
+/database
