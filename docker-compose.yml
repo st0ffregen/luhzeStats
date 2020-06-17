@@ -21,3 +21,7 @@ services:
     ports:
       - "8889:3306"
     
+  python:
+    build: ./online/python/
+    depends_on:
+      - db    
