@@ -14,14 +14,40 @@ services:
     restart: always
     volumes:
       - ./online/mariadb/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+     # - ./online/mariadb/data/:/var/lib/mysql
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       MYSQL_USER: admin
       MYSQL_PASSWORD: test 
+      MYSQL_DATABASE: luhze
     ports:
       - "8889:3306"
     
-  python:
-    build: ./online/python/
+  pythonapi:
+    build: ./online/pythonAPI/
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./online/pythonAPI:/usr/src/app
     depends_on:
       - db    
+    environment:
+      WAIT_HOSTS: db:3306
+
+  pythongather:
+    build: ./online/pythonGather/
+    volumes:
+      - ./online/pythonGather:/usr/src/app
+    depends_on:
+      - db
+    environment:
+      WAIT_HOSTS: db:3306
+
+#  pythonanalyze:
+ #   build: ./online/pythonAnalyze/
+  #  volumes:
+   #   - ./online/pythonAnalyze:/usr/src/app
+   # depends_on:
+     # - db
+    #environment:
+     # WAIT_HOSTS: db:3306

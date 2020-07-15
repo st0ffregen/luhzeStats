@@ -1,42 +1,88 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import sqlite3 as lite
-import urllib
+from urllib.request import urlopen
 import string
 import sys
 import os
 from bs4 import BeautifulSoup
+import MySQLdb
+from datetime import datetime
+import traceback
+import analyzeLuhze
 
-# date, ressort (maybe several), author (maybe several), title, wordcount
+
 
 directory = "/home/stoffregen/Documents/luhze/archive/"
 maxPageCount = 102 # so many pages are currently on luhze.de 101
 web = "https://www.luhze.de/page/"
 
+sqlStatements = []
+
+
+def connectToDB():
+	try: 
+		con = MySQLdb.connect(
+			host='db', # was muss hier fuer ein host???
+			db='luhze',
+			user='admin',
+			passwd='test'
+		)
+		con.set_character_set('utf8')
+		return con
+	except MySQLdb.Error as e:
+	   	print(f"Error connecting to MariaDB Platform: {e}")
+		
+	return 1	
+
+def executeSQL(sqlArray, cur, con):
+	
+	if len(sqlArray) > 0:
+		with cur:
+			try:
+				for statement in sqlArray:
+					#print(statement[0])
+					#print(statement[1])
+					cur.execute(statement[0],statement[1])
+
+				con.commit()
+				cur.close()
+				return 0
+			except:
+				print("error while inserting sql statements")
+				print("exiting")
+				cur.close()
+				print(sys.exc_info())
+				return 1
+
+	else:
+		print("nothing to write to db")
+		cur.close()
+		return 1
+		
 
 
 
-def checkDB():
+def scrapeWebsite(con):
 
 
-
-	con = lite.connect('articles.db',detect_types=lite.PARSE_DECLTYPES)
-
-	with con:
+	if con == 1:
+		return 1
+	try:
+	#cur.execute("CREATE TABLE articles(Id Integer PRIMARY KEY, Link TEXT, Title TEXT, Author TEXT, Ressorts TEXT, Created DATE, Wordcount INTEGER)")
 		cur = con.cursor()
-		#cur.execute("CREATE TABLE Articles(Id Integer PRIMARY KEY, Link TEXT, Title TEXT, Author TEXT, Ressorts TEXT, Created DATE, Wordcount INTEGER)")
-		
-		
-		for i in range(1,3)[::-1]: #3 as a random number to start looking for new articles
+			
+		for i in range(1,2)[::-1]: #3 as a random number to start looking for new articles
 			print("reading page " + str(i))
 			site = None
 			
 			try:
-				site = urllib.urlopen(web + str(i)).read()
+				site = urlopen(web + str(i)).read()
 			except:
 				print("Cannot connect to " + web + str(i))
+				print(sys.exc_info())
 
-			soup = BeautifulSoup(site, 'lxml')
+			soup = BeautifulSoup(site, 'html.parser')
 
 			try:
 				articles = soup.find_all('article')
@@ -48,18 +94,18 @@ def checkDB():
 
 					print(link)
 					#determine if link is already in db
-					cur.execute('SELECT * FROM Articles WHERE Link="' + link + '"')
-					entries = cur.fetchall()
+					cur.execute('SELECT * FROM articles WHERE Link="' + link + '"')
+					entries = cur.fetchall() 
 					isIn=False
-					if entries:
+					if len(entries) > 0:
 						print("articles is already in db")
 						isIn=True
 
 					# I have to update on wordcount or other stuff because of livetickers
 						
 
-					articleSite = urllib.urlopen(link).read()
-					soupArticle = BeautifulSoup(articleSite, 'lxml')
+					articlesite = urlopen(link).read()
+					soupArticle = BeautifulSoup(articlesite, 'html.parser')
 					# find title
 					try:
 						title = soupArticle.find("h2", {'class':'titleStyle'}).string
@@ -67,6 +113,7 @@ def checkDB():
 					except:
 						print("title not found")
 						title =""
+						print(sys.exc_info())
 
 					# find authors
 					try:
@@ -80,6 +127,7 @@ def checkDB():
 						print(authorsString)
 					except:
 						print("author not found")
+						print(sys.exc_info())
 						
 
 					# find ressort
@@ -96,6 +144,7 @@ def checkDB():
 						print(ressortsString)
 					except:
 						print("ressort not found")
+						print(sys.exc_info())
 
 					# find date
 					try: 
@@ -105,7 +154,7 @@ def checkDB():
 						#translate date to timestamp
 						split = tmpDate.split(" ")
 						year = split[2]
-						tmpMonth = split[1].encode('utf-8')
+						tmpMonth = split[1]
 						tmpDay = split[0][:-1]
 						if len(str(tmpDay)) == 1:
 							day = "0" + tmpDay
@@ -144,6 +193,7 @@ def checkDB():
 					except:
 						print("date not found")
 						date=""
+						print(sys.exc_info())
 
 
 					#get wordcount
@@ -167,25 +217,51 @@ def checkDB():
 								wordcount = wordcount + len(p.get_text())
 						print("wordcount: " + str(wordcount))
 					
+					#print(entries[0])
 					if isIn and (title != entries[0][2] or date != entries[0][5].strftime('%Y-%m-%d') or wordcount != entries[0][6]): # only checks first tupel
 						#for setting a new author/ressort a whole update of the table is needed
 						print("update rows")
-						cur.execute('UPDATE Articles SET Title=?,Created=?,Wordcount=? WHERE Link=?', (title,date,wordcount,link))
+						sqlStatements.append(['UPDATE articles SET Title=%s,Created=%s,Wordcount=%s WHERE Link=%s', [title,date,wordcount,link]])
 					elif isIn == False: 
 						print("insert rows")
 						for a in authorsString:
 							for r in ressortsString:
-								cur.execute('INSERT INTO Articles VALUES(null,?,?,?,?,?,?)', (link,title, a, r, date, wordcount))
+								sqlStatements.append(['INSERT INTO articles VALUES(%s,%s,%s,%s,%s,%s,%s)', [None,link,title, a, r, date, wordcount]])
 					else:
 						print("wont update nor insert")
 
 
-			except:
+			except Exception:
+				traceback.print_exc()
 				print("something went wrong")
 				print(sys.exc_info())
-				return 1
-	print("start analyzing")
-	os.system("python analyze.py")
+				sys.exit(1)
+				#return 1 irgendwie macht er trotzdem weiter
+
+		
+		## execute sql
+		if executeSQL(sqlStatements, cur, con) == 0:
+			print("inserting sql statements done")
+
+		
+	except MySQLdb.Error as e:
+	   print(f"Error connecting to MariaDB Platform: {e}")
+	   return 1
+
+	#con.close() why??
+	#print("start analyzing") own microservice now
+	#os.system("python analyze.py")
 	return 0
 
-checkDB()
+
+def main():
+	print("starting gathering")
+	print(datetime.now())
+	con = connectToDB()
+	scrapeWebsite(con)
+	return analyzeLuhze.mainFunc()
+	
+
+
+if __name__ == "__main__":
+	main()
