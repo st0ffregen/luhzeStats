@@ -248,9 +248,6 @@ def scrapeWebsite(con):
 	   print(f"Error connecting to MariaDB Platform: {e}")
 	   return 1
 
-	#con.close() why??
-	#print("start analyzing") own microservice now
-	#os.system("python analyze.py")
 	return 0
 
 
