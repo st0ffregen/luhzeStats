@@ -6,7 +6,7 @@ import datetime
 import MySQLdb
 
 
-minRessort=1
+minRessort=14
 fileArray = []
 
 
@@ -22,7 +22,7 @@ def connectToDB():
 		con.set_character_set('utf8')
 		return con
 	except MySQLdb.Error as e:
-	   	print(f"Error connecting to MariaDB Platform: {e}")
+		print(f"Error connecting to MariaDB Platform: {e}")
 		
 	return 1
 
@@ -45,9 +45,9 @@ def mainFunc():
 			topAuthorsPerRessort(cur,'topAuthorsPerRessort')
 			authorTimeline(cur,'authorTimeline',minAuthor)
 			mostArticlesPerTime(cur,'mostArticlesPerTime',minAuthor)
-			#authorAverage(cur,'authorAverage',minAuthor)
-			#averageCharactersPerDay(cur,'averageCharactersPerDay',minAuthor)
-			#ressortAverage(cur,'ressortAverage')
+			authorAverage(cur,'authorAverage',minAuthor)
+			averageCharactersPerDay(cur,'averageCharactersPerDay',minAuthor)
+			ressortAverage(cur,'ressortAverage')
 			authorTopList(cur,'authorTopList',minAuthor)
 			ressortTimeline(cur,'ressortTimeline')
 			oldestArticle(cur,'oldestArticle')
@@ -112,7 +112,6 @@ def ressortArticlesTimeline(cur,filename):
 	arr = [] # [{ressort: hopo, articles: [{date: some month, 5},{date: some month, 4}]}]
 	ressort = entries[0][0] #set ressort to first in fetched list
 	monthArray = []
-	print(entries)
 	for e in entries:
 		if ressort == e[0]:
 			monthArray.append({"date": e[1], "count": e[2]})
@@ -168,36 +167,32 @@ def mostArticlesPerTime(cur,filename,minAuthor):
 	return 0
 
 def authorAverage(cur,filename,minAuthor):
-	cur.execute('SELECT author FROM articles GROUP BY author HAVING count(distinct link) >= ' + str(minAuthor))
+	cur.execute('SELECT author, round(avg(wordcount)) as count from (select distinct(link), wordcount, author from articles where author in (select author from articles group by author having count(distinct link) >=' + str(minAuthor) + ')) as sub group by author order by count desc')
 	entries = cur.fetchall()
-	arr = {}
+	arr = []
 	for e in entries:
-		cur.execute('SELECT "' + e[0] + '", ROUND(AVG(words)) FROM (SELECT wordcount as words FROM articles WHERE author="' + e[0] + '" GROUP BY link) as words')
-		ent = cur.fetchall()
-		arr[ent[0][0]] = ent[0][1]
-	fileArray.append([sorted(arr.items(), key=operator.itemgetter(1))[::-1],filename])
+		arr.append({'name':e[0],'count':str(e[1])})
+	fileArray.append([json.dumps(arr),filename])
 	return 0
 
 def averageCharactersPerDay(cur,filename,minAuthor):
-	cur.execute('SELECT author,(DATEDIFF(MAX(created),MIN(created))) FROM articles GROUP BY author HAVING count(distinct link) >= ' + str(minAuthor) + ' ORDER BY 2')
+	cur.execute('SELECT author, sum(wordcount) as count from (select distinct(link), wordcount, author from articles where author in (select author from articles group by author having count(distinct link) >=' + str(minAuthor) + ')) as sub group by author order by count desc')
 	entries = cur.fetchall()
-	arr = {}
+	arr = []
 	for e in entries:
-		cur.execute('SELECT SUM(words) FROM (SELECT wordcount as words FROM articles WHERE author="' + e[0] + '" GROUP BY link) as words')
-		res = cur.fetchall()
-		arr[e[0]] = round(res[0][0]/(e[1]+1))
-	fileArray.append([sorted(arr.items(), key=operator.itemgetter(1))[::-1],filename])
+		cur.execute('SELECT DATEDIFF(MAX(created),MIN(created))+1 as average from articles where author="' + e[0] + '"')
+		res = cur.fetchone()
+		arr.append({"name": e[0], "count": round(e[1]/res[0])})
+	fileArray.append([json.dumps(arr),filename])
 	return 0
 
 def ressortAverage(cur,filename):
-	cur.execute('SELECT ressort FROM articles GROUP BY ressort HAVING count(distinct link) >= ' + str(minRessort))
+	cur.execute('SELECT ressort, round(avg(wordcount)) as count from (select distinct(link), wordcount, ressort from articles where ressort in (select ressort from articles group by ressort having count(distinct link) >=' + str(minRessort) + ')) as sub group by ressort order by count desc')
 	entries = cur.fetchall()
-	arr = {}
+	arr = []
 	for e in entries:
-		cur.execute('SELECT "' + e[0] + '", ROUND(AVG(words)) FROM (SELECT wordcount as words FROM articles WHERE ressort="' + e[0] + '" GROUP BY link) as words')
-		ent = cur.fetchall()
-		arr[ent[0][0]] = ent[0][1]
-	fileArray.append([sorted(arr.items(), key=operator.itemgetter(1))[::-1],filename])
+		arr.append({'name':e[0],'count':str(e[1])})
+	fileArray.append([json.dumps(arr),filename])
 	return 0
 
 def authorTopList(cur,filename,minAuthor):

@@ -256,9 +256,9 @@ def scrapeWebsite(con):
 
 def main():
 	print("starting gathering")
-	#print(datetime.now())
-	#con = connectToDB()
-	#scrapeWebsite(con)
+	print(datetime.now())
+	con = connectToDB()
+	scrapeWebsite(con)
 	return analyzeLuhze.mainFunc()
 	
 

@@ -598,10 +598,10 @@ async function fetchAPI(file,useDataFunction) {
 
 
 fetchAPI("date",(data) => {
-	document.getElementById("dateP").innerHTML="last updated " + data;
+	document.getElementById("dateP").innerHTML="last updated " + data['date'];
 });
 fetchAPI("minAuthor",(data) => {
-	document.getElementById("authorP").innerHTML="only authors with " + data + " and more articles included";
+	document.getElementById("authorP").innerHTML="only authors with " + data['minAuthor'] + " and more articles included";
 });
 
 fetchAPI("mostArticlesPerTime", (data) => {
@@ -613,8 +613,9 @@ fetchAPI("authorTopList",(data) => {
 	barChart('authorTopListChart',data, 'bar', 'number of articles per author',true);
 });
 
-//barChart('authorAverageChart',authorAverage, 'bar', 'average number of characters per author',true);
-
+fetchAPI("authorAverage",(data) => {
+	barChart('authorAverageChart',data, 'bar', 'average number of characters per author',true);
+});
 
 
 fetchAPI("topAuthorsPerRessort", (data) => {
@@ -624,9 +625,13 @@ fetchAPI("topAuthorsPerRessort", (data) => {
 	});
 });
 
-//barChart('ressortAverageChart',ressortAverage,'bar','average number of characters per ressort',true);
-//barChart('averageCharactersPerDayChart',averageCharactersPerDay,'bar','average number of characters written every day',true);
-//
+fetchAPI("ressortAverage",(data) => {
+	barChart('ressortAverageChart',data,'bar','average number of characters per ressort',true);
+});
+
+fetchAPI("averageCharactersPerDay",(data) => {
+	barChart('averageCharactersPerDayChart',data,'bar','average number of characters written every day',true);
+});
 
 fetchAPI("authorTimeline",(data) => {
 	googleTimeline('authorTimelineChart',data);
