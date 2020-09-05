@@ -72,7 +72,7 @@ def scrapeWebsite(con):
 	#cur.execute("CREATE TABLE articles(Id Integer PRIMARY KEY, Link TEXT, Title TEXT, Author TEXT, Ressorts TEXT, Created DATE, Wordcount INTEGER)")
 		cur = con.cursor()
 			
-		for i in range(1,2)[::-1]: #3 as a random number to start looking for new articles
+		for i in range(1,4)[::-1]: #3 as a random number to start looking for new articles
 			print("reading page " + str(i))
 			site = None
 			
@@ -256,9 +256,9 @@ def scrapeWebsite(con):
 
 def main():
 	print("starting gathering")
-	print(datetime.now())
-	con = connectToDB()
-	scrapeWebsite(con)
+	#print(datetime.now())
+	#con = connectToDB()
+	#scrapeWebsite(con)
 	return analyzeLuhze.mainFunc()
 	
 

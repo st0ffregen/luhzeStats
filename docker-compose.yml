@@ -1,13 +1,14 @@
 version: '3'
 services:
   web:
-    build: ./online/apache
+    image: php:7.4-apache
     ports:
       - "8000:80"
     volumes:
       - ./online/apache/src:/var/www/html
     depends_on:
       - db
+      - pythonapi
 
   db:
     build: ./online/mariadb/
@@ -26,7 +27,7 @@ services:
   pythonapi:
     build: ./online/pythonAPI/
     ports:
-      - "8001:8000"
+      - "5001:5001"
     volumes:
       - ./online/pythonAPI:/usr/src/app
     depends_on:
@@ -42,6 +43,21 @@ services:
       - db
     environment:
       WAIT_HOSTS: db:3306
+
+  nginxgateway:
+    build: ./online/nginx/
+    ports:
+      - "80:80"
+      #- "443:443"
+    #volumes:
+     # - .online/nginx:/etc/nginx/conf.d
+    restart: always
+    depends_on:
+      - db
+      - pythonapi
+      - web
+  #certbot:
+  #  image: certbot/certbot
 
 #  pythonanalyze:
  #   build: ./online/pythonAnalyze/

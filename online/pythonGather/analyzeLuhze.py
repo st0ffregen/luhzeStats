@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import division
-import sqlite3 as lite
 import operator
 import json
 import datetime
@@ -38,19 +36,19 @@ def mainFunc():
 			con.autocommit = False
 			cur = con.cursor()
 			minAuthor=selfCalibrieren(cur)
-			fileArray.append([minAuthor,'minAuthor'])
-			fileArray.append([datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),'date'])
+			fileArray.append([json.dumps({'minAuthor':minAuthor}),'minAuthor'])
+			fileArray.append([json.dumps({'date':datetime.datetime.now()}, default = str),'date']) #treats datetime as string
 			articlesTimeline(cur, 'articlesTimeline')
 			activeMembers(cur, 'activeMembers')
 			ressortTopList(cur,'ressortTopList')
 			ressortArticlesTimeline(cur,'ressortArticlesTimeline')
 			topAuthorsPerRessort(cur,'topAuthorsPerRessort')
-			timelineDataMin(cur,'timelineDataMin',minAuthor)
+			authorTimeline(cur,'authorTimeline',minAuthor)
 			mostArticlesPerTime(cur,'mostArticlesPerTime',minAuthor)
-			authorAverage(cur,'authorAverage',minAuthor)
-			averageCharactersPerDay(cur,'averageCharactersPerDay',minAuthor)
-			ressortAverage(cur,'ressortAverage')
-			authorTopList(cur,'list',minAuthor)
+			#authorAverage(cur,'authorAverage',minAuthor)
+			#averageCharactersPerDay(cur,'averageCharactersPerDay',minAuthor)
+			#ressortAverage(cur,'ressortAverage')
+			authorTopList(cur,'authorTopList',minAuthor)
 			ressortTimeline(cur,'ressortTimeline')
 			oldestArticle(cur,'oldestArticle')
 			newestArticle(cur,'newestArticle')
@@ -72,27 +70,24 @@ def selfCalibrieren(cur):
 def oldestArticle(cur,filename):
 	cur.execute('SELECT MIN(created) FROM articles')
 	entries = cur.fetchall()
-	fileArray.append([entries[0],filename])
+	fileArray.append([json.dumps({'oldestArticle':entries[0][0]}, default = str),filename])
 	return entries[0]
 
 
 def newestArticle(cur,filename):
 	cur.execute('SELECT MAX(created) FROM articles')
 	entries = cur.fetchall()
-	fileArray.append([entries[0],filename])
+	fileArray.append([json.dumps({'newestArticle':entries[0][0]}, default = str),filename])
 	return entries[0]
 
 def articlesTimeline(cur,filename):
-	cur.execute('SELECT created FROM articles GROUP BY Link')
+	cur.execute('select cast(date_format(created,"%Y-%m-01") as date),count(distinct link) as countPerMonth from articles group by month(created)')
 	entries = cur.fetchall()
-	arr = []
-	for e in entries:
-		arr.append(e[0].strftime('%Y-%m-%d'))
-	fileArray.append([ arr[::-1], filename])
+	fileArray.append([json.dumps(adjustFormatDate(entries)[::-1], default = str),filename])
 	return 0
 
 def activeMembers(cur,filename):
-	cur.execute('SELECT author FROM articles GROUP BY Author')
+	cur.execute('SELECT author FROM articles GROUP BY author')
 	entries = cur.fetchall()
 	arr = []
 	for e in entries:
@@ -101,52 +96,75 @@ def activeMembers(cur,filename):
 		dateArray = []
 		for d in dates:
 			dateArray.append(d[0].strftime('%Y-%m-%d'))
-		arr.append([e[0],dateArray])
-	fileArray.append([ arr,filename])
+		arr.append({"name": e[0],"articles":dateArray})
+	fileArray.append([ json.dumps(arr),filename])
 	return 0 
 
 def ressortTopList(cur,filename):
 	cur.execute('SELECT ressort, count(distinct link) FROM articles GROUP BY ressort HAVING count(distinct link) >= ' + str(minRessort) + ' ORDER BY 2 DESC')
 	entries = cur.fetchall()
-	arr = []
-	for e in entries:
-		arr.append([e[0],e[1]])
-	fileArray.append([arr,filename])
+	fileArray.append([json.dumps(adjustFormatName(entries)),filename])
 	return 0
 
 def ressortArticlesTimeline(cur,filename):
-	cur.execute('SELECT ressort FROM articles GROUP BY ressort HAVING count(distinct link) >= ' + str(minRessort))
+	cur.execute('SELECT ressort, cast(date_format(created,"%Y-%m-01") as date),count(distinct link) as countPerMonth from articles where ressort in (select ressort from articles group by ressort having count(distinct link) >= ' + str(minRessort) + ') group by ressort, month(created)')
 	entries = cur.fetchall()
-	arr = []
+	arr = [] # [{ressort: hopo, articles: [{date: some month, 5},{date: some month, 4}]}]
+	ressort = entries[0][0] #set ressort to first in fetched list
+	monthArray = []
+	print(entries)
 	for e in entries:
-		cur.execute('SELECT created FROM articles WHERE ressort ="' + e[0] + '" GROUP BY link')
-		dates = cur.fetchall()
-		dateArray = []
-		for d in dates:
-			dateArray.append(d[0].strftime('%Y-%m-%d'))
-		arr.append([e[0],dateArray[::-1]])
-	fileArray.append([ arr,filename])
+		if ressort == e[0]:
+			monthArray.append({"date": e[1], "count": e[2]})
+			if e == entries[len(entries)-1]: #if it is last element
+				arr.append({"ressort": ressort, "countPerMonth": monthArray})
+		else:
+			arr.append({"ressort": ressort, "countPerMonth": monthArray})
+			monthArray = [{"date": e[1], "count": e[2]}]
+			ressort = e[0]
+			if e == entries[len(entries)-1]: #if it is last element
+				arr.append({"ressort": ressort, "countPerMonth": monthArray})
+		
+	fileArray.append([json.dumps(arr, default = str),filename])
 	return 0 
 
 def topAuthorsPerRessort(cur,filename):
+	cur.execute('SELECT ressort, author, count(link) as count from articles where ressort in (select ressort from articles group by ressort having count(distinct link) >= ' + str(minRessort) + ') group by ressort, author having count >= 2 order by 1 asc,3 desc')
 	entries = cur.fetchall()
-	arr = []
+	arr = [] # should by filled with [{ressort: hopo, authors: [{name: theresa, count:5},{name: someone, count:2}]}] with min count >= 2 (in this example)
+	ressort = entries[0][0] #set ressort to first in fetched list
+	authorArray = []
 	for e in entries:
-		cur.execute('SELECT author,count(distinct link) FROM articles WHERE ressort="' + e[0] + '" GROUP BY author HAVING count(link) >= 5 ORDER BY 2 DESC')
-		arr.append([e[0],cur.fetchall()[:3]])
-	fileArray.append([arr,filename])
+		if ressort == e[0]:
+			authorArray.append({"name": e[1], "count": e[2]})
+			if e == entries[len(entries)-1]: #if it is last element
+				arr.append({"ressort": ressort, "authors": authorArray})
+		else:
+			arr.append({"ressort": ressort, "authors": authorArray})
+			authorArray = [{"name": e[1], "count": e[2]}]
+			ressort = e[0]
+			if e == entries[len(entries)-1]: #if it is last element
+				arr.append({"ressort": ressort, "authors": authorArray})
+
+	fileArray.append([json.dumps(arr),filename])
 	return 0
 
-def timelineDataMin(cur,filename,minAuthor):
+def authorTimeline(cur,filename,minAuthor):
 	cur.execute('SELECT author, MIN(created), MAX(created) FROM articles GROUP BY author HAVING count(distinct link) >= ' + str(minAuthor) + ' ORDER BY count(distinct link) DESC')
 	entries = cur.fetchall()
-	fileArray.append([entries, filename])
+	arr = [] #adjustFormat function only takes array with 2-tupel (2 entries in tupel)
+	for e in entries:
+		arr.append({"name":e[0],"min":e[1],"max":e[2]})
+	fileArray.append([json.dumps(arr, default = str), filename])
 	return 0
 
 def mostArticlesPerTime(cur,filename,minAuthor):
 	cur.execute('SELECT author, ROUND(((DATEDIFF(MAX(created),MIN(created)))/count(distinct link)),1) FROM articles GROUP BY author HAVING count(distinct link) >= ' + str(minAuthor) + ' ORDER BY 2')
 	entries = cur.fetchall()
-	fileArray.append([entries,filename])
+	arr = []
+	for e in entries:
+		arr.append({'name':e[0],'count':str(e[1])})
+	fileArray.append([json.dumps(arr),filename]) #decimal output from sql is not serializeable, cast to float
 	return 0
 
 def authorAverage(cur,filename,minAuthor):
@@ -185,13 +203,16 @@ def ressortAverage(cur,filename):
 def authorTopList(cur,filename,minAuthor):
 	cur.execute('SELECT author,count(distinct link) FROM articles GROUP BY author HAVING count(distinct link) >= ' + str(minAuthor) + ' ORDER BY 2 DESC')
 	entries = cur.fetchall()
-	fileArray.append([entries,filename])
+	fileArray.append([json.dumps(adjustFormatName(entries)),filename])
 	return 0
 
 def ressortTimeline(cur,filename):
 	cur.execute('SELECT ressort, MIN(created), MAX(created) FROM articles GROUP BY ressort ORDER BY count(distinct link) DESC')
 	entries = cur.fetchall()
-	fileArray.append([entries, filename])
+	arr = [] #adjustFormat function only takes array with 2-tupel (2 entries in tupel)
+	for e in entries:
+		arr.append({"name":e[0],"min":e[1],"max":e[2]})
+	fileArray.append([json.dumps(arr, default = str), filename])
 	return 0
 
 def writeToDB(cur,con):
@@ -199,7 +220,7 @@ def writeToDB(cur,con):
 		for file in fileArray:
 
 			print("insertOrUpdate", [file[1],"{" + str(file[0]) + "}"])
-			cur.callproc("insertOrUpdate", [file[1],"{" + str(file[0]) + "}"])
+			cur.callproc("insertOrUpdate", [file[1],str(file[0])])
 			#mit cursor.stored_results() results verarbeiten,falls gewünscht
 	except MySQLdb.Error as e:
 	   	print(f"Error inserting rows to MariaDB Platform: {e}")
@@ -211,3 +232,15 @@ def writeToDB(cur,con):
 		con.commit()
 		return 0
 
+
+def adjustFormatDate(entries):
+	arr = []
+	for e in entries:
+		arr.append({'date':e[0],'count':e[1]})
+	return arr
+
+def adjustFormatName(entries):
+	arr = []
+	for e in entries:
+		arr.append({'name':e[0],'count':e[1]})
+	return arr
