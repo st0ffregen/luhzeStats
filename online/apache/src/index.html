@@ -17,6 +17,12 @@
 
 
 <h1>Spaß mit Daten</h1>
+<div class="socialmedia">
+<ul class="socialmedialist">
+	<li>Twitter</li>
+	<li>Github</li>
+</ul>
+</div>
 <p id="authorP">only authors with 12 and more articles included</p>
 <p>only ressorts with 14 and more articles included</p>
 <p id="dateP">last updated </p>
@@ -28,7 +34,7 @@
 
 <h2>Authors</h2>
 <p class="chartjs">authors timeline</p>
-<div id="authorTimelineChart" style="height: 700px;"></div><br>
+<div id="authorTimelineChart" style="height: 600px;"></div><br>
 <canvas id="activeMembersChart"></canvas><br>
 <canvas id="authorTopListChart"></canvas><br>
 <canvas id="authorAverageChart"></canvas><br>
@@ -43,14 +49,9 @@
 <p class="chartjs">number of articles published per ressort each quarter (click on ressort in legend to hide/show)</p>
 <canvas id="ressortArticlesTimelineDerivativeChart"></canvas><br>
 
-<div id="chartjs-tooltip">
-			
-		</div>
+<div id="chartjs-tooltip"></div>
 
 <canvas id="ressortAverageChart"></canvas><br>
-
-
-
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
@@ -62,8 +63,11 @@
 
 <script type="text/javascript" src="chartjs-chart-financial.js"></script>
 
-<script type="text/javascript" src="charts.js"></script>
-
+<script type="text/javascript" src="helperFunctions.js"></script>
+<script type="text/javascript" src="financialCharts.js"></script>
+<script type="text/javascript" src="googleCharts.js"></script>
+<script type="text/javascript" src="barCharts.js"></script>
+<script type="text/javascript" src="fetchApi.js"></script>
 
 </body>
 </html>
