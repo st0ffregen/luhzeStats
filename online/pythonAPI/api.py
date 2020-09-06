@@ -15,7 +15,7 @@ def connectToDB():
 		user='api',
 		passwd='testApi'
 	)
-	con.set_character_set('utf8')
+	con.set_character_set('utf8mb4')
 	print(con)
 	return con
 

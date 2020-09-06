@@ -644,9 +644,6 @@ fetchAPI("ressortTimeline",(data) => {
 
 fetchAPI("articlesTimeline",(data) => {
 	financialChart('articlesTimelineChart',finData1(data),'month');
-});
-
-fetchAPI("articlesTimeline",(data) => {
 	financialChart('articlesTimelineDerivativeChart',finData3(data),'month');
 });
 
@@ -674,22 +671,29 @@ fetchAPI("oldestArticle",(data) => { //unnötig hier die variablen mehrmals im c
 		fetchAPI("ressortArticlesTimeline",(data) => {
 			//create color and hidden array to hide and color the same lines
 			var colorArray = getRandomHexColor(data.length);
-			//generate two random displayed ressorts
-			var hiddenArray = [data.length];
-			var randomNumber1 = Math.floor(Math.random() * data.length);
-			var randomNumber2 = 0;
 
-			do {
-				randomNumber2 = Math.floor(Math.random() * data.length);
-			} while(randomNumber1 === randomNumber2);
+			
 
-			for(var i=0;i<data.length;i++) {
-				if(i===randomNumber1 || i===randomNumber2) {
-					hiddenArray[i] = 0;//true;
-				} else {
-					hiddenArray[i] = 1;//false;
+			if(data.length === 1) { //wenn es nur einen datensatz (ein ressort) gibt
+				hiddenArray = [0];
+			} else {
+				//generate two random displayed ressorts
+				var hiddenArray = [data.length];
+				var randomNumber1 = Math.floor(Math.random() * data.length);
+				var randomNumber2 = 0;
+
+				do { //verhindern dass das selbe ressort random ausgewaehlt wird
+					randomNumber2 = Math.floor(Math.random() * data.length);
+				} while(randomNumber1 === randomNumber2);
+
+				for(var i=0;i<data.length;i++) {
+					if(i===randomNumber1 || i===randomNumber2) {
+						hiddenArray[i] = 0;//true;
+					} else {
+						hiddenArray[i] = 1;//false;
+					}
+					
 				}
-				
 			}
 			financialChart('ressortArticlesTimelineChart',finData2(data,colorArray,hiddenArray, oldestArticle, newestArticle),'month');
 			financialChart('ressortArticlesTimelineDerivativeChart',finData4(data,colorArray,hiddenArray,oldestArticle, newestArticle),'quarter');

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sqlite3 as lite
 from urllib.request import urlopen
 import string
 import sys
@@ -14,7 +13,7 @@ import analyzeLuhze
 
 
 directory = "/home/stoffregen/Documents/luhze/archive/"
-maxPageCount = 102 # so many pages are currently on luhze.de 101
+maxPageCount = 106 # so many pages are currently on luhze.de 101
 web = "https://www.luhze.de/page/"
 
 sqlStatements = []
@@ -28,7 +27,7 @@ def connectToDB():
 			user='gatherer',
 			passwd='testGatherer'
 		)
-		con.set_character_set('utf8')
+		con.set_character_set('utf8mb4')
 		return con
 	except MySQLdb.Error as e:
 		print(f"Error connecting to MariaDB Platform: {e}")
@@ -40,11 +39,12 @@ def executeSQL(sqlArray, cur, con):
         with cur:
             try:
                 for statement in sqlArray:
-                    print(statement[0])
-                    print(statement[1])
+                    #print(statement[0])
+                    #print(statement[1])
                     cur.execute(statement[0],statement[1])
+                print("commiting changes")
                 con.commit()
-                con.close()
+                cur.close()
                 return 0
             except MySQLdb.Error as e:
                 print(f"Error while inserting sql statements: {e}")
@@ -66,7 +66,7 @@ def scrapeWebsite(con):
 	try:
 		cur = con.cursor()
 			
-		for i in range(99,103)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
+		for i in range(1,maxPageCount)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
 			print("reading page " + str(i))
 			site = None
 			
@@ -116,11 +116,16 @@ def scrapeWebsite(con):
 						#might be several authors
 						authorsString = []
 						for a in authors:
+							if a.string == None: #if there is no author
+								print("author not found")
+								authorsString = ["Anonym"]
+								break
 							authorsString.append(a.string)
 						print("author: ")
 						print(authorsString)
 					except:
 						print("author not found")
+						authorsString = ["Anonym"]
 						print(sys.exc_info())
 						
 
@@ -239,7 +244,8 @@ def scrapeWebsite(con):
 
 		
 	except MySQLdb.Error as e:
-		print(f"Error connecting to MariaDB Platform: {e}")
+		print(f"MySQLdb Error while scraping site: {e}")
+		print(sys.exc_info())
 		return 1
 
 	return 0
@@ -250,13 +256,16 @@ def main():
 	print(datetime.now())
 	con = connectToDB()
 	if con != 1:
-		if scrapeWebsite(con) == 0:
+		if 0 == 0:
 			analyzeLuhze.mainFunc()
 		else:
 			print("exiting")
+			sys.exit(1)
+			return 1
 	else:
 		print("exiting")
-
+		sys.exit(1)
+		return 1
 
 if __name__ == "__main__":
 	main()

@@ -19,7 +19,7 @@ def connectToDB():
 			user='gatherer',
 			passwd='testGatherer'
 		)
-		con.set_character_set('utf8')
+		con.set_character_set('utf8mb4')
 		return con
 	except MySQLdb.Error as e:
 		print(f"Error connecting to MariaDB Platform: {e}")
@@ -81,7 +81,7 @@ def newestArticle(cur,filename):
 	return entries[0]
 
 def articlesTimeline(cur,filename):
-	cur.execute('select cast(date_format(created,"%Y-%m-01") as date),count(distinct link) as countPerMonth from articles group by month(created)')
+	cur.execute('select cast(date_format(created,"%Y-%m-01") as date),count(distinct link) as countPerMonth from articles group by year(created),month(created) order by 1 asc')
 	entries = cur.fetchall()
 	fileArray.append([json.dumps(adjustFormatDate(entries)[::-1], default = str),filename])
 	return 0
@@ -107,7 +107,7 @@ def ressortTopList(cur,filename):
 	return 0
 
 def ressortArticlesTimeline(cur,filename):
-	cur.execute('SELECT ressort, cast(date_format(created,"%Y-%m-01") as date),count(distinct link) as countPerMonth from articles where ressort in (select ressort from articles group by ressort having count(distinct link) >= ' + str(minRessort) + ') group by ressort, month(created)')
+	cur.execute('SELECT ressort, cast(date_format(created,"%Y-%m-01") as date),count(distinct link) as countPerMonth from articles where ressort in (select ressort from articles group by ressort having count(distinct link) >= ' + str(minRessort) + ') group by ressort, year(created), month(created)')
 	entries = cur.fetchall()
 	arr = [] # [{ressort: hopo, articles: [{date: some month, 5},{date: some month, 4}]}]
 	ressort = entries[0][0] #set ressort to first in fetched list
@@ -128,7 +128,7 @@ def ressortArticlesTimeline(cur,filename):
 	return 0 
 
 def topAuthorsPerRessort(cur,filename):
-	cur.execute('SELECT ressort, author, count(link) as count from articles where ressort in (select ressort from articles group by ressort having count(distinct link) >= ' + str(minRessort) + ') group by ressort, author having count >= 2 order by 1 asc,3 desc')
+	cur.execute('SELECT ressort, author, count(link) as count from articles where ressort in (select ressort from articles group by ressort having count(distinct link) >= ' + str(minRessort) + ') group by ressort, author having count >= 5 order by 1 asc,3 desc')
 	entries = cur.fetchall()
 	arr = [] # should by filled with [{ressort: hopo, authors: [{name: theresa, count:5},{name: someone, count:2}]}] with min count >= 2 (in this example)
 	ressort = entries[0][0] #set ressort to first in fetched list
@@ -137,13 +137,13 @@ def topAuthorsPerRessort(cur,filename):
 		if ressort == e[0]:
 			authorArray.append({"name": e[1], "count": e[2]})
 			if e == entries[len(entries)-1]: #if it is last element
-				arr.append({"ressort": ressort, "authors": authorArray})
+				arr.append({"ressort": ressort, "authors": authorArray[:3]})
 		else:
-			arr.append({"ressort": ressort, "authors": authorArray})
+			arr.append({"ressort": ressort, "authors": authorArray[:3]})
 			authorArray = [{"name": e[1], "count": e[2]}]
 			ressort = e[0]
 			if e == entries[len(entries)-1]: #if it is last element
-				arr.append({"ressort": ressort, "authors": authorArray})
+				arr.append({"ressort": ressort, "authors": authorArray[:3]})
 
 	fileArray.append([json.dumps(arr),filename])
 	return 0
@@ -183,7 +183,7 @@ def averageCharactersPerDay(cur,filename,minAuthor):
 		cur.execute('SELECT DATEDIFF(MAX(created),MIN(created))+1 as average from articles where author="' + e[0] + '"')
 		res = cur.fetchone()
 		arr.append({"name": e[0], "count": round(e[1]/res[0])})
-	fileArray.append([json.dumps(arr),filename])
+	fileArray.append([json.dumps(sorted(arr, key=lambda x: x['count'], reverse=True)),filename])
 	return 0
 
 def ressortAverage(cur,filename):
