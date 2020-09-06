@@ -1,4 +1,4 @@
-var alpha = 0.3;
+var alpha = 0.34;
 
 
 function finData1(data) {
