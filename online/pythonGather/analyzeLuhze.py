@@ -16,8 +16,8 @@ def connectToDB():
 		con = MySQLdb.connect(
 			host='db', # was muss hier fuer ein host???
 			db='luhze',
-			user='admin',
-			passwd='test'
+			user='gatherer',
+			passwd='testGatherer'
 		)
 		con.set_character_set('utf8')
 		return con

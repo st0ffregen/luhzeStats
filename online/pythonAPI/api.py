@@ -12,8 +12,8 @@ def connectToDB():
 	con = MySQLdb.connect(
 		host='db',
 		db='luhze',
-		user='admin',
-		passwd='test'
+		user='api',
+		passwd='testApi'
 	)
 	con.set_character_set('utf8')
 	print(con)

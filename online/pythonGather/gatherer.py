@@ -25,41 +25,36 @@ def connectToDB():
 		con = MySQLdb.connect(
 			host='db', # was muss hier fuer ein host???
 			db='luhze',
-			user='admin',
-			passwd='test'
+			user='gatherer',
+			passwd='testGatherer'
 		)
 		con.set_character_set('utf8')
 		return con
 	except MySQLdb.Error as e:
-	   	print(f"Error connecting to MariaDB Platform: {e}")
-		
-	return 1	
+		print(f"Error connecting to MariaDB Platform: {e}")
+		return 1
 
 def executeSQL(sqlArray, cur, con):
+
+    if len(sqlArray) > 0:
+        with cur:
+            try:
+                for statement in sqlArray:
+                    print(statement[0])
+                    print(statement[1])
+                    cur.execute(statement[0],statement[1])
+                con.commit()
+                con.close()
+                return 0
+            except MySQLdb.Error as e:
+                print(f"Error while inserting sql statements: {e}")
+                cur.close()
+                return 1
+    else:
+        print("nothing to write to db")
+        cur.close()
+        return 1
 	
-	if len(sqlArray) > 0:
-		with cur:
-			try:
-				for statement in sqlArray:
-					#print(statement[0])
-					#print(statement[1])
-					cur.execute(statement[0],statement[1])
-
-				con.commit()
-				cur.close()
-				return 0
-			except:
-				print("error while inserting sql statements")
-				print("exiting")
-				cur.close()
-				print(sys.exc_info())
-				return 1
-
-	else:
-		print("nothing to write to db")
-		cur.close()
-		return 1
-		
 
 
 
@@ -69,10 +64,9 @@ def scrapeWebsite(con):
 	if con == 1:
 		return 1
 	try:
-	#cur.execute("CREATE TABLE articles(Id Integer PRIMARY KEY, Link TEXT, Title TEXT, Author TEXT, Ressorts TEXT, Created DATE, Wordcount INTEGER)")
 		cur = con.cursor()
 			
-		for i in range(1,4)[::-1]: #3 as a random number to start looking for new articles
+		for i in range(99,103)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
 			print("reading page " + str(i))
 			site = None
 			
@@ -245,8 +239,8 @@ def scrapeWebsite(con):
 
 		
 	except MySQLdb.Error as e:
-	   print(f"Error connecting to MariaDB Platform: {e}")
-	   return 1
+		print(f"Error connecting to MariaDB Platform: {e}")
+		return 1
 
 	return 0
 
@@ -255,9 +249,13 @@ def main():
 	print("starting gathering")
 	print(datetime.now())
 	con = connectToDB()
-	scrapeWebsite(con)
-	return analyzeLuhze.mainFunc()
-	
+	if con != 1:
+		if scrapeWebsite(con) == 0:
+			analyzeLuhze.mainFunc()
+		else:
+			print("exiting")
+	else:
+		print("exiting")
 
 
 if __name__ == "__main__":

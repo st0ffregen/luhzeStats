@@ -18,9 +18,9 @@ services:
      # - ./online/mariadb/data/:/var/lib/mysql
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: test 
-      MYSQL_DATABASE: luhze
+      #MYSQL_USER: admin
+      #MYSQL_PASSWORD: test 
+      #MYSQL_DATABASE: luhze
     ports:
       - "8889:3306"
     
