@@ -37,7 +37,6 @@ h1 {
   min-height: 750px;
 }
 
-
 .row {
   margin:0 !important;
 }
@@ -68,7 +67,7 @@ h1 {
 	text-align: center;
 }
 
-.upArrowButtonDiv a {
+a {
 	outline: 0;
 }
 
