@@ -8,21 +8,20 @@
 <meta name="robots" content="noindex,nofollow">
 
 <link rel="stylesheet" type="text/css" href="canvas.css">
-
 <link rel="stylesheet" type="text/css" href="index.css">
 
 </head>
 <body>
 
-
-
-<h1>Spaß mit Daten</h1>
 <div class="socialmedia">
 <ul class="socialmedialist">
-	<li>Twitter</li>
-	<li>Github</li>
+	<li><a href="https://github.com/st0ffregen/luhzeStats"><img src="pictures/github.png"></a></li>
+	<li><a href="https://twitter.com/st0ffregen"><img src="pictures/twitter.png"></a></li>
 </ul>
 </div>
+
+<h1>Spaß mit Daten</h1>
+
 <p id="authorP">only authors with 12 and more articles included</p>
 <p>only ressorts with 14 and more articles included</p>
 <p id="dateP">last updated </p>
@@ -34,40 +33,42 @@
 
 <h2>Authors</h2>
 <p class="chartjs">authors timeline</p>
-<div id="authorTimelineChart" style="height: 600px;"></div><br>
+<div id="authorTimelineChart" class="googleChartAuthor"></div><br>
 <canvas id="activeMembersChart"></canvas><br>
 <canvas id="authorTopListChart"></canvas><br>
 <canvas id="authorAverageChart"></canvas><br>
 <canvas id="mostArticlesPerTimeChart"></canvas><br>
 <canvas id="averageCharactersPerDayChart"></canvas><br>
+
+
 <h2>Ressorts</h2>
-<p class="chartjs">ressorts timeline</p>
-<div id="ressortTimelineChart" style="height: 750px;"></div><br>
+<p class="chartjs">ressorts timeline, all of them</p>
+<div class="googleChartRessort" id="ressortTimelineChart"></div><br>
 <canvas id="ressortTopListChart"></canvas><br>
 <p class="chartjs">number of articles published per ressort (click on ressort in legend to hide/show)</p>
 <canvas id="ressortArticlesTimelineChart"></canvas><br>
 <p class="chartjs">number of articles published per ressort each quarter (click on ressort in legend to hide/show)</p>
 <canvas id="ressortArticlesTimelineDerivativeChart"></canvas><br>
-
 <div id="chartjs-tooltip"></div>
-
 <canvas id="ressortAverageChart"></canvas><br>
 
+<div class="upArrowButtonDiv">
+<a href="javascript:topFunction()" class="upArrowButton" title="Go to top"><img src="pictures/arrowUp.png"></a>
+</div>
+
+<script type="text/javascript" src="momentJs/moment.min.js"></script>
+<script type="text/javascript" src="chartJs/Chart.js"></script>
+
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
-<script type="text/javascript" src="https://cdn.polyfill.io/v2/polyfill.js?features=default,String.prototype.repeat,Array.prototype.find,Array.prototype.findIndex,Math.trunc,Math.sign"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/luxon@1.19.3"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js@2.9.0"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@0.2.0"></script>
 
-<script type="text/javascript" src="chartjs-chart-financial.js"></script>
+<script type="text/javascript" src="luhzeJs/helperFunctions.js"></script>
+<script type="text/javascript" src="luhzeJs/financialCharts.js"></script>
+<script type="text/javascript" src="luhzeJs/googleCharts.js"></script>
+<script type="text/javascript" src="luhzeJs/barCharts.js"></script>
+<script type="text/javascript" src="luhzeJs/fetchApi.js"></script>
 
-<script type="text/javascript" src="helperFunctions.js"></script>
-<script type="text/javascript" src="financialCharts.js"></script>
-<script type="text/javascript" src="googleCharts.js"></script>
-<script type="text/javascript" src="barCharts.js"></script>
-<script type="text/javascript" src="fetchApi.js"></script>
 
 </body>
 </html>

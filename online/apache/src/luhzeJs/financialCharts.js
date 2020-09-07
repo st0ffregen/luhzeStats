@@ -1,3 +1,4 @@
+Chart.defaults.global.defaultFontColor = '#555';
 
 function customTooltip(data) {
 
@@ -369,7 +370,15 @@ function financialChart(chart, dataFunc, tooltipString) {
 			tooltips: {
 				mode: 'nearest',
 				intersect: false
-			}
+			},
+			legend: {
+
+		  		labels: {
+		  			fontFamily: "'Helvetica', 'Arial', sans-serif",
+		  			fontColor: '#555',
+		  			fontSize: 15,
+		  		}
+		  	}
 				
 		}
 	};

@@ -1,3 +1,12 @@
+window.onresize = function() { //traffic aufwending
+	fetchAPI("authorTimeline",(data) => {
+		googleTimeline('authorTimelineChart', data);
+		fetchAPI("ressortTimeline", (data) => {
+			googleTimeline('ressortTimelineChart', data);
+		});
+	}); 
+}
+
 function googleTimeline(chartAttr,dataArrayAttr) {
 
 	google.charts.load("current", {packages:["timeline"]});

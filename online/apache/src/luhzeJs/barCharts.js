@@ -1,3 +1,5 @@
+Chart.defaults.global.defaultFontColor = '#555';
+
 function barChart(id, data, type,label, tooltipBoolean, customTooltip) {
 
 	var colorArray = [];
@@ -40,8 +42,17 @@ function barChart(id, data, type,label, tooltipBoolean, customTooltip) {
 		  	},
 		  	animations: {
 		  		duration:1000,
+		  	},
+		  	legend: {
+
+		  		labels: {
+		  			fontFamily: "'Helvetica', 'Arial', sans-serif",
+		  			fontColor: '#555',
+		  			fontSize: 15,
+		  		}
 		  	}
 		}
 	});
 
 }
+

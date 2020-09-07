@@ -8,26 +8,70 @@ body {
   padding: 1em 1em;
   /* coloring */
   color: #555;
-  background: #eee
+  background: #eee;
+  
 }
 
-p.chartjs {
-	margin: auto;
-	font-family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
-	font-size: 12px;
+p {
+	font-family: "Helvetica", "Arial", sans-serif;
+	font-size: 17px;
 	color: #555;
 }
 
-.socialmedia {
-	position: absolute;
-	top: 0%;
-	right: 0%;
+p.chartjs {
+	text-align: center;
 }
+
+h1 {
+	padding: 0;
+	margin: 0;
+}
+
+.googleChartAuthor {
+  width: 100%; 
+  min-height: 600px;
+}
+
+.googleChartRessort {
+  width: 100%; 
+  min-height: 750px;
+}
+
+
+.row {
+  margin:0 !important;
+}
+
+.socialmedia {
+	float: right;
+	top: 0;
+	right: 0;
+}
+
 
 .socialmedialist {
 	list-style: none;
-	margin: 10px 30px;
-	display: inline-block;
-	padding: 20px 20px;
+	display: flex;
+	margin-top: 0.6em;
+}
 
+.socialmedialist li {
+	display: inline;
+
+
+}
+.socialmedia img {
+	max-width: 4em;
+}
+
+.upArrowButtonDiv {
+	text-align: center;
+}
+
+.upArrowButtonDiv a {
+	outline: 0;
+}
+
+.upArrowButton img {
+	max-width: 5.5em;
 }
