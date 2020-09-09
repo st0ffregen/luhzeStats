@@ -9,16 +9,39 @@
 
 <link rel="stylesheet" type="text/css" href="canvas.css">
 <link rel="stylesheet" type="text/css" href="index.css">
+<link rel="stylesheet" type="text/css" href="ranking.css">
 
 </head>
 <body>
 
+<div class="containter">
+
+<div class="ranking">
+	<p>
+		<a href="javascript:hideRanking()" class="takeMeBack">< Take me to the luhze charts</a>
+		<span>Go back in time: <a href="javascript:rankingFunction(0)">Now</a> <a href="javascript:rankingFunction(1)">One Month</a> <a href="javascript:rankingFunction(2)">One Year</a> <a href="javascript:rankingFunction(3)">Two Years</a> <a href="javascript:rankingFunction(4)">Five Years</a></span>
+	</p>
+	<div class="rankingSection"></div>
+
+	<div class="upArrowButtonDiv">
+		<a href="javascript:topFunction()" class="upArrowButton" title="Go to top"><img src="pictures/arrowUp.png"></a>
+	</div>
+
+	<div class="footer">
+		<a href="privacy.html">Datenschutz</a> | <a href="about.html">Impressum</a>
+	</div>
+</div>
+
+<div class="graphContent">
+
 <div class="socialmedia">
 <ul class="socialmedialist">
-	<li><a href="https://github.com/st0ffregen/luhzeStats" title="Github"><img src="pictures/github.png"></a></li>
-	<li><a href="https://twitter.com/st0ffregen" title="Twitter"><img src="pictures/twitter.png"></a></li>
+	<li><a href="https://github.com/st0ffregen/luhzeStats" title="View this code on GitHub"><img src="pictures/github.png"></a></li>
+	<li><a href="https://twitter.com/st0ffregen" title="Follow me on Twitter"><img src="pictures/twitter.png"></a></li>
 </ul>
 </div>
+
+
 
 <h1>Spaß mit Daten</h1>
 
@@ -52,10 +75,24 @@
 <div id="chartjs-tooltip"></div>
 <canvas id="ressortAverageChart"></canvas><br>
 
+
 <div class="upArrowButtonDiv">
-<a href="javascript:topFunction()" class="upArrowButton" title="Go to top"><img src="pictures/arrowUp.png"></a>
+	<a href="javascript:topFunction()" class="upArrowButton" title="Go to top"><img src="pictures/arrowUp.png"></a>
 </div>
 
+<div class="footer">
+	<a href="privacy.html">Datenschutz</a> | <a href="about.html">Impressum</a>
+</div>
+
+
+</div>
+</div>
+
+
+
+
+
+<script type="text/javascript" src="luhzeJs/ranking.js"></script>
 <script type="text/javascript" src="momentJs/moment.min.js"></script>
 <script type="text/javascript" src="chartJs/Chart.js"></script>
 
@@ -68,7 +105,5 @@
 <script type="text/javascript" src="luhzeJs/googleCharts.js"></script>
 <script type="text/javascript" src="luhzeJs/barCharts.js"></script>
 <script type="text/javascript" src="luhzeJs/fetchApi.js"></script>
-
-
 </body>
 </html>

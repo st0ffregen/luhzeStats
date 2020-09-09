@@ -20,12 +20,16 @@ async function fetchAPI(file,useDataFunction) {
 
 }
 
+rankingFunction(0);
+
+function fetchChartsSite() { 
+
 fetchAPI("minAuthor",(data) => {
 	document.getElementById("authorP").innerHTML="only authors with " + data['minAuthor'] + " and more articles included";
 });
 
 fetchAPI("date",(data) => {
-	document.getElementById("dateP").innerHTML="last updated " + data['date'];
+	document.getElementById("dateP").innerHTML="last updated " + data['date'] + "<span><a href=\"javascript:rankingFunction(0)\"> >Take me to the ranking</a></span>";
 });
 
 fetchAPI("articlesTimeline",(data) => {
@@ -115,3 +119,5 @@ fetchAPI("oldestArticle",(data) => { //unnötig hier die variablen mehrmals im c
 fetchAPI("ressortAverage",(data) => {
 	barChart('ressortAverageChart',data,'bar','average number of characters per ressort',true);
 });
+
+}
