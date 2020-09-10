@@ -12,7 +12,8 @@ CREATE TABLE articles (
 	author VARCHAR(64) NOT NULL,
 	ressort VARCHAR(64) NOT NULL,
 	created DATE NOT NULL,
-	wordcount INT NOT NULL
+	wordcount INT NOT NULL,
+	sourcecode TEXT NOT NULL,
 );
 
 CREATE TABLE files (
