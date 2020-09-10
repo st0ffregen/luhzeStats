@@ -36,7 +36,7 @@ function rankingFunction(backInTime) {
 				addInnterHTML += "<hr><h1 class=\"dangerzone\">!!!DANGER ZONE!!!</h1><div class=\"danger\">";
 			}
 			 
-			addInnterHTML += "<p class=\"ranks\">" + data[i]['name'] + " <span class=\"rankScore\">" + data[i]['score'] + "</span><span class=\"rankAdjective\" style=\"color: "+ data[i]['color'] + ";\">" + data[i]['adjectiv'] + "</span><span class=\"rankDiff\">" + data[i]['div'] + " </span></p>";
+			addInnterHTML += "<div class=\"ranks\"><div class=\"rankName\">" + data[i]['name'] + "</div><div class=\"rankScore\">" + data[i]['score'] + "</div><div class=\"rankAdjective\" style=\"color: "+ data[i]['color'] + ";\">" + data[i]['adjectiv'] + "</div><div class=\"rankDiff\">" + data[i]['div'] + " </div></div>";
 			
 
 		}

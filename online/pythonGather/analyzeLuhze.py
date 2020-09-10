@@ -311,7 +311,9 @@ def ranking(cur, filename, backInTime):
 			adjectiv = "decending"
 			color = "#FF0000"
 		
-		
+		if div >= 0: #add plus sign
+			div = "+" + str(div)
+
 
 
 		arr.append({"name": e[0], "score": scoreNow, 'div': div, 'adjectiv': adjectiv, 'color':color})
