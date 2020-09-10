@@ -40,7 +40,6 @@ function rankingFunction(backInTime) {
 			
 
 		}
-		console.log("a" + addInnterHTML);
 		addInnterHTML += "</div>"; //end danger zone div
 
 		rankingSection.innerHTML = addInnterHTML;
