@@ -98,6 +98,26 @@ def oldestArticle():
 @app.route('/json/newestArticle',methods=['GET'])
 def newestArticle():
 	return readInGenericFile("newestArticle")
+
+@app.route('/json/rankingDefault', methods=['GET'])
+def ranking():
+	return readInGenericFile("rankingDefault")
+
+@app.route('/json/rankingMonth', methods=['GET'])
+def rankingMonth():
+	return readInGenericFile("rankingMonth")
+
+@app.route('/json/rankingYear', methods=['GET'])
+def rankingYear():
+	return readInGenericFile("rankingYear")
+
+@app.route('/json/rankingTwoYears', methods=['GET'])
+def rankingTwoYears():
+	return readInGenericFile("rankingTwoYears")
+
+@app.route('/json/rankingFiveYears', methods=['GET'])
+def rankingFiveYears():
+	return readInGenericFile("rankingFiveYears")
 	
 
 

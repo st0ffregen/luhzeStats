@@ -26,10 +26,24 @@ function rankingFunction(backInTime) {
 	}
 
 	fetchAPI("ranking" + backInTimeString,(data) => {
+
+		var addInnterHTML = "";
 		
 		for(var i=0;i<data.length;i++) {
-			rankingSection.innerHTML += "<p class=\"ranks\">" + data[i]['name'] + " <span>" + data[i]['div'] + " <span style=\"color: "+ data[i]['color'] + ";\">" + data[i]['adjectiv'] + "</span> " + data[i]['score'] + "</span></p>";
+
+			
+			if(i!=0 && data[i]['score']<0 && data[i-1]['score']>=0) { //put danger zone
+				addInnterHTML += "<hr><h1 class=\"dangerzone\">!!!DANGER ZONE!!!</h1><div class=\"danger\">";
+			}
+			 
+			addInnterHTML += "<p class=\"ranks\">" + data[i]['name'] + " <span class=\"rankScore\">" + data[i]['score'] + "</span><span class=\"rankAdjective\" style=\"color: "+ data[i]['color'] + ";\">" + data[i]['adjectiv'] + "</span><span class=\"rankDiff\">" + data[i]['div'] + " </span></p>";
+			
+
 		}
+		console.log("a" + addInnterHTML);
+		addInnterHTML += "</div>"; //end danger zone div
+
+		rankingSection.innerHTML = addInnterHTML;
 
 		//show up arrow and footer
 		arrow.style.display = "block";

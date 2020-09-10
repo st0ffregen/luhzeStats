@@ -66,7 +66,7 @@ def scrapeWebsite(con):
 	try:
 		cur = con.cursor()
 			
-		for i in range(1,maxPageCount)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
+		for i in range(1,3)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
 			print("reading page " + str(i))
 			site = None
 			
@@ -256,7 +256,7 @@ def main():
 	print(datetime.now())
 	con = connectToDB()
 	if con != 1:
-		if 0 == 0:
+		if 0==0:#scrapeWebsite(con) == 0:
 			analyzeLuhze.mainFunc()
 		else:
 			print("exiting")

@@ -4,12 +4,38 @@ import operator
 import json
 import datetime
 import MySQLdb
-
+import math
 
 minRessort=14
+limitAuthors = 25
 fileArray = []
 
+#szenario: wenig aktive Person: ZeitZumLetztenArtikel=120*-0.5=-60, ArtikelAnzahl=10*5=50, CPD=150*1=150, insgesamt = 140
+#szenario: sehr aktive Person: ZeitZumLetztenArtikel=15*-0.5=-7, ArtikelAnzahl=35*5=175, CPD=400*1=400, insgesamt = 400
 
+rankingTimeSinceLastArticleWeight = 1.4
+rankingCharactersPerDayWeight = 1.4
+rankingArticlesCountWeight = 1.2
+intervall = 2
+
+
+def tslaFunction(value):
+	#function is using months not days so:
+	value = round(value/30.5)
+	#to avoid math overflow when passing month thats to big
+	if value > 10:
+		return round(-0.5*value) #linear loosing points over time
+	else: 
+		result = round(-10/(0.1+10 * math.exp(-1.3 * value)) + 100)
+		return round(result * rankingTimeSinceLastArticleWeight)
+
+def cpdFunction(value):
+	result = round(10/(0.103 + 2.5 * math.exp(-0.02 * value)))
+	return round(result * rankingCharactersPerDayWeight)
+
+def acFunction(value):
+	result = round(10/(0.1 + math.exp(-0.4 * value))-10)
+	return round(result * rankingArticlesCountWeight)
 
 def connectToDB():
 	try: 
@@ -52,6 +78,11 @@ def mainFunc():
 			ressortTimeline(cur,'ressortTimeline')
 			oldestArticle(cur,'oldestArticle')
 			newestArticle(cur,'newestArticle')
+			ranking(cur, 'rankingDefault', 0)
+			ranking(cur, 'rankingMonth', 1)
+			ranking(cur, 'rankingYear', 12)
+			ranking(cur, 'rankingTwoYears', 24)
+			ranking(cur, 'rankingFiveYears', 60)
 		except MySQLdb.Error as e:
 			print(f"Error connecting to MariaDB Platform: {e}")
 			return 1
@@ -61,7 +92,7 @@ def mainFunc():
 
 
 def selfCalibrieren(cur):
-	cur.execute('SELECT author, count(distinct Link) FROM articles GROUP BY author ORDER BY 2 DESC LIMIT 30')
+	cur.execute('SELECT author, count(distinct Link) FROM articles GROUP BY author ORDER BY 2 DESC LIMIT ' + str(limitAuthors))
 	entries = cur.fetchall()
 	minAuthor = entries[len(entries) - 1][1] #makes sure that always 30 authors are shown
 	print("minAuthor is: " + str(minAuthor))
@@ -209,6 +240,84 @@ def ressortTimeline(cur,filename):
 		arr.append({"name":e[0],"min":e[1],"max":e[2]})
 	fileArray.append([json.dumps(arr, default = str), filename])
 	return 0
+
+
+def ranking(cur, filename, backInTime):
+	cur.execute('SELECT distinct(author) from articles')
+	entries = cur.fetchall()
+	arr = []
+	for e in entries: #loop through all authors
+
+		#jetziger Zustand bzw. nach hinten wenn backInTime an ist
+		cur.execute('SELECT sum(wordcount) as count from (select distinct(link), wordcount, author from articles where author = "' + e[0] + '" and created < DATE_ADD(CURDATE(), INTERVAL -' + str(backInTime) + ' MONTH)) as sub')
+		ressum = cur.fetchone()
+		if(ressum[0] == "NULL" or ressum[0] == None):  #den autor gabs damals noch nicht
+			continue
+
+		cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL -' + str(backInTime) + ' MONTH),MIN(created))+1 as average from articles where author="' + e[0] + '"')
+		rescpd = cur.fetchone()
+		rankingCPD = cpdFunction(round((ressum[0]/rescpd[0])))
+
+		cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL -' + str(backInTime) + ' MONTH),MAX(created))+1 as average from articles where author="' + e[0] + '"')
+		restsla = cur.fetchone()
+		rankingTSFA = tslaFunction(restsla[0])
+
+		cur.execute('SELECT count(distinct link) FROM articles where author = "' + e[0] + '" and created < DATE_ADD(CURDATE(), INTERVAL -' + str(backInTime) + ' MONTH)')
+		resac = cur.fetchone()
+		rankingAC = acFunction(resac[0])
+		scoreNow = round(rankingAC + rankingTSFA + rankingCPD)
+
+		#two months before bzw. plus backInTime
+		ressum = "NULL" 
+		rescpd = "NULL"
+		restsla = "NULL"
+
+		cur.execute('SELECT sum(wordcount) as count from (select distinct(link), wordcount, author from articles where author = "' + e[0] + '" and created < DATE_ADD(CURDATE(), INTERVAL -' + str(intervall + backInTime) + ' MONTH)) as sub')
+		ressum = cur.fetchone()
+		if(ressum[0] == "NULL" or ressum[0] == None): #no article published two months before
+			scoreBackThen = 0
+		else:
+			cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL -' + str(intervall + backInTime) + ' MONTH),MIN(created))+1 as average from articles where author="' + e[0] + '"')
+			rescpd = cur.fetchone()
+			rankingCPD = cpdFunction(round((ressum[0]/rescpd[0])))
+
+			cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL -' + str(intervall + backInTime) + ' MONTH),MAX(created))+1 as average from articles where author="' + e[0] + '"')
+			restsla = cur.fetchone()
+			rankingTSFA = tslaFunction(restsla[0])
+
+			cur.execute('SELECT count(distinct link) FROM articles where author = "' + e[0] + '" and created < DATE_ADD(CURDATE(), INTERVAL -' + str(intervall + backInTime) + ' MONTH)')
+			resac = cur.fetchone()
+			rankingAC = acFunction(resac[0])
+			scoreBackThen = round(rankingAC + rankingTSFA + rankingCPD)
+
+
+		#calculatin div and adjectiv
+		div = scoreNow - scoreBackThen
+		adjectiv = ""
+		color = ""
+		if div >= 50:
+			adjectiv = "rising star"
+			color = "#32CD32"
+		elif div >= 10:
+			adjectiv = "ascending"
+			color = "#6B8E23"
+		elif div < 10 and div > -10:
+			adjectiv = "stagnating"
+			color = "#FFA500"
+		elif div <= -50:
+			adjectiv = "free falling"
+			color = "#8B0000"
+		elif div <= -10:
+			adjectiv = "decending"
+			color = "#FF0000"
+		
+		
+
+
+		arr.append({"name": e[0], "score": scoreNow, 'div': div, 'adjectiv': adjectiv, 'color':color})
+	fileArray.append([json.dumps(sorted(arr, key=lambda x: x['score'], reverse=True)),filename])
+	return 0
+
 
 def writeToDB(cur,con):
 	try:

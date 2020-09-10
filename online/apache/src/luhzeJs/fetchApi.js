@@ -20,7 +20,7 @@ async function fetchAPI(file,useDataFunction) {
 
 }
 
-rankingFunction(0);
+fetchChartsSite();
 
 function fetchChartsSite() { 
 
