@@ -1,2 +1,2 @@
 # luhzeStats
-Statistics from luhze 
+Statistics from luhze.de 
