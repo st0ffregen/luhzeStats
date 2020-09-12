@@ -306,10 +306,10 @@ def ranking(cur, filename, backInTime):
 			color = "#FFA500"
 		elif div <= -50:
 			adjectiv = "free falling"
-			color = "#8B0000"
+			color = "#FF0000"
 		elif div <= -10:
 			adjectiv = "decending"
-			color = "#FF0000"
+			color = "#8B0000"
 		
 		if div >= 0: #add plus sign
 			div = "+" + str(div)

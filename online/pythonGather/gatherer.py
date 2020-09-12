@@ -66,7 +66,7 @@ def scrapeWebsite(con):
 	try:
 		cur = con.cursor()
 			
-		for i in range(1,3)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
+		for i in range(1,60)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
 			print("reading page " + str(i))
 			site = None
 			
@@ -106,8 +106,8 @@ def scrapeWebsite(con):
 						print("title: " + title)
 					except:
 						print("title not found")
-						title =""
 						print(sys.exc_info())
+						sys.exit(1) #kann man eh stoppen, da constraints der db blockieren
 
 					# find authors
 					try:
@@ -130,10 +130,10 @@ def scrapeWebsite(con):
 						
 
 					# find ressort
-
+					footer = None
 					try:
-						div = soupArticle.find("div", {'class': 'articleFooter'})
-						ressorts = div.find_all("a")
+						footer = soupArticle.find("div", {'class': 'articleFooter'})
+						ressorts = footer.find_all("a")
 						#loop through all a to find a category
 						ressortsString = []
 						for r in ressorts:
@@ -142,13 +142,13 @@ def scrapeWebsite(con):
 						print("ressort: ")
 						print(ressortsString)
 					except:
-						print("ressort not found")
+						print("footer not found. ressort not found. date not found")
 						print(sys.exc_info())
+						sys.exit(1) #kann man eh stoppen, da constraints der db blockieren
 
 					# find date
 					try: 
-						div = soupArticle.find("div", {'class': 'articleFooter'})
-						tmpDate = div.find("span").string
+						tmpDate = footer.find("span").string
 
 						#translate date to timestamp
 						split = tmpDate.split(" ")
@@ -195,37 +195,48 @@ def scrapeWebsite(con):
 						print(sys.exc_info())
 
 
-					#get wordcount
+					#get wordcount and text
 					wordcount = 0
+					document = "" #text of site
 					article = soupArticle.find("article", {'id':'mainArticle'})
 					if article is None: #very old article
 						allP = soupArticle.find("div", {'class':'field-content'}).find_all("p")
+						allPInFooter = footer.find_all("p") #ignore text in footer
 						for p in allP:
-							wordcount = wordcount + len(p.get_text())
+							if p not in allPInFooter:
+								wordcount = wordcount + len(p.get_text())
+								document += p.get_text() + " "
 						print("wordcount: " + str(wordcount))
 					elif article.find_all("div",{'class':'field-content'}) is not None: #old article but not so old
 						allP = article.find_all("p")
+						allPInFooter = footer.find_all("p") #ignore text in footer
 						for p in allP:
-							if p.get_text() is not None and p.get('id') is None:
+							if p.get_text() is not None and p.get('id') is None and p not in allPInFooter:
 								wordcount = wordcount + len(p.get_text())
+								document += p.get_text() + " "
 						print("wordcount: " + str(wordcount))
 					else:
 						allP = article.find_all("p")
+						allPInFooter = footer.find_all("p") #ignore text in footer
 						for p in allP:
-							if p.get_text() is not None and p.get('id') is None and 'contentWrapper' in p.find_parent('div')['class']:
+							if p.get_text() is not None and p.get('id') is None and 'contentWrapper' in p.find_parent('div')['class'] and p not in allPInFooter:
 								wordcount = wordcount + len(p.get_text())
+								document += p.get_text() + " "
 						print("wordcount: " + str(wordcount))
+
+					#add title to document
+					document = title + " " + document
 					
 					#print(entries[0])
-					if isIn and (title != entries[0][2] or date != entries[0][5].strftime('%Y-%m-%d') or wordcount != entries[0][6]): # only checks first tupel
+					if isIn and (title != entries[0][2] or date != entries[0][5].strftime('%Y-%m-%d') or wordcount != entries[0][6] or document != entries[0][7]): # only checks first tupel
 						#for setting a new author/ressort a whole update of the table is needed
 						print("update rows")
-						sqlStatements.append(['UPDATE articles SET Title=%s,Created=%s,Wordcount=%s WHERE Link=%s', [title,date,wordcount,link]])
+						sqlStatements.append(['UPDATE articles SET Title=%s,Created=%s,Wordcount=%s, document=%s WHERE Link=%s', [title,date,wordcount,document,link]])
 					elif isIn == False: 
 						print("insert rows")
 						for a in authorsString:
 							for r in ressortsString:
-								sqlStatements.append(['INSERT INTO articles VALUES(%s,%s,%s,%s,%s,%s,%s)', [None,link,title, a, r, date, wordcount]])
+								sqlStatements.append(['INSERT INTO articles VALUES(%s,%s,%s,%s,%s,%s,%s, %s)', [None,link,title, a, r, date, wordcount, document]])
 					else:
 						print("wont update nor insert")
 
