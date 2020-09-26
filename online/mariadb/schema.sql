@@ -9,24 +9,34 @@ CREATE TABLE articles (
 	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 	link VARCHAR(255) NOT NULL,
 	title VARCHAR(255) NOT NULL,
-	author VARCHAR(64) NOT NULL,
+	authorId INT NOT NULL,
 	ressort VARCHAR(64) NOT NULL,
 	created DATE NOT NULL,
 	wordcount INT NOT NULL,
-	document INT NOT NULL,
-	mostUsedWords VARCHAR(255) NOT NULL,
-	FOREIGN KEY (document) REFERENCES documents(document) ON DELETE CASCADE ON UPDATE CASCADE
+	documentId INT NOT NULL,
+	FOREIGN KEY (authorId) REFERENCES authors(id) ON DELETE RESTRICT ON UPDATE CASCADE
+	FOREIGN KEY (documentId) REFERENCES documents(id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE authors (
+	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+	firstName VARCHAR(64) NOT NULL,
+	lastName VARCHAR(64) NOT NULL,
+	mostUsedWords VARCHAR(255) NOT NULL, # ersatz fuer array, speichert 5 woerter
+	UNIQUE(firstName, lastName)
 );
 
 CREATE TABLE files (
 	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 	filename VARCHAR(64) NOT NULL,
-	json JSON NOT NULL
+	json JSON NOT NULL,
+	UNIQUE(filename, json)
 );
 
 CREATE TABLE documents (
 	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-	document TEXT NOT NULL
+	document TEXT NOT NULL,
+	UNIQUE(document)
 );
 
 DELIMITER $$ 
