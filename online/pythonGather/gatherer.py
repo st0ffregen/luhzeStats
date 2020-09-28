@@ -41,8 +41,8 @@ def executeSQL(sqlArray, cur, con):
         with cur:
             try:
                 for statement in sqlArray:
-                    #print(statement[0])
-                    #print(statement[1])
+                    print(statement[0])
+                    print(statement[1])
                     cur.execute(statement[0],statement[1])
                 print("commiting changes")
                 con.commit()
@@ -165,18 +165,20 @@ def scrapeDate(text):
 
 		date = year + "-" + month + "-" + day
 		print("date: " + date)
+		return date
 	except Exception:
 		traceback.print_exc()
 		print("date not found")
 		print(sys.exc_info())
 		sys.exit(1) #kann man eh stoppen, da constraints der db blockieren
 
-def scrapeWordcountAndText(text):
+def scrapeWordcountAndText(text, title):
 	#get wordcount and text
 	try:
 		article = text.find("article", {'id':'mainArticle'})
 		footer = text.find("div", {'class': 'articleFooter'})
 		wordcount = 0
+		document = ""
 		if article is None: #very old article
 			allP = text.find("div", {'class':'field-content'}).find_all("p")
 			allPInFooter = footer.find_all("p") #ignore text in footer
@@ -212,30 +214,30 @@ def scrapeWordcountAndText(text):
 		print(sys.exc_info())
 		sys.exit(1) #kann man eh stoppen, da constraints der db blockieren
 
-def fillSQLArray(link, title, authorArray, ressortArray, wordount, document, isIn):
+def fillSQLArray(link, title, authorArray, ressortArray, wordcount, document, date, isIn):
 	sqlStatements = []
-
+	
 	if isIn == True:
 		print("update rows")
 		#delte all old rows with link
 		sqlStatements.append(['DELETE FROM articles WHERE link=%s', [link]])
 		# reinsert document
-		sqlStatements.append(['INSERT IGNORE INTO documents VALUES(%s,%s)', [None, document]])
-		for a in authorsArray:
+		sqlStatements.append(['INSERT IGNORE INTO documents VALUES(%s,%s,%s)', [None, document, wordcount]])
+		for a in authorArray:
 			#insert author if not exitsts
-			sqlStatements.append(['INSERT IGNORE INTO authors VALUES(%s,%s,%s)', [None, a[0], a[1]]]) 
+			sqlStatements.append(['INSERT IGNORE INTO authors VALUES(%s,%s,%s,%s)', [None, a[0], a[1], None]]) 
 			for r in ressortArray:
-				sqlStatements.append(['INSERT INTO articles VALUES(%s,%s,%s,(SELECT id FROM authors WHERE firstName=%s and lastName=%s),%s,%s,%s, (SELECT id FROM documents WHERE document=%s))', [None,link,title, a[0], a[1], r, date, wordcount, document]])
+				sqlStatements.append(['INSERT INTO articles VALUES(%s,%s,%s,(SELECT id FROM authors WHERE firstName=%s and lastName=%s),%s,%s, (SELECT id FROM documents WHERE document=%s))', [None,link,title, a[0], a[1], r, date, document]])
 
 	elif isIn == False: 
 		print("insert rows")
 		# reinsert document
-		sqlStatements.append(['INSERT IGNORE INTO documents VALUES(%s,%s)', [None, document]])
-		for a in authorsArray:
+		sqlStatements.append(['INSERT IGNORE INTO documents VALUES(%s,%s, %s)', [None, document, wordcount]])
+		for a in authorArray:
 			#insert author if not exitsts
-			sqlStatements.append(['INSERT IGNORE INTO authors VALUES(%s,%s,%s)', [None, a[0], a[1]]]) 
+			sqlStatements.append(['INSERT IGNORE INTO authors VALUES(%s,%s,%s,%s)', [None, a[0], a[1], None]]) 
 			for r in ressortArray:
-				sqlStatements.append(['INSERT INTO articles VALUES(%s,%s,%s,(SELECT id FROM authors WHERE firstName=%s and lastName=%s),%s,%s,%s, (SELECT id FROM documents WHERE document=%s))', [None,link,title, a[0], a[1], r, date, wordcount, document]])
+				sqlStatements.append(['INSERT INTO articles VALUES(%s,%s,%s,(SELECT id FROM authors WHERE firstName=%s and lastName=%s),%s,%s, (SELECT id FROM documents WHERE document=%s))', [None,link,title, a[0], a[1], r, date, document]])
 	else:
 		print("wont update nor insert")
 
@@ -321,12 +323,12 @@ def scrapeWebsite(con):
 
 			date = scrapeDate(soupArticle)
 
-			textWordcountArray = scrapeWordcountAndText(soupArticle)
+			textWordcountArray = scrapeWordcountAndText(soupArticle, title)
 
 			wordcount = textWordcountArray[0]
 			document = textWordcountArray[1]
 			
-			sqlStatements.extend(fillSQLArray(link, title, authorArray, ressortArray, wordount, document, isIn))
+			sqlStatements.extend(fillSQLArray(link, title, authorArray, ressortArray, wordcount, document, date, isIn))
 		
 	executeSQL(sqlStatements, cur, con)
 
@@ -340,7 +342,7 @@ def main():
 	print(datetime.now())
 	con = connectToDB()
 	
-	if scrapeWebsite(con) == 0:
+	if scrapeWebsite(con) == 2:
 		analyzeLuhze.mainFunc()
 	else:
 		print("exiting")

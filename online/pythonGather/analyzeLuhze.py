@@ -320,6 +320,10 @@ def ranking(cur, filename, backInTime):
 	fileArray.append([json.dumps(sorted(arr, key=lambda x: x['score'], reverse=True)),filename])
 	return 0
 
+def calculateWordOccurence(cur, filename, newlyFetchedArticleCount):
+	#ich muss wissen wie viele neu dazu gekommen sind um nicht alles neu berechnen zu müssen
+	return 0
+
 
 def writeToDB(cur,con):
 	try:
