@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import operator
 import json
-import datetime
+from datetime import datetime
 import MySQLdb
 import math
 import re
@@ -48,6 +48,7 @@ def connectToDB():
 			passwd='testGatherer'
 		)
 		con.set_character_set('utf8mb4')
+		con.autocommit(False)
 		return con
 	except MySQLdb.Error as e:
 		print(f"Error connecting to MariaDB Platform: {e}")
@@ -56,7 +57,7 @@ def connectToDB():
 
 def mainFunc():
 	print("start analyzing")
-	print(datetime.datetime.now())
+	print(datetime.now())
 	con = connectToDB()
 
 	with con:
@@ -383,15 +384,22 @@ def insertSQLStatements(cur, con, sqlStatements):
 					print(statement[1])
 					cur.execute(statement[0],statement[1])
 
+				print('UPDATE lastmodified set lastModified = "' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '"')
+				cur.execute('UPDATE lastmodified set lastModified = "' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '"') #update lastmodified
 				print("commiting new tables")
 				con.commit()
 				cur.close()
 				return 0
 			except MySQLdb.Error as e:
 				print(f"Error while inserting sql statements from analyzeLuhze: {e}")
+				print("rollback everything")
+				#loescht nicht die neu angelegten tabellen, da die als ddl nicht von autocommit(false) betroffen sind
+				# kann zwar hier alle tabellen loeschen die in quarterArray vorkommen aber dann loesche ich auch potenzielle immer die mit dem alten aber noch aktuellen quarter
+				con.rollback()
 				cur.close()
 				print(sys.exc_info())
 				sys.exit(1) #kann man eh stoppen, da constraints der db blockieren
+
 	else:
 		print("nothing to write to db")
 		return 0
@@ -418,7 +426,7 @@ def calculateWordOccurence(cur):
 	
 
 	#fetch new articles from documents
-	cur.execute('SELECT document, YEAR(addedDate), QUARTER(addedDate) FROM documents WHERE addedDate > %s', [lastmodified])
+	cur.execute('SELECT document, YEAR(createdDate), QUARTER(createdDate) FROM documents WHERE addedDate > %s', [lastmodified])
 	newDocuments = cur.fetchall()
 
 	# loop durch die neuen quarter und fasse dokumente aus den quarter zusammen 

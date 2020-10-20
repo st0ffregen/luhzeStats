@@ -29,6 +29,7 @@ def connectToDB():
 			passwd='testGatherer'
 		)
 		con.set_character_set('utf8mb4')
+		con.autocommit(False)
 		return con
 	except MySQLdb.Error as e:
 		print(f"Error connecting to MariaDB Platform: {e}")
@@ -222,7 +223,7 @@ def fillSQLArray(link, title, authorArray, ressortArray, wordcount, document, da
 		#delte all old rows with link
 		sqlStatements.append(['DELETE FROM articles WHERE link=%s', [link]])
 		# reinsert document
-		sqlStatements.append(['INSERT IGNORE INTO documents VALUES(%s,%s,%s,%s)', [None, document, wordcount, date]])
+		sqlStatements.append(['INSERT IGNORE INTO documents VALUES(%s,%s,%s,%s,%s)', [None, document, wordcount, date, datetime.now().strftime('%Y-%m-%d %H:%M:%S')]])
 		for a in authorArray:
 			#insert author if not exitsts
 			sqlStatements.append(['INSERT IGNORE INTO authors VALUES(%s,%s,%s,%s)', [None, a[0], a[1], None]]) 
@@ -232,7 +233,7 @@ def fillSQLArray(link, title, authorArray, ressortArray, wordcount, document, da
 	elif isIn == False: 
 		print("insert rows")
 		# reinsert document
-		sqlStatements.append(['INSERT IGNORE INTO documents VALUES(%s,%s,%s,%s)', [None, document, wordcount,date]])
+		sqlStatements.append(['INSERT IGNORE INTO documents VALUES(%s,%s,%s,%s,%s)', [None, document, wordcount, date, datetime.now().strftime('%Y-%m-%d %H:%M:%S')]])
 		for a in authorArray:
 			#insert author if not exitsts
 			sqlStatements.append(['INSERT IGNORE INTO authors VALUES(%s,%s,%s,%s)', [None, a[0], a[1], None]]) 

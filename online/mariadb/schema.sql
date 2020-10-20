@@ -11,8 +11,9 @@ USE luhze;
 # muss das hier eingetragen werden damit dann bei der nächsten Berechnung der Werte 
 # nur die neuen Artikel ausgewertet werden müssen und nicht nochmal alle 
 # die neuen Artikel werden mit addedDate von documents ermittelt
+# muss ein genaus datum mit uhrzeit haben weil mehrfach am tag die artikel neu ausgewertet werden
 CREATE TABLE lastmodified (
-	lastModified DATE PRIMARY KEY
+	lastModified DATETIME PRIMARY KEY
 );
 
 CREATE TABLE authors (
@@ -36,7 +37,8 @@ CREATE TABLE documents ( #speichert den sourcecode der texte
 	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 	document TEXT NOT NULL,
 	wordcount INT NOT NULL, #wie viele wörter der text hat
-	addedDate DATE NOT NULL, #kann das bitte noch einen schöneren Namen bekommen
+	createdDate DATE NOT NULL, # das entstehungs datum des artikels, dann kann ich heruasfinden zu welchem quartal das document gehört
+	addedDate DATETIME NOT NULL, #datum an den es der db hinzugefügt wurde, ist datetime um es mit lastModified zu vergleichen
 	UNIQUE(document)
 );
 
@@ -109,7 +111,7 @@ BEGIN
 
 			SELECT yearAndQuarter as '';
 
-			SET paramString = CONCAT('GRANT CREATE, SELECT, INSERT, DELETE, UPDATE ON ', yearAndQuarter, ' TO \'gatherer\'@\'%\'');
+			SET paramString = CONCAT('GRANT CREATE, DROP, SELECT, INSERT, DELETE, UPDATE ON ', yearAndQuarter, ' TO \'gatherer\'@\'%\'');
 
 			SELECT paramString as '';
 
