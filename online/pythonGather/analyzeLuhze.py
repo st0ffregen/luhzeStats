@@ -5,6 +5,8 @@ import json
 import datetime
 import MySQLdb
 import math
+import re
+import sys
 
 minRessort=14
 limitAuthors = 25
@@ -61,6 +63,7 @@ def mainFunc():
 		try:
 			con.autocommit = False
 			cur = con.cursor()
+			"""
 			minAuthor=selfCalibrieren(cur)
 			fileArray.append([json.dumps({'minAuthor':minAuthor}),'minAuthor'])
 			fileArray.append([json.dumps({'date':datetime.datetime.now()}, default = str),'date']) #treats datetime as string
@@ -83,8 +86,10 @@ def mainFunc():
 			ranking(cur, 'rankingYear', 12)
 			ranking(cur, 'rankingTwoYears', 24)
 			ranking(cur, 'rankingFiveYears', 60)
+			"""
+			insertSQLStatements(cur,con, calculateWordOccurence(cur))
 		except MySQLdb.Error as e:
-			print(f"Error connecting to MariaDB Platform: {e}")
+			print(f"MySQL Error in mainFunc(): {e}")
 			return 1
 		else:
 			writeToDB(cur,con)
@@ -320,9 +325,164 @@ def ranking(cur, filename, backInTime):
 	fileArray.append([json.dumps(sorted(arr, key=lambda x: x['score'], reverse=True)),filename])
 	return 0
 
-def calculateWordOccurence(cur, filename, newlyFetchedArticleCount):
-	#ich muss wissen wie viele neu dazu gekommen sind um nicht alles neu berechnen zu müssen
+
+def createQuarterArray(cur, lastmodified):
+	# erstellt für jedes Quartal eine wordOccurence Tabelle
+
+	#erstellt zunächst eine Tabelle aller Quartale die neu hinzugekommen sind 
+	lastmodified = str(fetchLastModified(cur)[0])
+
+	cur.execute('SELECT cast(date_format(MIN(created),"%%Y-%%m-01") as date) FROM articles WHERE QUARTER(created) > QUARTER(%s) OR YEAR(created) > YEAR(%s)', [lastmodified, lastmodified])
+	minDate = str(cur.fetchone()[0])
+	
+
+	cur.execute('SELECT cast(date_format(MAX(created),"%%Y-%%m-01") as date) FROM articles WHERE QUARTER(created) > QUARTER(%s) OR YEAR(created) > YEAR(%s)', [lastmodified, lastmodified])
+	maxDate = str(cur.fetchone()[0])
+
+	quarterArray = []
+
+	if minDate != "None" and maxDate != "None":
+		minYear = minDate.split("-")[0]
+		maxYear = maxDate.split("-")[0]
+
+		initQuarter = (((int(minDate.split("-")[1])-1)//3) +1) # gib quarter von 1 bis 4
+
+		for year in range(int(minYear), int(maxYear)+1): # +1 da maxYear exklusive Grenze
+			for quarter in range(initQuarter,5): # 5 ist hier wieder exklusiv
+				quarterArray.append(str(year) + str(quarter))
+			initQuarter = 1 #setzt initquarter wieder auf 1, s.d. die for schleife jetzt von 1 anfängt
+	else:
+		print("no articles in new quarters")
+
+	return quarterArray
+
+def createQuarterTables(quarterArray):
+
+	sqlStatements = []
+
+	# create new Tables
+	for yearAndQuarter in quarterArray:
+		sqlStatements.append(["CREATE TABLE wordOccurence" + yearAndQuarter + "(" + 
+			"word VARCHAR(64) PRIMARY KEY NOT NULL, " +
+			"occurencePerWords INT NOT NULL," + # durchschnitt, also verhaeltnis aus occurence/100000 Wörter (oder ähnliche Zahl) IN DEM QUARTAL
+			"occurence INT NOT NULL," + # absulute Zahl wie oft das spezifische wort auftaucht IN DEM QUARTAL
+			"quarterWordCount INT NOT NULL" + # totaler worcound, also wie viele wörter es insegesamt auf luhze.de IN DEM QUARTAL gibt, absulute Zahl wie oft das wort auftaucht, ist immer der selbe, wird mitgeschrieben damit bei neuen artikel die occurence neu berechnet werden kann
+		");",[]])
+
+	return sqlStatements
+
+
+def insertSQLStatements(cur, con, sqlStatements):
+
+	if len(sqlStatements) > 0:
+		with cur:
+			try:
+				for statement in sqlStatements:
+					print(statement[0])
+					print(statement[1])
+					cur.execute(statement[0],statement[1])
+				print("commiting new tables")
+				con.commit()
+				cur.close()
+				return 0
+			except MySQLdb.Error as e:
+				print(f"Error while inserting sql statements from analyzeLuhze: {e}")
+				cur.close()
+				print(sys.exc_info())
+				sys.exit(1) #kann man eh stoppen, da constraints der db blockieren
+	else:
+		print("nothing to write to db")
+		return 0
 	return 0
+
+def fetchLastModified(cur):
+	#fetch lastmodiefied
+	cur.execute('SELECT lastmodified from lastmodified')
+	lastmodified = cur.fetchone() #letztes mal das analysiert wurde
+	return lastmodified
+
+
+def calculateWordOccurence(cur):
+	# berechnet zu jedem wort eine relative zahl die die absolute Anzahl der Erscheinen des Wortes dividiert durch eine bestimmte 
+	# Zahl dartsellt (z.B. 100 000) 
+	#ich nutze die lastmodified tabelle um nicht alle artikel nochmals zu analysieren zu müssen
+
+	lastmodified = fetchLastModified(cur)[0]
+	# zunächst erstellen der neuen tabellen für die neuen Quartale
+	quarterArray = createQuarterArray(cur, lastmodified)
+	sqlStatements = createQuarterTables(quarterArray)
+	print("quarterArray")
+	print(quarterArray)
+	
+
+	#fetch new articles from documents
+	cur.execute('SELECT document, YEAR(addedDate), QUARTER(addedDate) FROM documents WHERE addedDate > %s', [lastmodified])
+	newDocuments = cur.fetchall()
+
+	# loop durch die neuen quarter und fasse dokumente aus den quarter zusammen 
+	# immer auf der Grundlage dass es das erste Quarter schon als Tabelle gegeben hat und die schon teils befüllt ist
+	# das ist immer maximal eine Tabelle, das wissen wir anhand von lastmodified
+
+	for quarterAndYear in quarterArray:
+
+		quarterSqlStatements = []
+
+		quarterText = ""
+		# find documentes with same quarter and year
+		for document in newDocuments:
+			if quarterAndYear == str(document[0]) + str(document[1]):
+				# fasse dokumente zusammen
+				quarterText += document[0]
+
+		# get last wordcount from table
+		# ich weiß dass die Tabelle evtl. noch nicht erstellt ist, deshalb fange ich den MySQL Feher ab und werte den als 0
+		try:
+			cur.execute('SELECT MAX(quarterWordCount) FROM wordOccurence' + quarterAndYear)
+			quarterWordCount = int(cur.fetchone())
+		except MySQLdb.Error as e: # der fehler ist hier, dass ich keine Berechtigung für den Zugriff auf eine imaginäre Tabelle habe
+			print("table wordOccurence" + quarterAndYear + " does not exists yet.\nTreat quarter wordcount as zero.")
+			quarterWordCount = 0 # anzahl aller wörter auf luhze.de in diesem quartal
+
+		countPerWordDict = {}
+		upperText = quarterText.upper()
+		allWords = upperText.split()
+		quarterWordCount += len(allWords)
+		for w in allWords:
+			w = w.strip()
+			if re.match(r'{2,}$',w):
+				w = removeTrailingHyphens(w)
+				w = removeAheadHyphens(w)
+				if w is not None and len(w) > 1:
+					if w in countPerWordDict:
+						countPerWordDict[w] += 1
+					else:
+						countPerWordDict[w] = 1
+					
+		for w in countPerWordDict.keys():
+			quarterSqlStatements.append(['INSERT INTO wordOccurence' + quarterAndYear +' VALUES (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE occurencePerWords=((occurence + VALUES(occurence))/VALUES(quarterWordCount))*100000),occurence=occurence + VALUES(occurence), quarterWordCount=VALUES(quarterWordCount)', [w, occurencePerWords ,countPerWordDict[w], quarterWordCount]])
+
+		sqlStatements.extend(quarterSqlStatements)
+	
+		
+	return sqlStatements
+
+def calculateMostUsedWords(cur): 
+	#wird in author table gespeichert, weiß noch nicht wie
+	# ich müsste pro autor eine eigene wordoccourence tabelle erstellen
+	# kann ich aber eigentlich machen, ist halt bisschen aufwendig
+	return 0
+
+def removeTrailingHyphens(w):
+	if w[-1] == "-" and len(w) > 1:
+		return removeTrailingHyphens(w[:-1])
+	else:
+		return w
+
+def removeAheadHyphens(w):
+	if w[0] == "-" and len(w) > 1:
+		return removeAheadHyphens(w[1:])
+	else:
+		return w
 
 
 def writeToDB(cur,con):

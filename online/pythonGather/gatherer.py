@@ -222,7 +222,7 @@ def fillSQLArray(link, title, authorArray, ressortArray, wordcount, document, da
 		#delte all old rows with link
 		sqlStatements.append(['DELETE FROM articles WHERE link=%s', [link]])
 		# reinsert document
-		sqlStatements.append(['INSERT IGNORE INTO documents VALUES(%s,%s,%s)', [None, document, wordcount]])
+		sqlStatements.append(['INSERT IGNORE INTO documents VALUES(%s,%s,%s,%s)', [None, document, wordcount, str(datetime.now().strftime('%Y-%m-%d'))]])
 		for a in authorArray:
 			#insert author if not exitsts
 			sqlStatements.append(['INSERT IGNORE INTO authors VALUES(%s,%s,%s,%s)', [None, a[0], a[1], None]]) 
@@ -232,7 +232,7 @@ def fillSQLArray(link, title, authorArray, ressortArray, wordcount, document, da
 	elif isIn == False: 
 		print("insert rows")
 		# reinsert document
-		sqlStatements.append(['INSERT IGNORE INTO documents VALUES(%s,%s, %s)', [None, document, wordcount]])
+		sqlStatements.append(['INSERT IGNORE INTO documents VALUES(%s,%s,%s,%s)', [None, document, wordcount, str(datetime.now().strftime('%Y-%m-%d'))]])
 		for a in authorArray:
 			#insert author if not exitsts
 			sqlStatements.append(['INSERT IGNORE INTO authors VALUES(%s,%s,%s,%s)', [None, a[0], a[1], None]]) 
@@ -342,7 +342,7 @@ def main():
 	print(datetime.now())
 	con = connectToDB()
 	
-	if scrapeWebsite(con) == 2:
+	if scrapeWebsite(con) == 0:
 		analyzeLuhze.mainFunc()
 	else:
 		print("exiting")
