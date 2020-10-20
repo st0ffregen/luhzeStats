@@ -332,10 +332,11 @@ def createQuarterArray(cur, lastmodified):
 	#erstellt zunächst eine Tabelle aller Quartale die neu hinzugekommen sind 
 	lastmodified = str(fetchLastModified(cur)[0])
 
+	# ermittelt den neuesten ältesten artikel, also ein minimales datum
 	cur.execute('SELECT cast(date_format(MIN(created),"%%Y-%%m-01") as date) FROM articles WHERE QUARTER(created) > QUARTER(%s) OR YEAR(created) > YEAR(%s)', [lastmodified, lastmodified])
 	minDate = str(cur.fetchone()[0])
 	
-
+	# ermittelt den neuesten jüngsten artikel, also ein maximales datum
 	cur.execute('SELECT cast(date_format(MAX(created),"%%Y-%%m-01") as date) FROM articles WHERE QUARTER(created) > QUARTER(%s) OR YEAR(created) > YEAR(%s)', [lastmodified, lastmodified])
 	maxDate = str(cur.fetchone()[0])
 
@@ -381,6 +382,7 @@ def insertSQLStatements(cur, con, sqlStatements):
 					print(statement[0])
 					print(statement[1])
 					cur.execute(statement[0],statement[1])
+
 				print("commiting new tables")
 				con.commit()
 				cur.close()
@@ -429,18 +431,24 @@ def calculateWordOccurence(cur):
 
 		quarterText = ""
 		# find documentes with same quarter and year
+		documentInThatQuarterCount = 0
 		for document in newDocuments:
-			if quarterAndYear == str(document[0]) + str(document[1]):
+			if quarterAndYear == str(document[1]) + str(document[2]):
 				# fasse dokumente zusammen
 				quarterText += document[0]
+				documentInThatQuarterCount += 1
+		print("found " + str(documentInThatQuarterCount) + " documents in quarter " + str(quarterAndYear))
 
 		# get last wordcount from table
 		# ich weiß dass die Tabelle evtl. noch nicht erstellt ist, deshalb fange ich den MySQL Feher ab und werte den als 0
 		try:
 			cur.execute('SELECT MAX(quarterWordCount) FROM wordOccurence' + quarterAndYear)
-			quarterWordCount = int(cur.fetchone())
-		except MySQLdb.Error as e: # der fehler ist hier, dass ich keine Berechtigung für den Zugriff auf eine imaginäre Tabelle habe
-			print("table wordOccurence" + quarterAndYear + " does not exists yet.\nTreat quarter wordcount as zero.")
+			quarterWordCount = int(cur.fetchone()[0])
+		except MySQLdb.Error as e: # der fehler ist hier, dass die tabelle ja noch nicht existiert
+			print("table wordOccurence" + quarterAndYear + " does not exists yet. Treat quarter wordcount as zero.")
+			quarterWordCount = 0 # anzahl aller wörter auf luhze.de in diesem quartal
+		except TypeError as e: # der fehler ist hier, dass es die tabelle schon gibt (glaube ich problen von testing) aber noch keine werte
+			print("table wordOccurence" + quarterAndYear + " is empty. Treat quarter wordcount as zero.")
 			quarterWordCount = 0 # anzahl aller wörter auf luhze.de in diesem quartal
 
 		countPerWordDict = {}
@@ -449,7 +457,7 @@ def calculateWordOccurence(cur):
 		quarterWordCount += len(allWords)
 		for w in allWords:
 			w = w.strip()
-			if re.match(r'{2,}$',w):
+			if re.match(r'\w{2,}$',w):
 				w = removeTrailingHyphens(w)
 				w = removeAheadHyphens(w)
 				if w is not None and len(w) > 1:
@@ -459,7 +467,7 @@ def calculateWordOccurence(cur):
 						countPerWordDict[w] = 1
 					
 		for w in countPerWordDict.keys():
-			quarterSqlStatements.append(['INSERT INTO wordOccurence' + quarterAndYear +' VALUES (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE occurencePerWords=((occurence + VALUES(occurence))/VALUES(quarterWordCount))*100000),occurence=occurence + VALUES(occurence), quarterWordCount=VALUES(quarterWordCount)', [w, occurencePerWords ,countPerWordDict[w], quarterWordCount]])
+			quarterSqlStatements.append(['INSERT INTO wordOccurence' + quarterAndYear +' VALUES (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE occurencePerWords=(((occurence + VALUES(occurence))/VALUES(quarterWordCount))*100000),occurence=occurence + VALUES(occurence), quarterWordCount=VALUES(quarterWordCount)', [w, round(countPerWordDict[w]/quarterWordCount*100000),countPerWordDict[w], quarterWordCount]])
 
 		sqlStatements.extend(quarterSqlStatements)
 	

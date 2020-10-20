@@ -105,7 +105,7 @@ BEGIN
 				LEAVE quarterloop;
 			END IF;
 
-			SET yearAndQuarter = CONCAT('wordOccurence', year, '0', quarter);
+			SET yearAndQuarter = CONCAT('wordOccurence', year, quarter);
 
 			SELECT yearAndQuarter as '';
 
