@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import jsonify
 from flask import Response
+from flask import request
 import MySQLdb
 import json
 
@@ -118,7 +119,39 @@ def rankingTwoYears():
 @app.route('/json/rankingFiveYears', methods=['GET'])
 def rankingFiveYears():
 	return readInGenericFile("rankingFiveYears")
-	
+
+@app.route('/json/wordOccurence', methods=['GET'])
+def wordOccurence():
+	# read in word
+	if 'word' in request.args:
+		word = request.args['word'].upper()
+		con = connectToDB()
+		with con:
+			cur = con.cursor()
+			cur.execute('SELECT wholeTableName FROM createdTables')
+			tableNames = cur.fetchall()
+			#craft result with all table names and entries
+			result = []
+			for table in tableNames:
+				print(table[0])
+				
+				# prepare statement here
+				cur.execute('SELECT occurencePerWords, occurence FROM ' + table[0] + ' WHERE word = "' + word + '"') # so auf jeden fall nicht xD
+				occurences = cur.fetchone()
+				contentArray = []
+				if(occurences is None): #das wort existiert nicht
+					result.append({'table': table[0].split("e")[2], 'occurencePerWords': 0, 'occurence': 0})
+				else: # das wort existiert in der tabelle
+					result.append({'table': table[0].split("e")[2], 'occurencePerWords': occurences[0], 'occurence': occurences[1]})
+
+			if(len(result)==0):
+				return Response(json.dumps(result),  mimetype='application/json')
+			else:
+				return Response(json.dumps(result),  mimetype='application/json')
+	else:
+		return jsonify("Error. No word filed provided. Please specify a word")
+	return jsonify("Error. No word filed provided. Please specify a word")
+
 
 
 if(__name__ == "__main__"):

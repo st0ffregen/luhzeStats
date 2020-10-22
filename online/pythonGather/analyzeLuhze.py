@@ -12,6 +12,7 @@ minRessort=14
 limitAuthors = 25
 fileArray = []
 
+
 #szenario: wenig aktive Person: ZeitZumLetztenArtikel=120*-0.5=-60, ArtikelAnzahl=10*5=50, CPD=150*1=150, insgesamt = 140
 #szenario: sehr aktive Person: ZeitZumLetztenArtikel=15*-0.5=-7, ArtikelAnzahl=35*5=175, CPD=400*1=400, insgesamt = 400
 
@@ -370,6 +371,7 @@ def createQuarterTables(quarterArray):
 			"occurence INT NOT NULL," + # absulute Zahl wie oft das spezifische wort auftaucht IN DEM QUARTAL
 			"quarterWordCount INT NOT NULL" + # totaler worcound, also wie viele wörter es insegesamt auf luhze.de IN DEM QUARTAL gibt, absulute Zahl wie oft das wort auftaucht, ist immer der selbe, wird mitgeschrieben damit bei neuen artikel die occurence neu berechnet werden kann
 		");",[]])
+		sqlStatements.append(['INSERT INTO createdTables VALUES(%s,%s)', [yearAndQuarter, "wordOccurence" + yearAndQuarter]])
 
 	return sqlStatements
 
@@ -482,11 +484,6 @@ def calculateWordOccurence(cur):
 		
 	return sqlStatements
 
-def calculateMostUsedWords(cur): 
-	#wird in author table gespeichert, weiß noch nicht wie
-	# ich müsste pro autor eine eigene wordoccourence tabelle erstellen
-	# kann ich aber eigentlich machen, ist halt bisschen aufwendig
-	return 0
 
 def removeTrailingHyphens(w):
 	if w[-1] == "-" and len(w) > 1:

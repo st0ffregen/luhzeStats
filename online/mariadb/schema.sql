@@ -54,6 +54,11 @@ CREATE TABLE articles (
 	FOREIGN KEY (documentId) REFERENCES documents(id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
+CREATE TABLE createdTables ( 
+	yearAndQuarter VARCHAR(10) PRIMARY KEY NOT NULL,
+	wholeTableName VARCHAR(55) NOT NULL
+);
+
 # Tabellen für jedes Quartal werden mit Python erzeugt
 
 #CREATE TABLE wordOccurence" + yearAndQuarter + "(" + 
@@ -109,11 +114,25 @@ BEGIN
 
 			SET yearAndQuarter = CONCAT('wordOccurence', year, quarter);
 
-			SELECT yearAndQuarter as '';
+			#SELECT yearAndQuarter as '';
 
 			SET paramString = CONCAT('GRANT CREATE, DROP, SELECT, INSERT, DELETE, UPDATE ON ', yearAndQuarter, ' TO \'gatherer\'@\'%\'');
 
-			SELECT paramString as '';
+			PREPARE stm FROM paramString;
+
+			EXECUTE stm;
+
+			SET paramString = CONCAT('GRANT CREATE, SELECT ON ', yearAndQuarter, ' TO \'api\'@\'%\'');
+
+			PREPARE stm FROM paramString;
+
+			EXECUTE stm;
+
+			#grant select geht nur wenn tabelle tatsächlich schon existiert, mit create im grant statement gehts aber auch schon zuvor
+			# jetzt die rechte wieder entziehen
+
+			SET paramString = CONCAT('REVOKE CREATE ON ', yearAndQuarter, ' FROM \'api\'@\'%\'');
+			
 
 			PREPARE stm FROM paramString;
 
@@ -138,11 +157,14 @@ DELIMITER ;
 #grant privileges
 GRANT SELECT ON luhze.files TO 'api'@'%'; #nicht sicher wie sicher hier diese wildcard ist
 GRANT SELECT ON luhze.authors TO 'api'@'%';
+GRANT SELECT ON luhze.createdTables TO 'api'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.authors TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.documents TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.files TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.articles TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.lastmodified TO 'gatherer'@'%';
+GRANT INSERT ON luhze.createdTables TO 'gatherer'@'%';
+
 
 # insert start date to lastmodified 
 INSERT INTO lastmodified (lastModified) VALUES ('1900-01-01');

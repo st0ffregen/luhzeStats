@@ -1,2 +1,3 @@
 *.pyc
 restartDb.sh
+resetAll.sh
