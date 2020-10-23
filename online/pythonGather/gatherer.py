@@ -299,8 +299,10 @@ def scrapeWebsite(con):
 		return 1
 	
 	cur = con.cursor()
+
+
 			
-	for i in range(1,3)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
+	for i in range(1,2)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
 			
 		soup = readInSite(web + str(i))
 	

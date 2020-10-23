@@ -133,18 +133,24 @@ def wordOccurence():
 			#craft result with all table names and entries
 			result = []
 			for table in tableNames:
-				print(table[0])
-				
+				#translate table name back to a date
+				initQuarter = ((( - 1) // 3) + 1)  # gib quarter von 1 bis 4
+				month = str((int(table[0][-1:]) * 3) -2)
+				if int(month)<10:
+					month = "0" + month
+				year = table[0].split("e")[2][:4]
+				date = year + "-" + month + "-01"
+
 				# prepare statement here
 				cur.execute('SELECT occurencePerWords, occurence FROM ' + table[0] + ' WHERE word = "' + word + '"') # so auf jeden fall nicht xD
 				occurences = cur.fetchone()
 				contentArray = []
-				if(occurences is None): #das wort existiert nicht
-					result.append({'table': table[0].split("e")[2], 'occurencePerWords': 0, 'occurence': 0})
+				if occurences is None:  # das wort existiert nicht
+					result.append({'table': date, 'occurencePerWords': 0, 'occurence': 0})
 				else: # das wort existiert in der tabelle
-					result.append({'table': table[0].split("e")[2], 'occurencePerWords': occurences[0], 'occurence': occurences[1]})
+					result.append({'table': date, 'occurencePerWords': occurences[0], 'occurence': occurences[1]})
 
-			if(len(result)==0):
+			if len(result) == 0:
 				return Response(json.dumps(result),  mimetype='application/json')
 			else:
 				return Response(json.dumps(result),  mimetype='application/json')

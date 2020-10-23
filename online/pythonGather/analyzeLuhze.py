@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import operator
+
 import json
 from datetime import datetime
 import MySQLdb
@@ -405,7 +405,7 @@ def insertSQLStatements(cur, con, sqlStatements):
 	else:
 		print("nothing to write to db")
 		return 0
-	return 0
+
 
 def fetchLastModified(cur):
 	#fetch lastmodiefied
@@ -504,7 +504,7 @@ def writeToDB(cur,con):
 
 			print("insertOrUpdate", [file[1],"{" + str(file[0]) + "}"])
 			cur.callproc("insertOrUpdate", [file[1],str(file[0])])
-			#mit cursor.stored_results() results verarbeiten,falls gewünscht
+			# mit cursor.stored_results() results verarbeiten,falls gewünscht
 	except MySQLdb.Error as e:
 	   	print(f"Error inserting rows to MariaDB Platform: {e}")
 	   	print("rollback")

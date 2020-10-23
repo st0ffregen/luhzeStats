@@ -301,13 +301,9 @@ function activeMembersFinancial(data, oldestArticle, newestArticle) {
 
 }
 
-function financialChart(chart, dataFunc, tooltipString) {
-
-	var ctx = document.getElementById(chart).getContext('2d');
-
-	var cfg = {
+var configForFinancialCharts = {
 		data: {
-			datasets: dataFunc
+			datasets: []
 		},
 		options: {
 			animation: {
@@ -319,7 +315,7 @@ function financialChart(chart, dataFunc, tooltipString) {
 					distribution: 'linear',
 					offset: true,
 					time: {
-
+                        'tooltipFormat': 'q yyyy'
 					},
 					ticks: {
 						major: {
@@ -379,17 +375,26 @@ function financialChart(chart, dataFunc, tooltipString) {
 		  			fontSize: 15,
 		  		}
 		  	}
-				
+
 		}
 	};
 
 
-			if(tooltipString == 'month') {
-				cfg.options.scales.xAxes[0].time['tooltipFormat'] = "MMM yyyy"
-			} else if(tooltipString == 'quarter') {
-				cfg.options.scales.xAxes[0].time['tooltipFormat'] = "q yyyy"
-			}
 
-			var chart = new Chart(ctx, cfg);
+function financialChart(chart, dataFunc, quarterOrMonth) {
+
+	var ctx = document.getElementById(chart).getContext('2d');
+
+	var configForThisChart = configForFinancialCharts; //nicht sicher ob ich das hier machen muss, aber sonst wuerd ich doch auf dem objekt rumschrauben oder???
+
+	configForThisChart.data.datasets = dataFunc;
+
+	if(quarterOrMonth == 'month') {
+		configForThisChart.options.scales.xAxes[0].time['tooltipFormat'] = "MMM yyyy"
+	} else if(quarterOrMonth == 'quarter') {
+		configForThisChart.options.scales.xAxes[0].time['tooltipFormat'] = "q yyyy"
+	}
+
+	var chart = new Chart(ctx, configForThisChart);
 		
 }
