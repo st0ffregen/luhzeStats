@@ -88,13 +88,17 @@ def scrapeAuthor(text):
 		#might be several authors
 		authorsArray = []
 		for a in authors:
-			if a.string == None: #if there is no author
+			if a.string == None:  # if there is no author
 				print("author not found")
-				authorsArray = ["Anonym"] #there is at least one article with no author on site
+				authorsArray = ["Anonym"]  # there is at least one article with no author on luhze.de
 				break
-			else: #split author in first and last name
-				firstName = a.string.split(" ")[0]
-				lastName = a.string.split(" ")[1]
+			else: #split author in first and last name if there is both
+				if len(a.string.split(" "))>1:
+					firstName = a.string.split(" ")[0]
+					lastName = a.string.split(" ")[1]
+				else: #z.B. hastduzeit, dann nur nachname aufnehmen
+					firstName = ""
+					lastName = a.string
 			authorsArray.append([firstName, lastName])
 		print("author: ")
 		print(authorsArray)
@@ -164,7 +168,7 @@ def scrapeDate(text):
 			print(sys.exc_info())
 			sys.exit(1) #kann man eh stoppen, da constraints der db blockieren
 
-		date = year + "-" + month + "-" + day
+		date = year + "-" + month + "-" + day + " 00:00:00"
 		print("date: " + date)
 		return date
 	except Exception:
@@ -302,7 +306,7 @@ def scrapeWebsite(con):
 
 
 			
-	for i in range(1,2)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
+	for i in range(1,0)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
 			
 		soup = readInSite(web + str(i))
 	

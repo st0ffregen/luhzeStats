@@ -10,6 +10,7 @@
 <link rel="stylesheet" type="text/css" href="canvas.css">
 <link rel="stylesheet" type="text/css" href="index.css">
 <link rel="stylesheet" type="text/css" href="ranking.css">
+<link rel="stylesheet" type="text/css" href="autocomplete.css">
 
 </head>
 <body>
@@ -47,9 +48,17 @@
 
 <p id="authorP">only authors with 12 and more articles included</p>
 <p>only ressorts with 14 and more articles included</p>
-<p id="dateP">last updated </p>
+<p id="dateP">last updated <a href="javascript:showRanking()" class="takeMeForth">Take me to the ranking ></a></p>
+
 
 <h2>Darüber spricht luhze.de</h2>
+	<form autocomplete="off" action="">
+	  <div class="autocomplete" style="width:100%;">
+		<input id="wordInput" type="text" name="word" placeholder="Geben Sie einen Begriff ein">
+	  </div>
+
+	</form>
+
 <canvas id="wordOccurenceChart"></canvas><br>
 
 <canvas id="articlesTimelineChart"></canvas><br>
@@ -107,6 +116,8 @@
 <script type="text/javascript" src="luhzeJs/googleCharts.js"></script>
 <script type="text/javascript" src="luhzeJs/barCharts.js"></script>
 <script type="text/javascript" src="luhzeJs/fetchApi.js"></script>
-<script type="text/javascript" src="luhzeJs/wordOccurence.js"></script>
+<script type="text/javascript" src="luhzeJs/wordOccurence/wordOccurence.js"></script>
+<script type="text/javascript" src="luhzeJs/wordOccurence/autocomplete.js"></script>
+<script type="text/javascript" src="luhzeJs/main.js"></script>
 </body>
 </html>

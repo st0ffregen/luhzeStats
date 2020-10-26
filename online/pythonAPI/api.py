@@ -156,7 +156,29 @@ def wordOccurence():
 				return Response(json.dumps(result),  mimetype='application/json')
 	else:
 		return jsonify("Error. No word filed provided. Please specify a word")
-	return jsonify("Error. No word filed provided. Please specify a word")
+
+
+@app.route('/json/totalWordOccurence', methods=['GET'])
+def totalWordOccurence():
+	# read in word
+	if 'word' in request.args:
+		word = request.args['word'].upper()
+		con = connectToDB()
+		with con:
+			cur = con.cursor()
+			cur.execute('SELECT word, occurencePerWords, occurence, totalWordCount FROM totalWordOccurence WHERE word like "' + word + '%" order by occurencePerWords desc limit 5')
+			occ = cur.fetchall()
+
+			result = []
+
+			for w in occ:
+				result.append({'word': w[0], 'occurencePerWords': w[1], 'occurence': w[2]})
+
+			return Response(json.dumps(result),  mimetype='application/json')
+
+	else:
+		return jsonify("Error. No word filed provided. Please specify a word")
+
 
 
 

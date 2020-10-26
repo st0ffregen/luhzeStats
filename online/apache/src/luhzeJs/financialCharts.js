@@ -330,32 +330,33 @@ var configForFinancialCharts = {
 						maxTicksLimit: 7,
 					},
 					afterBuildTicks: function(scale, ticks) {
-						var majorUnit = scale._majorUnit;
-						var firstTick = ticks[0];
-						var i, ilen, val, tick, currMajor, lastMajor;
+					    if(ticks != null) {
+                            var majorUnit = scale._majorUnit;
+                            var firstTick = ticks[0];
+                            var i, ilen, val, tick, currMajor, lastMajor;
 
-						val = moment(ticks[0].value);
-						if ((majorUnit === 'minute' && val.second() === 0)
-							|| (majorUnit === 'hour' && val.minute() === 0)
-							|| (majorUnit === 'day' && val.hour() === 9)
-							|| (majorUnit === 'month' && val.date() <= 3 && val.isoWeekday() === 1)
-							|| (majorUnit === 'year' && val.month() === 0)) {
-							firstTick.major = true;
-						} else {
-							firstTick.major = false;
-						}
-						lastMajor = val.get(majorUnit);
+                            val = moment(ticks[0].value);
+                            if ((majorUnit === 'minute' && val.second() === 0)
+                                || (majorUnit === 'hour' && val.minute() === 0)
+                                || (majorUnit === 'day' && val.hour() === 9)
+                                || (majorUnit === 'month' && val.date() <= 3 && val.isoWeekday() === 1)
+                                || (majorUnit === 'year' && val.month() === 0)) {
+                                firstTick.major = true;
+                            } else {
+                                firstTick.major = false;
+                            }
+                            lastMajor = val.get(majorUnit);
 
-						for (i = 1, ilen = ticks.length; i < ilen; i++) {
-							tick = ticks[i];
-							val = moment(tick.value);
-							currMajor = val.get(majorUnit);
-							tick.major = currMajor !== lastMajor;
-							lastMajor = currMajor;
-						}
-						return ticks;
-					}
-
+                            for (i = 1, ilen = ticks.length; i < ilen; i++) {
+                                tick = ticks[i];
+                                val = moment(tick.value);
+                                currMajor = val.get(majorUnit);
+                                tick.major = currMajor !== lastMajor;
+                                lastMajor = currMajor;
+                            }
+                            return ticks;
+					    }
+                    }
 				}],
 				yAxes: [{}] //not sure why i need this
 			},

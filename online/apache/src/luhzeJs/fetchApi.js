@@ -43,7 +43,7 @@ async function fetchParameterAPI(route, parameter, parameterValue, useDataFuncti
 }
 
 
-fetchChartsSite();
+//fetchChartsSite();
 
 function fetchChartsSite() { 
 
