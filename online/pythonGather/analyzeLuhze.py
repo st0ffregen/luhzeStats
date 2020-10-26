@@ -68,7 +68,8 @@ def mainFunc():
         con.autocommit = False
         cur = con.cursor()
         """
-        minAuthor=selfCalibrieren(cur)
+        minAuthor = selfCalibrieren(cur)
+        
         fileArray.append([json.dumps({'minAuthor':minAuthor}),'minAuthor'])
         fileArray.append([json.dumps({'date':datetime.datetime.now()}, default = str),'date']) #treats datetime as string
         articlesTimeline(cur, 'articlesTimeline')
@@ -97,6 +98,7 @@ def mainFunc():
         insertSQLStatements(cur, con,
                             calculateTotalWordOccurence(cur, createQuarterArray(cur, fetchLastModified(cur, True)[0])),
                             True)
+
         # cur.close()
     except MySQLdb.Error as e:
         print(f"MySQL Error in mainFunc(): {e}")
@@ -410,7 +412,7 @@ def createQuarterArray(cur, lastmodified):
 
     return quarterArray
 
-
+"""
 def createQuarterTables(cur, quarterArray):
     sqlStatements = []
 
@@ -419,17 +421,17 @@ def createQuarterTables(cur, quarterArray):
         # check if table already exists
         cur.execute('SELECT * FROM createdTables WHERE yearAndQuarter = ' + yearAndQuarter)
         if len(cur.fetchall()) == 0:
-            sqlStatements.append(["CREATE TABLE wordOccurence" + yearAndQuarter + "(" +
+            sqlStatements.append(["CREATE TABLE %s (" +
                                   "word VARCHAR(128) PRIMARY KEY NOT NULL, " +
                                   "occurencePerWords INT NOT NULL," +  # durchschnitt, also verhaeltnis aus occurence/100000 Wörter (oder ähnliche Zahl) IN DEM QUARTAL
                                   "occurence INT NOT NULL," +  # absulute Zahl wie oft das spezifische wort auftaucht IN DEM QUARTAL
                                   "quarterWordCount INT NOT NULL" +  # totaler worcound, also wie viele wörter es insegesamt auf luhze.de IN DEM QUARTAL gibt, absulute Zahl wie oft das wort auftaucht, ist immer der selbe, wird mitgeschrieben damit bei neuen artikel die occurence neu berechnet werden kann
-                                  ");", []])
+                                  ");", ["wordOccurence" + yearAndQuarter]])
             sqlStatements.append(
                 ['INSERT INTO createdTables VALUES(%s,%s)', [yearAndQuarter, "wordOccurence" + yearAndQuarter]])
 
     return sqlStatements
-
+"""
 
 def insertSQLStatements(cur, con, sqlStatements, total):
     if sqlStatements is not None and len(sqlStatements) > 0:
@@ -439,12 +441,12 @@ def insertSQLStatements(cur, con, sqlStatements, total):
                 #print(statement[1])
                 cur.execute(statement[0], statement[1])
 
-            if total:
-                cur.execute('UPDATE lastmodified set lastModifiedTotalWordOccurence = "' + datetime.now().strftime(
-                    '%Y-%m-%d %H:%M:%S') + '"')  # update lastmodified
-            else:
-                cur.execute('UPDATE lastmodified set lastModifiedWordOccurence = "' + datetime.now().strftime(
-                    '%Y-%m-%d %H:%M:%S') + '"')  # update lastmodified
+            if total is True:
+                cur.execute('UPDATE lastmodified set lastModifiedTotalWordOccurence = %s', [datetime.now().strftime(
+                    '%Y-%m-%d %H:%M:%S')])  # update lastmodified
+            if total is False:
+                cur.execute('UPDATE lastmodified set lastModifiedWordOccurence = %s', [datetime.now().strftime(
+                    '%Y-%m-%d %H:%M:%S')])  # update lastmodified
 
             print("commiting statements")
             con.commit()
@@ -482,7 +484,7 @@ def calculateWordOccurence(cur):
     lastmodified = fetchLastModified(cur, False)[0]
     # zunächst erstellen der neuen tabellen für die neuen Quartale
     quarterArray = createQuarterArray(cur, lastmodified)
-    sqlStatements = createQuarterTables(cur, quarterArray)
+    sqlStatements = []#createQuarterTables(cur, quarterArray)
 
     # fetch new articles from documents
     cur.execute('SELECT document, YEAR(createdDate), QUARTER(createdDate) FROM documents WHERE addedDate > %s',
@@ -490,10 +492,10 @@ def calculateWordOccurence(cur):
     newDocuments = cur.fetchall()
 
     # loop durch die neuen quarter und fasse dokumente aus den quarter zusammen
-    # immer auf der Grundlage dass es das erste Quarter schon als Tabelle gegeben hat und die schon teils befüllt ist
-    # das ist immer maximal eine Tabelle, das wissen wir anhand von lastmodified
+    # immer auf der Grundlage dass es das eventuell ein überschneidendes Quarter gibt, quasi ein laufender Monat wo schon dinge drinstehen
+    # das ist immer maximal ein yearAndQuarter, das wissen wir anhand von lastmodified
     print(quarterArray)
-    for quarterAndYear in quarterArray:
+    for yearAndQuarter in quarterArray:
 
         quarterSqlStatements = []
 
@@ -501,23 +503,20 @@ def calculateWordOccurence(cur):
         # find documentes with same quarter and year
         documentInThatQuarterCount = 0
         for document in newDocuments:
-            if quarterAndYear == str(document[1]) + str(document[2]):
+            if yearAndQuarter == str(document[1]) + str(document[2]):
                 # fasse dokumente zusammen
                 quarterText += document[0]
                 documentInThatQuarterCount += 1
-        print("found " + str(documentInThatQuarterCount) + " documents in quarter " + str(quarterAndYear))
+        print("found " + str(documentInThatQuarterCount) + " documents in quarter " + str(yearAndQuarter))
 
         # get last wordcount from table
-        # ich weiß dass die Tabelle evtl. noch nicht erstellt ist, deshalb fange ich den MySQL Feher ab und werte den als 0
-        try:
-            cur.execute('SELECT MAX(quarterWordCount) FROM wordOccurence' + quarterAndYear)
-            quarterWordCount = int(cur.fetchone()[0])
-        except MySQLdb.Error as e:  # der fehler ist hier, dass die tabelle ja noch nicht existiert
-            print("table wordOccurence" + quarterAndYear + " does not exists yet. Treat quarter wordcount as zero.")
-            quarterWordCount = 0  # anzahl aller wörter auf luhze.de in diesem quartal
-        except TypeError as e:  # der fehler ist hier, dass es die tabelle schon gibt (glaube ich problen von testing) aber noch keine werte
-            print("table wordOccurence" + quarterAndYear + " is empty. Treat quarter wordcount as zero.")
-            quarterWordCount = 0  # anzahl aller wörter auf luhze.de in diesem quartal
+        cur.execute("SELECT MAX(quarterWordCount) FROM wordOccurenceOverTheQuarters WHERE yearAndQuarter = %s", [yearAndQuarter])
+        quarterWordCount = cur.fetchone()[0] # anzahl aller wörter auf luhze.de in diesem quartal
+        if quarterWordCount is None:
+            print("entries with yearAndQuarter " + yearAndQuarter + " do not exist yet. Treat quarter wordcount as zero.")
+            quarterWordCount = 0
+        else:
+            quarterWordCount = int(quarterWordCount)
 
         countPerWordDict = {}
         upperText = quarterText.upper()
@@ -537,26 +536,25 @@ def calculateWordOccurence(cur):
 
         for w in countPerWordDict.keys():
             quarterSqlStatements.append([
-                'INSERT INTO wordOccurence' + quarterAndYear + ' VALUES (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE occurencePerWords=(((occurence + VALUES(occurence))/VALUES(quarterWordCount))*100000),occurence=occurence + VALUES(occurence), quarterWordCount=VALUES(quarterWordCount)',
-                [w, round(countPerWordDict[w] / quarterWordCount * 100000),
+                'INSERT INTO wordOccurenceOverTheQuarters VALUES (%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE occurencePerWords=(((occurence + VALUES(occurence))/VALUES(quarterWordCount))*100000),occurence=occurence + VALUES(occurence), quarterWordCount=VALUES(quarterWordCount)',
+                [w, yearAndQuarter, round(countPerWordDict[w] / quarterWordCount * 100000),
                  countPerWordDict[w], quarterWordCount]])
 
         sqlStatements.extend(quarterSqlStatements)
 
     return sqlStatements
 
-
 def calculateTotalWordOccurence(cur, quarterArray):
     countPerWordDict = {}
     sqlStatements = []
     totalWordCount = 0
     print(quarterArray)
-    for quarterAndYear in quarterArray:
+    for yearAndQuarter in quarterArray:
 
-        cur.execute('SELECT word, occurence, quarterWordCount FROM wordOccurence' + quarterAndYear)
+        cur.execute('SELECT word, occurence, quarterWordCount FROM wordOccurenceOverTheQuarters WHERE yearAndQuarter = %s', [yearAndQuarter])
 
         allEntriesFromThatTable = cur.fetchall()
-        # maybe there is no word in a table
+        # maybe there is no word with that yearAndQuarter
         if allEntriesFromThatTable is None or len(allEntriesFromThatTable) == 0:
             continue
         totalWordCount += allEntriesFromThatTable[0][2]
@@ -582,7 +580,7 @@ def calculateTotalWordOccurence(cur, quarterArray):
 def removeTrailingPunctuations(w):
     unwantedPunctuations = ["-", ",", ":", ".", "!", "?", "\"", "“", ")"]
 
-    if w[-1] in unwantedPunctuations and len(w) > 1:
+    if w[-1] in unwantedPunctuations and len(w) > 1 and w != "student!": #student! darf das Ausrufezeichen behalten
         return removeTrailingPunctuations(w[:-1])
     else:
         return w

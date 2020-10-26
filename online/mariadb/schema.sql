@@ -55,19 +55,19 @@ CREATE TABLE articles (
 	FOREIGN KEY (documentId) REFERENCES documents(id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-CREATE TABLE createdTables ( 
-	yearAndQuarter VARCHAR(10) PRIMARY KEY NOT NULL,
-	wholeTableName VARCHAR(55) NOT NULL
+#CREATE TABLE createdTables (
+#	yearAndQuarter VARCHAR(10) PRIMARY KEY NOT NULL,
+#	wholeTableName VARCHAR(55) NOT NULL
+#);
+
+CREATE TABLE wordOccurenceOverTheQuarters ( # einfach alles in eine Tabelle
+	word VARCHAR(128) NOT NULL,
+	yearAndQuarter INT NOT NULL, #e.g. 20203
+	occurencePerWords INT NOT NULL, # durchschnitt, also verhaeltnis aus occurence/100000 Wörter (oder ähnliche Zahl) IN DEM QUARTAL
+	occurence INT NOT NULL, # absulute Zahl wie oft das spezifische wort auftaucht IN DEM QUARTAL
+	quarterWordCount INT NOT NULL, # totaler worcound, also wie viele wörter es insegesamt auf luhze.de IN DEM QUARTAL gibt, absulute Zahl wie oft das wort auftaucht, ist immer der selbe, wird mitgeschrieben damit bei neuen artikel die occurence neu berechnet werden kann
+    PRIMARY KEY (word, yearAndQuarter)
 );
-
-# Tabellen für jedes Quartal werden mit Python erzeugt
-
-#CREATE TABLE wordOccurence" + yearAndQuarter + "(" + 
-#	"word VARCHAR(128) PRIMARY KEY NOT NULL, " +
-#	"occurencePerWords INT NOT NULL," + # durchschnitt, also verhaeltnis aus occurence/100000 Wörter (oder ähnliche Zahl) IN DEM QUARTAL
-#	"occurence INT NOT NULL," + # absulute Zahl wie oft das spezifische wort auftaucht IN DEM QUARTAL
-#	"quarterWordCount INT NOT NULL" + # totaler worcound, also wie viele wörter es insegesamt auf luhze.de IN DEM QUARTAL gibt, absulute Zahl wie oft das wort auftaucht, ist immer der selbe, wird mitgeschrieben damit bei neuen artikel die occurence neu berechnet werden kann
-#");")
 
 
 CREATE TABLE totalWordOccurence ( # bildet fuer die autocomplete api alle worter mit gesamt werten ab
@@ -99,84 +99,22 @@ BEGIN
 END; $$
 
 
-# generiert alle berechtigungen bis 2050 um tabellen zu erstellen und darauf zuzugreifen
-
-CREATE PROCEDURE grantPrivsToAllFutureWordOccurenceTables()
-BEGIN
-	DECLARE year INT;
-	DECLARE quarter INT;
-	DECLARE yearAndQuarter VARCHAR(30);
-	DECLARE paramString VARCHAR(255);
-	SET year = 2000; # begin in year 2000
-	SET yearAndQuarter = ''; 
-
-	yearloop: LOOP
-		IF year > 2050 THEN # end 2050
-			LEAVE yearloop;
-		END IF;
-
-		SET quarter = 1;
-
-		quarterloop: LOOP
-			IF quarter > 4 THEN
-				LEAVE quarterloop;
-			END IF;
-
-			SET yearAndQuarter = CONCAT('wordOccurence', year, quarter);
-
-			#SELECT yearAndQuarter as '';
-
-			SET paramString = CONCAT('GRANT CREATE, DROP, SELECT, INSERT, DELETE, UPDATE ON ', yearAndQuarter, ' TO \'gatherer\'@\'%\'');
-
-			PREPARE stm FROM paramString;
-
-			EXECUTE stm;
-
-			SET paramString = CONCAT('GRANT CREATE, SELECT ON ', yearAndQuarter, ' TO \'api\'@\'%\'');
-
-			PREPARE stm FROM paramString;
-
-			EXECUTE stm;
-
-			#grant select geht nur wenn tabelle tatsächlich schon existiert, mit create im grant statement gehts aber auch schon zuvor
-			# jetzt die rechte wieder entziehen
-
-			SET paramString = CONCAT('REVOKE CREATE ON ', yearAndQuarter, ' FROM \'api\'@\'%\'');
-			
-
-			PREPARE stm FROM paramString;
-
-			EXECUTE stm;
-
-			SET quarter = quarter + 1;
-		
-			ITERATE quarterloop;
-			
-			END LOOP quarterloop;
-
-		SET year = year + 1;
-
-		ITERATE yearloop;
-
-		END LOOP yearloop;
-END; $$
-
-
 DELIMITER ;
 
 #grant privileges
 GRANT SELECT ON luhze.files TO 'api'@'%'; #nicht sicher wie sicher hier diese wildcard ist
 GRANT SELECT ON luhze.authors TO 'api'@'%';
-GRANT SELECT ON luhze.createdTables TO 'api'@'%';
+#GRANT SELECT ON luhze.createdTables TO 'api'@'%';
 GRANT SELECT ON luhze.totalWordOccurence TO 'api'@'%';
+GRANT SELECT ON luhze.wordOccurenceOverTheQuarters TO 'api'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.authors TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.documents TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.files TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.articles TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.lastmodified TO 'gatherer'@'%';
-GRANT INSERT, SELECT ON luhze.createdTables TO 'gatherer'@'%';
+#GRANT INSERT, SELECT ON luhze.createdTables TO 'gatherer'@'%';
 GRANT INSERT, UPDATE, SELECT ON luhze.totalWordOccurence TO 'gatherer'@'%';
-
+GRANT INSERT, UPDATE, SELECT ON luhze.wordOccurenceOverTheQuarters TO 'gatherer'@'%';
 
 # insert start date to lastmodified 
 INSERT INTO lastmodified (lastModifiedWordOccurence, lastModifiedTotalWordOccurence) VALUES ('1900-01-01 00:00:00','1900-01-01 00:00:00');

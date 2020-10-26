@@ -16,7 +16,7 @@ function autocomplete(inp) {
       /*append the DIV element as a child of the autocomplete container:*/
       this.parentNode.appendChild(a);
 
-      fetchParameterAPI("totalWordOccurence", "word", val, function (data) {
+      fetchParameterAPI("autocomplete", "word", val, function (data) {
 
           /*for each item in the array...*/
           for (i = 0; i < data.length; i++) {
@@ -35,6 +35,8 @@ function autocomplete(inp) {
                   addDataToWordOccurenceChart(this.getElementsByTagName("input")[0].value,window.myLine);
                   /*close the list of autocompleted values,
                   (or any other open lists of autocompleted values:*/
+                  inp.value = "";
+                  inp.placeholder = "Geben Sie einen Begriff ein";
                   closeAllLists();
               });
               a.appendChild(b);

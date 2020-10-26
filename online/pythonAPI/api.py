@@ -120,6 +120,23 @@ def rankingTwoYears():
 def rankingFiveYears():
 	return readInGenericFile("rankingFiveYears")
 
+@app.route('/json/minAndMaxYearAndQuarter', methods=['GET'])
+def minYearAndQuarter():
+	con = connectToDB()
+	with con:
+		cur = con.cursor()
+		cur.execute('SELECT MIN(yearAndQuarter), MAX(yearAndQuarter) from wordOccurenceOverTheQuarters')
+		res = cur.fetchone()
+		return Response(json.dumps({'minYearAndQuarter': res[0], 'maxYearAndQuarter': res[1]}), mimetype='application/json')
+
+@app.route('/json/maxYearAndQuarter', methods=['GET'])
+def maxYearAndQuarter():
+	con = connectToDB()
+	with con:
+		cur = con.cursor()
+		cur.execute('SELECT MAX(yearAndQuarter) from wordOccurenceOverTheQuarters')
+		return Response(json.dumps({'maxYearAndQuarter': cur.fetchone()[0]}), mimetype='application/json')
+
 @app.route('/json/wordOccurence', methods=['GET'])
 def wordOccurence():
 	# read in word
@@ -127,7 +144,9 @@ def wordOccurence():
 		word = request.args['word'].upper()
 		con = connectToDB()
 		with con:
+
 			cur = con.cursor()
+			"""
 			cur.execute('SELECT wholeTableName FROM createdTables')
 			tableNames = cur.fetchall()
 			#craft result with all table names and entries
@@ -140,25 +159,24 @@ def wordOccurence():
 					month = "0" + month
 				year = table[0].split("e")[2][:4]
 				date = year + "-" + month + "-01"
+				"""
+			result = []
+			# prepare statement here
+			cur.execute('SELECT yearAndQuarter, occurencePerWords, occurence FROM wordOccurenceOverTheQuarters WHERE word = %s', [word])
+			occurences = cur.fetchall()
 
-				# prepare statement here
-				cur.execute('SELECT occurencePerWords, occurence FROM ' + table[0] + ' WHERE word = "' + word + '"') # so auf jeden fall nicht xD
-				occurences = cur.fetchone()
-				contentArray = []
-				if occurences is None:  # das wort existiert nicht
-					result.append({'table': date, 'occurencePerWords': 0, 'occurence': 0})
-				else: # das wort existiert in der tabelle
-					result.append({'table': date, 'occurencePerWords': occurences[0], 'occurence': occurences[1]})
+			if occurences is None or len(occurences) == 0:
+				return jsonify("Error. The word does not exists.")
 
-			if len(result) == 0:
-				return Response(json.dumps(result),  mimetype='application/json')
-			else:
-				return Response(json.dumps(result),  mimetype='application/json')
+			for entry in occurences:
+				result.append({'yearAndQuarter': entry[0], 'occurencePerWords': entry[1], 'occurence': entry[2]})
+
+			return Response(json.dumps(result),  mimetype='application/json')
 	else:
-		return jsonify("Error. No word filed provided. Please specify a word")
+		return jsonify("Error. No word provided. Please specify a word")
 
 
-@app.route('/json/totalWordOccurence', methods=['GET'])
+@app.route('/json/autocomplete', methods=['GET'])
 def totalWordOccurence():
 	# read in word
 	if 'word' in request.args:
@@ -170,18 +188,22 @@ def totalWordOccurence():
 			occ = cur.fetchall()
 
 			result = []
+			restOfResult = [] # gibt quasi ein first result das ist das wort was eigeben wurde, falls vorhanden in der db, nach oben zu schieben auch wenn es weniger treffer als andere hat
 
 			for w in occ:
-				result.append({'word': w[0], 'occurencePerWords': w[1], 'occurence': w[2]})
+				if w[0] == word:
+					result = [{'word': w[0], 'occurencePerWords': w[1], 'occurence': w[2]}]
+				else:
+					restOfResult.append({'word': w[0], 'occurencePerWords': w[1], 'occurence': w[2]})
 
+			result.extend(restOfResult)
+			cur.close()
 			return Response(json.dumps(result),  mimetype='application/json')
 
 	else:
 		return jsonify("Error. No word filed provided. Please specify a word")
 
 
-
-
-if(__name__ == "__main__"):
-	app.run(host="0.0.0.0",port="5001",debug=True)
+if __name__ == "__main__":
+	app.run(host="0.0.0.0", port="5001", debug=True)
 
