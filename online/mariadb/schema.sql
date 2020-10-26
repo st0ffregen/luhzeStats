@@ -55,11 +55,6 @@ CREATE TABLE articles (
 	FOREIGN KEY (documentId) REFERENCES documents(id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-#CREATE TABLE createdTables (
-#	yearAndQuarter VARCHAR(10) PRIMARY KEY NOT NULL,
-#	wholeTableName VARCHAR(55) NOT NULL
-#);
-
 CREATE TABLE wordOccurenceOverTheQuarters ( # einfach alles in eine Tabelle
 	word VARCHAR(128) NOT NULL,
 	yearAndQuarter INT NOT NULL, #e.g. 20203
@@ -104,7 +99,6 @@ DELIMITER ;
 #grant privileges
 GRANT SELECT ON luhze.files TO 'api'@'%'; #nicht sicher wie sicher hier diese wildcard ist
 GRANT SELECT ON luhze.authors TO 'api'@'%';
-#GRANT SELECT ON luhze.createdTables TO 'api'@'%';
 GRANT SELECT ON luhze.totalWordOccurence TO 'api'@'%';
 GRANT SELECT ON luhze.wordOccurenceOverTheQuarters TO 'api'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.authors TO 'gatherer'@'%';
@@ -112,7 +106,6 @@ GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.documents TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.files TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.articles TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.lastmodified TO 'gatherer'@'%';
-#GRANT INSERT, SELECT ON luhze.createdTables TO 'gatherer'@'%';
 GRANT INSERT, UPDATE, SELECT ON luhze.totalWordOccurence TO 'gatherer'@'%';
 GRANT INSERT, UPDATE, SELECT ON luhze.wordOccurenceOverTheQuarters TO 'gatherer'@'%';
 
