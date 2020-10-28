@@ -14,7 +14,8 @@ USE luhze;
 # muss ein genaus datum mit uhrzeit haben weil mehrfach am tag die artikel neu ausgewertet werden
 CREATE TABLE lastmodified (
 	lastModifiedWordOccurence DATETIME PRIMARY KEY, # gilt fuer den ersten schritt der analyse wo nur die quarter tabellen befüllt werden
-	lastModifiedTotalWordOccurence DATETIME NOT NULL # hier wird die total tabelle befüllt
+	lastModifiedTotalWordOccurence DATETIME NOT NULL, # hier wird die total tabelle befüllt
+	lastModifiedFiles DATETIME NOT NULL # hier werden die files befüllt
 );
 
 CREATE TABLE authors (
@@ -27,9 +28,8 @@ CREATE TABLE authors (
 
 CREATE TABLE files ( #speichert vorbereitete json dateien
 	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-	filename VARCHAR(64) NOT NULL,
-	json JSON NOT NULL,
-	UNIQUE(filename, json)
+	filename VARCHAR(64) NOT NULL UNIQUE,
+	json JSON NOT NULL UNIQUE
 );
 
 CREATE TABLE documents ( #speichert den sourcecode der texte
@@ -75,32 +75,12 @@ CREATE TABLE totalWordOccurence ( # bildet fuer die autocomplete api alle worter
 
 
 
-DELIMITER $$ 
-
-
-# kann eigentlich durch insert or ignore erstetzt werden, oder?
-CREATE PROCEDURE insertOrUpdate (IN new_filename VARCHAR(64), IN new_file JSON)
-BEGIN 
-	IF EXISTS(SELECT json FROM files WHERE filename = new_filename) THEN # wenn es die Datei schon gibt
-		IF ((SELECT json FROM files WHERE filename = new_filename) != new_file) THEN # wenn es die Datei schon gibt und der inhalt ein andere ist, sonst nichts, durch unique klausel ersetzten?
-			UPDATE files as f
-			SET f.json = new_file
-			WHERE f.filename = new_filename;
-		END IF;
-	ELSE
-		INSERT INTO files (id, filename, json)
-		VALUES (null, new_filename, new_file);
-	END IF;
-END; $$
-
-
-DELIMITER ;
-
 #grant privileges
 GRANT SELECT ON luhze.files TO 'api'@'%'; #nicht sicher wie sicher hier diese wildcard ist
 GRANT SELECT ON luhze.authors TO 'api'@'%';
 GRANT SELECT ON luhze.totalWordOccurence TO 'api'@'%';
 GRANT SELECT ON luhze.wordOccurenceOverTheQuarters TO 'api'@'%';
+GRANT SELECT ON luhze.lastmodified TO 'api'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.authors TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.documents TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.files TO 'gatherer'@'%';
@@ -110,8 +90,4 @@ GRANT INSERT, UPDATE, SELECT ON luhze.totalWordOccurence TO 'gatherer'@'%';
 GRANT INSERT, UPDATE, SELECT ON luhze.wordOccurenceOverTheQuarters TO 'gatherer'@'%';
 
 # insert start date to lastmodified 
-INSERT INTO lastmodified (lastModifiedWordOccurence, lastModifiedTotalWordOccurence) VALUES ('1900-01-01 00:00:00','1900-01-01 00:00:00');
-
-
-
-CALL grantPrivsToAllFutureWordOccurenceTables();
+INSERT INTO lastmodified (lastModifiedWordOccurence, lastModifiedTotalWordOccurence, lastModifiedFiles) VALUES ('1900-01-01 00:00:00','1900-01-01 00:00:00','1900-01-01 00:00:00' );

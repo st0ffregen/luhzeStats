@@ -194,7 +194,7 @@ function ressortArticlesTimelineFinancial(data,colorArray,hiddenArray, oldestArt
 	var datasetArray = [];
 	for(var k=0;k<data.length;k++) {// get a ressort
 		var returnArray = [];
-		var dateArray = monthArray(new Date(oldestArticle['oldestArticle']+"T00:00:00Z"),new Date(newestArticle['newestArticle']+"T00:00:00Z"));
+		var dateArray = monthArray(new Date(oldestArticle['oldestArticle']),new Date(newestArticle['newestArticle']));
 		var totalMonthlyArticles = 0;
 		for(var i=0;i<dateArray.length;i++) { //loop through months
 
@@ -237,7 +237,7 @@ function ressortArticlesTimelineFinancialDerivation(data,colorArray,hiddenArray,
 
 		var returnArray = [];
 		//use a init date to determine if next date is in same quarter or not
-		var dateArray = quarterArray(new Date(oldestArticle['oldestArticle']+"T00:00:00Z"),new Date(newestArticle['newestArticle']+"T00:00:00Z"));
+		var dateArray = quarterArray(new Date(oldestArticle['oldestArticle']),new Date(newestArticle['newestArticle']));
 		for(var i=0;i<dateArray.length;i++) {
 			//loop through the empty date array (only dates in it by now) find the articles with another for loop
 			articlesCount = 0;
@@ -269,7 +269,7 @@ function ressortArticlesTimelineFinancialDerivation(data,colorArray,hiddenArray,
 
 function activeMembersFinancial(data, oldestArticle, newestArticle) {
 
-	var dateArray = quarterArray(new Date(oldestArticle['oldestArticle']+"T00:00:00Z"),new Date(newestArticle['newestArticle']+"T00:00:00Z"));
+	var dateArray = quarterArray(new Date(oldestArticle['oldestArticle']),new Date(newestArticle['newestArticle']));
 	var returnArray = [];
 	
 	for(var i=0;i<dateArray.length;i++) { //gives me an quarter
@@ -277,7 +277,7 @@ function activeMembersFinancial(data, oldestArticle, newestArticle) {
 		for(var k=0;k<data.length;k++) { //gives me an author
 			for(var l=0;l<data[k]['articles'].length;l++) { //gives me the article array for the k author
 
-				currentDate = new Date(data[k]['articles'][l]+"T00:00:00Z");
+				currentDate = new Date(data[k]['articles'][l]);
 				currentQuarter = Math.floor(currentDate.getMonth()/3);
 				if(currentQuarter === dateArray[i][1] && currentDate.getFullYear() === dateArray[i][0]) {
 					dateArray[i][2]++;
@@ -301,9 +301,15 @@ function activeMembersFinancial(data, oldestArticle, newestArticle) {
 
 }
 
-var configForFinancialCharts = {
+
+
+
+
+function financialChart(chart, dataFunc, quarterOrMonth) {
+
+    var configForFinancialCharts = {
 		data: {
-			datasets: []
+			datasets: dataFunc
 		},
 		options: {
 			animation: {
@@ -358,7 +364,8 @@ var configForFinancialCharts = {
 					    }
                     }
 				}],
-				yAxes: [{}] //not sure why i need this
+				yAxes: [{
+                }]
 			},
 			hover: {
 				mode: 'nearest',
@@ -380,22 +387,15 @@ var configForFinancialCharts = {
 		}
 	};
 
-
-
-function financialChart(chart, dataFunc, quarterOrMonth) {
-
 	var ctx = document.getElementById(chart).getContext('2d');
 
-	var configForThisChart = configForFinancialCharts; //nicht sicher ob ich das hier machen muss, aber sonst wuerd ich doch auf dem objekt rumschrauben oder???
-
-	configForThisChart.data.datasets = dataFunc;
 
 	if(quarterOrMonth == 'month') {
-		configForThisChart.options.scales.xAxes[0].time['tooltipFormat'] = "MMM yyyy"
+		configForFinancialCharts.options.scales.xAxes[0].time['tooltipFormat'] = "MMM yyyy"
 	} else if(quarterOrMonth == 'quarter') {
-		configForThisChart.options.scales.xAxes[0].time['tooltipFormat'] = "q yyyy"
+		configForFinancialCharts.options.scales.xAxes[0].time['tooltipFormat'] = "q yyyy"
 	}
 
-	var chart = new Chart(ctx, configForThisChart);
+	var chart = new Chart(ctx, configForFinancialCharts);
 		
 }

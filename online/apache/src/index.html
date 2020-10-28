@@ -51,15 +51,16 @@
 <p id="dateP">last updated <a href="javascript:showRanking()" class="takeMeForth">Take me to the ranking ></a></p>
 
 
-<h2>Darüber spricht luhze.de</h2>
+<h2 class="luhzeSprichtHeader">Darüber spricht luhze.de</h2>
 	<div id="luhzeSpricht">
+		<div id="luhzeSprichtInput">
 	<form autocomplete="off" action="">
 	  <div class="autocomplete" style="width:100%;">
 		<input id="wordInput" type="text" name="word" placeholder="Geben Sie einen Begriff ein">
 	  </div>
 
-	</form>
-
+	</form><button class="hideYearsButton" onclick="javascript:hideOrShowDateBeforeYear(myLine, 2015, document.getElementsByClassName('hideYearsButton')[0])">Hide data before 2015</button>
+		</div>
 <canvas id="wordOccurenceChart"></canvas><br>
 	</div>
 <canvas id="articlesTimelineChart"></canvas><br>

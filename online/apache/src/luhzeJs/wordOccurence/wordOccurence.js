@@ -1,20 +1,29 @@
 
-var colorArray = ["rgb(102, 176, 50)","rgb(134, 1, 175)","rgb(27,52,9)"];
+var colorArray = ["rgb(189, 154, 66)","rgb(119, 204, 102)","rgb(151, 172, 211)"];
 
-var colorArrayAlpha = ["rgba(102, 176, 50,0.5)","rgba(134, 1, 175,0.5)","rgb(27,52,9,0.5)"];
+var colorArrayAlpha = ["rgba(189, 154, 66,0.5)","rgba(119, 204, 102,0.5)","rgba(151, 172, 211,0.5)"];
 
-function addDataToWordOccurenceChart(word, chart) {
+async function addDataToWordOccurenceChart(word, chart) {
 			
 	//only add a word with max 4 words
 	var maxValue = 4; //in die env???
 	if(chart.data.datasets.length<=maxValue) {
 	    fetchFileAPI("minAndMaxYearAndQuarter", function (data) {
 
-            var firstYear = data['minYearAndQuarter'].toString().substring(0, 4);
-            var firstQuarter = data['minYearAndQuarter'].toString().slice(-1);
+            var button = document.getElementsByClassName("hideYearsButton")[0];
+
+            if(button.innerHTML.startsWith("Show data before")) {
+                var firstYear = button.innerHTML.slice(-4);//holt sich das jahr vom button text
+                var firstQuarter = 1;
+
+            } else {
+                var firstYear = data['minYearAndQuarter'].toString().substring(0, 4);
+                var firstQuarter = data['minYearAndQuarter'].toString().slice(-1);
+            }
 
             var lastYear = data['maxYearAndQuarter'].toString().substring(0, 4);
             var lastQuarter = data['maxYearAndQuarter'].toString().slice(-1);
+
 
             //data verarbeiten
             dataArray = [];
@@ -61,9 +70,10 @@ function addDataToWordOccurenceChart(word, chart) {
                                 borderWidth: 2};
 
                 chart.data.datasets.push(newDataset);
-                chart.update();
 
+                chart.update();
                 });
+
 
 
 
@@ -76,6 +86,225 @@ function addDataToWordOccurenceChart(word, chart) {
 	    //add the givin input word
 	    addDataToWordOccurenceChart(word, chart);
 	}
+
+}
+
+
+async function hideOrShowDateBeforeYear(chart, year, button) {
+
+    if(button.innerHTML == "Hide data before " + year) {
+        //the data before 2017 is pretty löchrig und verzieht das ganze imens
+        for(var i=0;i<chart.data.datasets.length;i++) { //loop durch die dargestellten woerter
+            var newArray = [];
+            for(var k=0;k<chart.data.datasets[i]['data'].length;k++) {
+                if(moment(chart.data.datasets[i]['data'][k]['t']).year() >= year) {
+                    newArray.push(chart.data.datasets[i]['data'][k]);
+                }
+            }
+            chart.data.datasets[i]['data'] = newArray;
+        }
+
+        button.innerHTML = "Show data before " + year;
+
+        chart.update();
+
+    } else {
+        var wordsToFetchAgain = []
+
+        for(var i=0;i<chart.data.datasets.length;i++) {
+            wordsToFetchAgain.push(chart.data.datasets[i]['label']);
+        }
+
+        chart.data.datasets = [];
+
+        button.innerHTML = "Hide data before " + year;
+
+        for(var i=0;i<wordsToFetchAgain.length;i++) {
+            addDataToWordOccurenceChart(wordsToFetchAgain[i], chart);
+            await Sleep(500);
+        }
+
+
+
+
+    }
+
+}
+
+function Sleep(milliseconds) {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+function initLuhzeChart(chart, word1, word2) {
+
+
+	fetchFileAPI("minAndMaxYearAndQuarter", function (data) {
+
+            var firstYear = data['minYearAndQuarter'].toString().substring(0, 4);
+            var firstQuarter = data['minYearAndQuarter'].toString().slice(-1);
+
+            var lastYear = data['maxYearAndQuarter'].toString().substring(0, 4);
+            var lastQuarter = data['maxYearAndQuarter'].toString().slice(-1);
+
+            //data verarbeiten
+            dataArrayWord1 = [];
+            dataArrayWord2 = [];
+            //erstellen eines array mit durchgehenden daten
+            fetchParameterAPI("wordOccurence", "word", word1, (data) => {
+                if("Error. The word does not exists." === data) {
+                    console.log("Error. The word " + word + " does not exists.");
+                    var input = document.getElementById("wordInput");
+                    input.value = "";
+                    input.placeholder = "Wort nicht gefunden";
+                    return 1;
+                }
+                var word1Data = data;
+                fetchParameterAPI("wordOccurence", "word", word2, (data) => {
+
+                var word2Data = data;
+
+                for(var i=firstYear;i<=lastYear;i++) {
+                    for(var q=firstQuarter;q<=4;q++) {
+                        // translate quarter to date
+                        var month = ((q * 3) -2).toString();
+                        var date = i.toString() + "-" + month + "-01";
+
+                        //check if current date (i+q) is in data array
+                        var foundInDataSetWord1 = false;
+                        for(var k=0;k<word1Data.length;k++) { //overwrites den eintrag von zuvor
+                            if(word1Data[k]['yearAndQuarter'] == i.toString() + q.toString()) {
+
+                                foundInDataSetWord1 = true;
+                                dataArrayWord1.push({t:moment(date,'YYYY-MM-DD').valueOf(),y:word1Data[k]['occurencePerWords']});
+                            }
+                        }
+                        if(foundInDataSetWord1 == false) dataArrayWord1.push({t:moment(date,'YYYY-MM-DD').valueOf(),y:0});
+
+                        //check if current date (i+q) is in data array
+                        var foundInDataSetWord2 = false;
+                        for(var k=0;k<word2Data.length;k++) { //overwrites den eintrag von zuvor
+                            if(word2Data[k]['yearAndQuarter'] == i.toString() + q.toString()) {
+
+                                foundInDataSetWord2 = true;
+                                dataArrayWord2.push({t:moment(date,'YYYY-MM-DD').valueOf(),y:word2Data[k]['occurencePerWords']});
+                            }
+                        }
+                        if(foundInDataSetWord2 == false) dataArrayWord2.push({t:moment(date,'YYYY-MM-DD').valueOf(),y:0});
+
+                    }
+                    firstQuarter = 1;
+                }
+
+
+                var configForFinancialCharts = {
+		data: {
+			datasets: [{label: word1.toUpperCase(),
+                                borderColor: colorArray[0],
+                                backgroundColor: colorArrayAlpha[0],
+                                data: dataArrayWord1,
+                                type: 'line',
+                                pointRadius: 0,
+                                fill: true,
+                                lineTension: 0,
+                                borderWidth: 2},
+                                {label: word2.toUpperCase(),
+                                borderColor: colorArray[1],
+                                backgroundColor: colorArrayAlpha[1],
+                                data: dataArrayWord2,
+                                type: 'line',
+                                pointRadius: 0,
+                                fill: true,
+                                lineTension: 0,
+                                borderWidth: 2}]
+		},
+		options: {
+			animation: {
+				duration: 0
+			},
+			scales: {
+				xAxes: [{
+					type: 'time',
+					distribution: 'linear',
+					offset: true,
+					time: {
+                        'tooltipFormat': 'q yyyy'
+					},
+					ticks: {
+						major: {
+							enabled: true,
+							fontStyle: 'bold'
+						},
+						source: 'data',
+						autoSkip: true,
+						autoSkipPadding: 75,
+						maxRotation: 0,
+						sampleSize: 100,
+						maxTicksLimit: 7,
+					},
+					afterBuildTicks: function(scale, ticks) {
+					    if(ticks != null) {
+                            var majorUnit = scale._majorUnit;
+                            var firstTick = ticks[0];
+                            var i, ilen, val, tick, currMajor, lastMajor;
+
+                            val = moment(ticks[0].value);
+                            if ((majorUnit === 'minute' && val.second() === 0)
+                                || (majorUnit === 'hour' && val.minute() === 0)
+                                || (majorUnit === 'day' && val.hour() === 9)
+                                || (majorUnit === 'month' && val.date() <= 3 && val.isoWeekday() === 1)
+                                || (majorUnit === 'year' && val.month() === 0)) {
+                                firstTick.major = true;
+                            } else {
+                                firstTick.major = false;
+                            }
+                            lastMajor = val.get(majorUnit);
+
+                            for (i = 1, ilen = ticks.length; i < ilen; i++) {
+                                tick = ticks[i];
+                                val = moment(tick.value);
+                                currMajor = val.get(majorUnit);
+                                tick.major = currMajor !== lastMajor;
+                                lastMajor = currMajor;
+                            }
+                            return ticks;
+					    }
+                    }
+				}],
+				yAxes: [{
+                  scaleLabel: {
+                    display: true,
+                    labelString: 'Anzahl pro 100.000 Wörter'
+                  }
+                }]
+			},
+			hover: {
+				mode: 'nearest',
+				intersect: false
+			},
+			tooltips: {
+				mode: 'nearest',
+				intersect: false
+			},
+			legend: {
+
+		  		labels: {
+		  			fontFamily: "'Helvetica', 'Arial', sans-serif",
+		  			fontColor: '#555',
+		  			fontSize: 15,
+		  		}
+		  	}
+
+		}
+	};
+ window.myLine = new Chart(document.getElementById("wordOccurenceChart").getContext("2d"), configForFinancialCharts);
+
+                });
+
+            });
+
+	    });
+
+
 
 }
 

@@ -25,24 +25,31 @@ def readInGenericFile(filename):
 	con = connectToDB()
 	with con:
 		cur = con.cursor()
-		cur.execute('SELECT json FROM files WHERE filename="' + filename + '"') # durch prepared statement ersetzen , security
-		entries = cur.fetchall() #fetchone?
+		cur.execute('SELECT json FROM files WHERE filename=%s', [filename])
+		entries = cur.fetchone() #fetchone?
 		
-		if len(entries) < 1:
+		if entries is None or len(entries) == 0:
 			print("no entries in db for "  + filename)
 			return jsonify("NaN")
 		else:
 			return Response(entries[0],  mimetype='application/json')
-	return jsonify("NaN")
+
+@app.route('/json/date',methods=['GET'])
+def date():
+	con = connectToDB()
+	with con:
+		cur = con.cursor()
+		cur.execute('SELECT lastModifiedFiles from lastmodified')
+		return Response(json.dumps({'date': cur.fetchone()[0].strftime('%Y-%m-%d %H:%M:%S')}), mimetype='application/json')
 
 
 @app.route('/json/minAuthor',methods=['GET'])
 def minAuthor():
 	return readInGenericFile("minAuthor")
 
-@app.route('/json/date',methods=['GET'])
-def date():
-	return readInGenericFile("date")
+#@app.route('/json/date',methods=['GET'])
+#def date():
+#	return readInGenericFile("date")
 
 @app.route('/json/activeMembers',methods=['GET'])
 def activeMembers():

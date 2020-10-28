@@ -93,7 +93,7 @@ def scrapeAuthor(text):
 				authorsArray = ["Anonym"]  # there is at least one article with no author on luhze.de
 				break
 			else: #split author in first and last name if there is both
-				if len(a.string.split(" "))>1:
+				if len(a.string.split(" "))>1: # schauen wie viele zwischennamen es gibt und die zu vorname zählen
 					firstName = a.string.split(" ")[0]
 					lastName = a.string.split(" ")[1]
 				else: #z.B. hastduzeit, dann nur nachname aufnehmen

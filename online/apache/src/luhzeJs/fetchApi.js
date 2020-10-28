@@ -21,6 +21,8 @@ async function fetchFileAPI(route,useDataFunction) {
 }
 
 async function fetchParameterAPI(route, parameter, parameterValue, useDataFunction) {
+
+
 	try {
 		await fetch("http://localhost/json/" + route + "?" + parameter + "=" + parameterValue)
 		.then(res => {
@@ -30,6 +32,7 @@ async function fetchParameterAPI(route, parameter, parameterValue, useDataFuncti
 				return Promise.reject(res.status);
 			}
 		}).then(data => useDataFunction(data)
+
 		).catch(err => {
 			console.log('Error: ', err);
 		});
