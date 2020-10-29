@@ -93,9 +93,12 @@ def scrapeAuthor(text):
 				authorsArray = ["Anonym"]  # there is at least one article with no author on luhze.de
 				break
 			else: #split author in first and last name if there is both
-				if len(a.string.split(" "))>1: # schauen wie viele zwischennamen es gibt und die zu vorname zählen
-					firstName = a.string.split(" ")[0]
-					lastName = a.string.split(" ")[1]
+				splitName = a.string.split(" ")
+				if len(splitName)>1: # schauen wie viele zwischennamen es gibt und die zu vorname zählen
+					firstName = splitName[0]
+					for n in range(1,len(splitName)-2):
+						firstName = firstName + " " + splitName[n]
+					lastName = splitName[len(splitName)-1] #letzter name ist immer nachname
 				else: #z.B. hastduzeit, dann nur nachname aufnehmen
 					firstName = ""
 					lastName = a.string
@@ -306,7 +309,7 @@ def scrapeWebsite(con):
 
 
 			
-	for i in range(1,108)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
+	for i in range(0,15)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
 			
 		soup = readInSite(web + str(i))
 	
