@@ -14,10 +14,40 @@ body {
 
 .luhzeSprichtHeader {
     text-align: center;
+    margin-bottom: 1vw;
 }
 
+#luhzeSprichtInput {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1vw;
+}
+
+#luhzeSprichtForm {
+    order: 0;
+    flex-grow: 0.9;
+}
+
+/*
+.twitterShareButton {
+    order: 2;
+
+}
+#twitterShareIcon {
+    min-height: 100%;
+}
+
+*/
+.hideYearsButton {
+    order: 1;
+    background-color: white;
+    padding: 0 2vw;
+  text-align: center;
+  text-decoration: none;
+   border: none;
 
 
+}
 
 .footer {
 	left: 0;

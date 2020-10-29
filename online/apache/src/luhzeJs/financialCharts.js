@@ -61,7 +61,7 @@ function customTooltip(data) {
 			 var label = document.createElement('p');
 
 			 if(displayData.length >0) {
-			 	label.innerHTML = tooltip.title[0] + ": "  + tooltip.dataPoints[0].yLabel + "; top authors:";
+			 	label.innerHTML = tooltip.title[0] + ": "  + tooltip.dataPoints[0].yLabel + "; Top Autor*innen:";
 			 	label.className = "chartjs";
 			 	tooltipEl.appendChild(label);
 			 	var child = document.createElement('canvas');
@@ -151,7 +151,7 @@ function articlesTimelineFinancial(data) {
 
 	}
 
-	return [{label: 'number of articles published',
+	return [{label: 'Anzahl der veröffentlichten Artikel',
 	borderColor: '#ff6384',
 	data: returnArray,
 	type: 'line',
@@ -178,7 +178,7 @@ function articlesTimelineFinancialDerivation(data) {
 
 	}
 
-	return [{label: 'number of articles published each month',
+	return [{label: 'Anzahl der veröffentlichten Artikeln pro Monat',
 	borderColor: '#ff6384',
 	data: returnArray,
 	type: 'line',
@@ -290,7 +290,7 @@ function activeMembersFinancial(data, oldestArticle, newestArticle) {
 		returnArray[i] = {t:moment(dateArray[i][0]+"-"+((dateArray[i][1]*3)+1).toString()+"-01",'YYYY-MM-DD').valueOf(),y:dateArray[i][2]};//calculating the first month in each quarter
 	}
 
-	return [{label: 'active authors per quarter',
+	return [{label: 'Aktive Autor*innen pro Quartal',
 	borderColor: '#02a0e4',
 	data: returnArray,
 	type: 'line',

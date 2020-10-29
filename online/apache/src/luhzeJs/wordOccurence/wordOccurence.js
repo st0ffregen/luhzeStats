@@ -12,9 +12,9 @@ async function addDataToWordOccurenceChart(word, chart) {
 
             var button = document.getElementsByClassName("hideYearsButton")[0];
 
-            if(button.innerHTML.startsWith("Show data before")) {
-                var firstYear = button.innerHTML.slice(-4);//holt sich das jahr vom button text
-                var firstQuarter = 1;
+            if(button.innerHTML.startsWith("Zeige Daten vor ")) {
+                var firstYear = "2015";
+                var firstQuarter = 2;
 
             } else {
                 var firstYear = data['minYearAndQuarter'].toString().substring(0, 4);
@@ -90,21 +90,24 @@ async function addDataToWordOccurenceChart(word, chart) {
 }
 
 
-async function hideOrShowDateBeforeYear(chart, year, button) {
+async function hideOrShowDateBeforeYear(chart, button) {
 
-    if(button.innerHTML == "Hide data before " + year) {
+    if(button.innerHTML.startsWith("Verberge Daten vor ")) {
         //the data before 2017 is pretty löchrig und verzieht das ganze imens
         for(var i=0;i<chart.data.datasets.length;i++) { //loop durch die dargestellten woerter
             var newArray = [];
             for(var k=0;k<chart.data.datasets[i]['data'].length;k++) {
-                if(moment(chart.data.datasets[i]['data'][k]['t']).year() >= year) {
+                var momentDate = moment(chart.data.datasets[i]['data'][k]['t']);
+                console.log(momentDate.month());
+                if(momentDate.year() >= 2015 && !(momentDate.month() < 3 && momentDate.year() == 2015 )) {
+
                     newArray.push(chart.data.datasets[i]['data'][k]);
                 }
             }
             chart.data.datasets[i]['data'] = newArray;
         }
 
-        button.innerHTML = "Show data before " + year;
+        button.innerHTML = "Zeige Daten vor 2015, 2. Quartal";
 
         chart.update();
 
@@ -117,7 +120,7 @@ async function hideOrShowDateBeforeYear(chart, year, button) {
 
         chart.data.datasets = [];
 
-        button.innerHTML = "Hide data before " + year;
+        button.innerHTML = "Verberge Daten vor 2015, 2. Quartal";
 
         for(var i=0;i<wordsToFetchAgain.length;i++) {
             addDataToWordOccurenceChart(wordsToFetchAgain[i], chart);

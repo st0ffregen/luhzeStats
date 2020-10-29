@@ -512,7 +512,7 @@ def calculateWordOccurence(cur):
         countPerWordDict = {}
         upperText = quarterText.upper()
         allWords = upperText.split()
-        quarterWordCount = 0
+
         for w in allWords:
             w = w.strip()
             if re.match(r'.{2,}$', w):
@@ -571,7 +571,7 @@ def calculateTotalWordOccurence(cur, quarterArray):
 def removeTrailingPunctuations(w):
     unwantedPunctuations = ["-", ",", ":", ".", "!", "?", "\"", "“", ")"]
 
-    if w[-1] in unwantedPunctuations and len(w) > 1 and w != "student!": #student! darf das Ausrufezeichen behalten
+    if w[-1] in unwantedPunctuations and len(w) > 2 and w is not "student!": #student! darf das Ausrufezeichen behalten
         return removeTrailingPunctuations(w[:-1])
     else:
         return w
@@ -580,7 +580,7 @@ def removeTrailingPunctuations(w):
 def removeLeadingPunctuations(w):
     unwantedPunctuations = ["-", ",", ":", ".", "!", "?", "\"", "„", "("]
 
-    if w[0] in unwantedPunctuations and len(w) > 1:
+    if w[0] in unwantedPunctuations and len(w) > 2:
         return removeLeadingPunctuations(w[1:])
     else:
         return w

@@ -42,8 +42,8 @@ def executeSQL(sqlArray, cur, con):
         with cur:
             try:
                 for statement in sqlArray:
-                    print(statement[0])
-                    print(statement[1])
+                    #print(statement[0])
+                    #print(statement[1])
                     cur.execute(statement[0],statement[1])
                 print("commiting changes")
                 con.commit()
@@ -306,7 +306,7 @@ def scrapeWebsite(con):
 
 
 			
-	for i in range(1,0)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
+	for i in range(1,108)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
 			
 		soup = readInSite(web + str(i))
 	

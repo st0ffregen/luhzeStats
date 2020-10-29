@@ -51,11 +51,11 @@ async function fetchParameterAPI(route, parameter, parameterValue, useDataFuncti
 function fetchChartsSite() { 
 
 fetchFileAPI("minAuthor",(data) => {
-	document.getElementById("authorP").innerHTML="only authors with " + data['minAuthor'] + " and more articles included";
+	document.getElementById("authorP").innerHTML="Nur Autor*innen mit mehr als " + data['minAuthor'] + " miteinbezogen";
 });
 
 fetchFileAPI("date",(data) => {
-	document.getElementById("dateP").innerHTML="last updated " + data['date'] + "<span><a href=\"javascript:rankingFunction(0)\"> >Take me to the ranking</a></span>";
+	document.getElementById("dateP").innerHTML="Zuletzt aktualisiert " + data['date'] + "<span><a href=\"javascript:rankingFunction(0)\"> > Zum Ranking</a></span>";
 });
 
 
@@ -79,19 +79,19 @@ fetchFileAPI("oldestArticle", (data) => {
 });
 
 fetchFileAPI("authorTopList",(data) => {
-	barChart('authorTopListChart',data, 'bar', 'number of articles per author',true);
+	barChart('authorTopListChart',data, 'bar', 'Anzahl der Artikel pro Autor*in',true);
 });
 
 fetchFileAPI("authorAverage",(data) => {
-	barChart('authorAverageChart',data, 'bar', 'average number of characters per author',true);
+	barChart('authorAverageChart',data, 'bar', 'Durchschnittliche Anzahl von Zeichen pro Autor*in',true);
 });
 
 fetchFileAPI("mostArticlesPerTime", (data) => {
-	barChart('mostArticlesPerTimeChart',data, 'bar', 'time span between two articles in days',true);
+	barChart('mostArticlesPerTimeChart',data, 'bar', 'Zeitspanne zwischen zwei Artikeln in Tagen',true);
 });
 
 fetchFileAPI("averageCharactersPerDay",(data) => {
-	barChart('averageCharactersPerDayChart',data,'bar','average number of characters written every day',true);
+	barChart('averageCharactersPerDayChart',data,'bar','Durchschnittliche Anzahl von geschriebenen Zeichen pro Tag',true);
 });
 
 fetchFileAPI("ressortTimeline",(data) => {
@@ -101,7 +101,7 @@ fetchFileAPI("ressortTimeline",(data) => {
 fetchFileAPI("topAuthorsPerRessort", (data) => {
 	var func = customTooltip(data);
 	fetchFileAPI("ressortTopList",(data) => {
-		barChart('ressortTopListChart',data,'bar','number of articles per ressort',false, func);
+		barChart('ressortTopListChart',data,'bar','Anzahl der Artikel pro Ressort',false, func);
 	});
 });
 
@@ -144,7 +144,7 @@ fetchFileAPI("oldestArticle",(data) => { //unnötig hier die variablen mehrmals 
 });
 
 fetchFileAPI("ressortAverage",(data) => {
-	barChart('ressortAverageChart',data,'bar','average number of characters per ressort',true);
+	barChart('ressortAverageChart',data,'bar','Durchschnittliche Anzahl an Zeichen pro Ressort',true);
 });
 
 }
