@@ -1,6 +1,6 @@
-async function fetchAPI(file,useDataFunction) {
+async function fetchFileAPI(route,useDataFunction) {
 	try {
-		await fetch("http://localhost/json/" + file)
+		await fetch("http://localhost/json/" + route)
 		.then(res => {
 			if(res.ok) {
 				return res.json();
@@ -20,69 +20,96 @@ async function fetchAPI(file,useDataFunction) {
 
 }
 
-fetchChartsSite();
+async function fetchParameterAPI(route, parameter, parameterValue, useDataFunction) {
+
+
+	try {
+		await fetch("http://localhost/json/" + route + "?" + parameter + "=" + parameterValue)
+		.then(res => {
+			if(res.ok) {
+				return res.json();
+			} else {
+				return Promise.reject(res.status);
+			}
+		}).then(data => useDataFunction(data)
+
+		).catch(err => {
+			console.log('Error: ', err);
+		});
+
+	} catch(e) {
+		console.error(e.message);
+	}
+
+	return 1;
+
+}
+
+
+//fetchChartsSite();
 
 function fetchChartsSite() { 
 
-fetchAPI("minAuthor",(data) => {
-	document.getElementById("authorP").innerHTML="only authors with " + data['minAuthor'] + " and more articles included";
+fetchFileAPI("minAuthor",(data) => {
+	document.getElementById("authorP").innerHTML="Nur Autor*innen mit mehr als " + data['minAuthor'] + " miteinbezogen";
 });
 
-fetchAPI("date",(data) => {
-	document.getElementById("dateP").innerHTML="last updated " + data['date'] + "<span><a href=\"javascript:rankingFunction(0)\"> >Take me to the ranking</a></span>";
+fetchFileAPI("date",(data) => {
+	document.getElementById("dateP").innerHTML="Zuletzt aktualisiert " + data['date'] + "<span><a href=\"javascript:rankingFunction(0)\"> > Zum Ranking</a></span>";
 });
 
-fetchAPI("articlesTimeline",(data) => {
+
+fetchFileAPI("articlesTimeline",(data) => {
 	financialChart('articlesTimelineChart',articlesTimelineFinancial(data),'month');
 	financialChart('articlesTimelineDerivativeChart',articlesTimelineFinancialDerivation(data),'month');
 });
 
-fetchAPI("authorTimeline",(data) => {
+fetchFileAPI("authorTimeline",(data) => {
 	googleTimeline('authorTimelineChart',data);
 }); 
 
-fetchAPI("oldestArticle", (data) => {
+fetchFileAPI("oldestArticle", (data) => {
 	var oldestArticle = data;
-	fetchAPI("newestArticle",(data) => {
+	fetchFileAPI("newestArticle",(data) => {
 		var newestArticle = data;
-		fetchAPI("activeMembers",(data) => {
+		fetchFileAPI("activeMembers",(data) => {
 			financialChart('activeMembersChart',activeMembersFinancial(data,oldestArticle,newestArticle),'quarter');
 		});
 	});
 });
 
-fetchAPI("authorTopList",(data) => {
-	barChart('authorTopListChart',data, 'bar', 'number of articles per author',true);
+fetchFileAPI("authorTopList",(data) => {
+	barChart('authorTopListChart',data, 'bar', 'Anzahl der Artikel pro Autor*in',true);
 });
 
-fetchAPI("authorAverage",(data) => {
-	barChart('authorAverageChart',data, 'bar', 'average number of characters per author',true);
+fetchFileAPI("authorAverage",(data) => {
+	barChart('authorAverageChart',data, 'bar', 'Durchschnittliche Anzahl von Zeichen pro Autor*in',true);
 });
 
-fetchAPI("mostArticlesPerTime", (data) => {
-	barChart('mostArticlesPerTimeChart',data, 'bar', 'time span between two articles in days',true);
+fetchFileAPI("mostArticlesPerTime", (data) => {
+	barChart('mostArticlesPerTimeChart',data, 'bar', 'Zeitspanne zwischen zwei Artikeln in Tagen',true);
 });
 
-fetchAPI("averageCharactersPerDay",(data) => {
-	barChart('averageCharactersPerDayChart',data,'bar','average number of characters written every day',true);
+fetchFileAPI("averageCharactersPerDay",(data) => {
+	barChart('averageCharactersPerDayChart',data,'bar','Durchschnittliche Anzahl von geschriebenen Zeichen pro Tag',true);
 });
 
-fetchAPI("ressortTimeline",(data) => {
+fetchFileAPI("ressortTimeline",(data) => {
 	googleTimeline('ressortTimelineChart', data);
 }); 
 
-fetchAPI("topAuthorsPerRessort", (data) => {
+fetchFileAPI("topAuthorsPerRessort", (data) => {
 	var func = customTooltip(data);
-	fetchAPI("ressortTopList",(data) => {
-		barChart('ressortTopListChart',data,'bar','number of articles per ressort',false, func);
+	fetchFileAPI("ressortTopList",(data) => {
+		barChart('ressortTopListChart',data,'bar','Anzahl der Artikel pro Ressort',false, func);
 	});
 });
 
-fetchAPI("oldestArticle",(data) => { //unnötig hier die variablen mehrmals im code abzufragen
+fetchFileAPI("oldestArticle",(data) => { //unnötig hier die variablen mehrmals im code abzufragen
 	var oldestArticle = data;
-	fetchAPI("newestArticle",(data) => {
+	fetchFileAPI("newestArticle",(data) => {
 		var newestArticle = data;
-		fetchAPI("ressortArticlesTimeline",(data) => {
+		fetchFileAPI("ressortArticlesTimeline",(data) => {
 			//create color and hidden array to hide and color the same lines
 			var colorArray = getRandomHexColor(data.length);
 
@@ -116,8 +143,8 @@ fetchAPI("oldestArticle",(data) => { //unnötig hier die variablen mehrmals im c
 	
 });
 
-fetchAPI("ressortAverage",(data) => {
-	barChart('ressortAverageChart',data,'bar','average number of characters per ressort',true);
+fetchFileAPI("ressortAverage",(data) => {
+	barChart('ressortAverageChart',data,'bar','Durchschnittliche Anzahl an Zeichen pro Ressort',true);
 });
 
 }

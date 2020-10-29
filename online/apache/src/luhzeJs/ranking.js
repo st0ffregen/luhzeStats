@@ -25,7 +25,7 @@ function rankingFunction(backInTime) {
 		backInTimeString = "FiveYears";
 	}
 
-	fetchAPI("ranking" + backInTimeString,(data) => {
+	fetchFileAPI("ranking" + backInTimeString,(data) => {
 
 		var addInnterHTML = "";
 		
@@ -57,6 +57,10 @@ function rankingFunction(backInTime) {
 
 
 function showRanking(el, graphContent) {
+
+
+	document.getElementsByClassName("graphContent")[0].style.display = "none";
+	rankingFunction('Default');
 	
 }
 

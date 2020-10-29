@@ -10,6 +10,7 @@
 <link rel="stylesheet" type="text/css" href="canvas.css">
 <link rel="stylesheet" type="text/css" href="index.css">
 <link rel="stylesheet" type="text/css" href="ranking.css">
+<link rel="stylesheet" type="text/css" href="autocomplete.css">
 
 </head>
 <body>
@@ -17,14 +18,14 @@
 <div class="containter">
 
 <div class="ranking">
-	<p class="header">
-		<a href="javascript:hideRanking()" class="takeMeBack">< Take me to the luhze charts</a>
-		<span>Go back in time: <a href="javascript:rankingFunction(0)">Now</a> <a href="javascript:rankingFunction(1)">One Month</a> <a href="javascript:rankingFunction(2)">One Year</a> <a href="javascript:rankingFunction(3)">Two Years</a> <a href="javascript:rankingFunction(4)">Five Years</a></span>
+	<p class="header" >
+		<a href="javascript:hideRanking()" class="takeMeBack">< Zu den Grafiken</a>
+		<span>Gehe zurück in der Zeit: <a href="javascript:rankingFunction(0)">Jetzt</a> <a href="javascript:rankingFunction(1)">Ein Monat</a> <a href="javascript:rankingFunction(2)">Ein Jahr</a> <a href="javascript:rankingFunction(3)">Zwei Jahre</a> <a href="javascript:rankingFunction(4)">Fünf Jahre</a></span>
 	</p>
 	<div class="rankingSection"></div>
 
 	<div class="upArrowButtonDiv">
-		<a href="javascript:topFunction()" class="upArrowButton" title="Go to top"><img src="pictures/arrowUp.png"></a>
+		<a href="javascript:topFunction()" class="upArrowButton" title="Spring zum Seitenanfang"><img src="pictures/arrowUp.png"></a>
 	</div>
 
 	<div class="footer">
@@ -36,8 +37,8 @@
 
 <div class="socialmedia">
 <ul class="socialmedialist">
-	<li><a href="https://github.com/st0ffregen/luhzeStats" title="View this code on GitHub"><img src="pictures/github.png"></a></li>
-	<li><a href="https://twitter.com/st0ffregen" title="Follow me on Twitter"><img src="pictures/twitter.png"></a></li>
+	<li><a href="https://github.com/st0ffregen/luhzeStats" title="Schau dir den Code auf GitHub an"><img src="pictures/github.png"></a></li>
+	<li><a href="https://twitter.com/st0ffregen" title="Folge mir auf Twitter"><img src="pictures/twitter.png"></a></li>
 </ul>
 </div>
 
@@ -45,17 +46,31 @@
 
 <h1>Spaß mit Daten</h1>
 
-<p id="authorP">only authors with 12 and more articles included</p>
-<p>only ressorts with 14 and more articles included</p>
-<p id="dateP">last updated </p>
+<p id="authorP">Nur Autor*innen mit mehr als Artikeln miteinbezogen</p>
+<p>Nur Ressorts mit mehr als 14 Artikeln miteinbezogen</p>
+<p id="dateP">Zuletzt aktualisiert <a href="javascript:showRanking()" class="takeMeForth">Zum Ranking ></a></p>
 
 
+<h1 class="luhzeSprichtHeader">Darüber spricht luhze.de</h1>
+	<div id="luhzeSpricht">
+		<div id="luhzeSprichtInput">
+	<form id="luhzeSprichtForm" autocomplete="off" action="">
+	  <div class="autocomplete" style="width:100%;">
+		<input id="wordInput" type="text" name="word" placeholder="Geben Sie einen Begriff ein">
+	  </div>
+
+	</form><button class="hideYearsButton" title="Die Daten vor dem 2. Quartal 2015 sind durch wenige und unregelmäßig Erscheinungen wenig aussagekräftig." onclick="javascript:hideOrShowDateBeforeYear(myLine, document.getElementsByClassName('hideYearsButton')[0])">Verberge Daten vor 2015, 2. Quartal</button>
+		<!--<a class="twitterShareButton" title="Twittere diese Grafik"
+  href="https://twitter.com/intent/tweet?text=Hello%20world">
+<img id="twitterShareIcon" src="pictures/twitterLogo.png"></a>--></div>
+<canvas id="wordOccurenceChart"></canvas><br>
+	</div>
 <canvas id="articlesTimelineChart"></canvas><br>
 <canvas id="articlesTimelineDerivativeChart"></canvas><br>
 
 
-<h2>Authors</h2>
-<p class="chartjs">authors timeline</p>
+<h2>Autor*innen</h2>
+<p class="chartjs">Autor*innen Timeline</p>
 <div id="authorTimelineChart" class="googleChartAuthor"></div><br>
 <canvas id="activeMembersChart"></canvas><br>
 <canvas id="authorTopListChart"></canvas><br>
@@ -65,19 +80,19 @@
 
 
 <h2>Ressorts</h2>
-<p class="chartjs">ressorts timeline, all of them</p>
+<p class="chartjs">Ressorts Timeline</p>
 <div class="googleChartRessort" id="ressortTimelineChart"></div><br>
 <canvas id="ressortTopListChart"></canvas><br>
-<p class="chartjs">number of articles published per ressort (click on ressort in legend to hide/show)</p>
+<p class="chartjs">Anzahl von Artikel pro Ressort (Klick auf ein Ressort zum anzeigen/ausblenden)</p>
 <canvas id="ressortArticlesTimelineChart"></canvas><br>
-<p class="chartjs">number of articles published per ressort each quarter (click on ressort in legend to hide/show)</p>
+<p class="chartjs">Anzahl von Artikel pro Ressort pro Quartal (Klick auf ein Ressort zum anzeigen/ausblenden)</p>
 <canvas id="ressortArticlesTimelineDerivativeChart"></canvas><br>
 <div id="chartjs-tooltip"></div>
 <canvas id="ressortAverageChart"></canvas><br>
 
 
 <div class="upArrowButtonDiv">
-	<a href="javascript:topFunction()" class="upArrowButton" title="Go to top"><img src="pictures/arrowUp.png"></a>
+	<a href="javascript:topFunction()" class="upArrowButton" title="Springe zum Seitenanfang"><img src="pictures/arrowUp.png"></a>
 </div>
 
 <div class="footer">
@@ -105,5 +120,8 @@
 <script type="text/javascript" src="luhzeJs/googleCharts.js"></script>
 <script type="text/javascript" src="luhzeJs/barCharts.js"></script>
 <script type="text/javascript" src="luhzeJs/fetchApi.js"></script>
+<script type="text/javascript" src="luhzeJs/wordOccurence/wordOccurence.js"></script>
+<script type="text/javascript" src="luhzeJs/wordOccurence/autocomplete.js"></script>
+<script type="text/javascript" src="luhzeJs/main.js"></script>
 </body>
 </html>

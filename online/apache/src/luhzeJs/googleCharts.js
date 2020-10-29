@@ -1,7 +1,7 @@
 window.onresize = function() { //traffic aufwending
-	fetchAPI("authorTimeline",(data) => {
+	fetchFileAPI("authorTimeline",(data) => {
 		googleTimeline('authorTimelineChart', data);
-		fetchAPI("ressortTimeline", (data) => {
+		fetchFileAPI("ressortTimeline", (data) => {
 			googleTimeline('ressortTimelineChart', data);
 		});
 	}); 
@@ -25,6 +25,7 @@ function googleTimeline(chartAttr,dataArrayAttr) {
 		dataTable.addColumn({ type: 'date', id: 'End' });
 
 		for(var i=0;i<dataArray.length;i++) {
+
 			dataTable.addRows([["", dataArray[i]['name'], new Date(dataArray[i]['min']), new Date(dataArray[i]['max'])]]); //name is here equivilant to ressort name
 
 		}

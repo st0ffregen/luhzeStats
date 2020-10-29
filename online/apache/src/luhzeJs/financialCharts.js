@@ -61,7 +61,7 @@ function customTooltip(data) {
 			 var label = document.createElement('p');
 
 			 if(displayData.length >0) {
-			 	label.innerHTML = tooltip.title[0] + ": "  + tooltip.dataPoints[0].yLabel + "; top authors:";
+			 	label.innerHTML = tooltip.title[0] + ": "  + tooltip.dataPoints[0].yLabel + "; Top Autor*innen:";
 			 	label.className = "chartjs";
 			 	tooltipEl.appendChild(label);
 			 	var child = document.createElement('canvas');
@@ -151,7 +151,7 @@ function articlesTimelineFinancial(data) {
 
 	}
 
-	return [{label: 'number of articles published',
+	return [{label: 'Anzahl der veröffentlichten Artikel',
 	borderColor: '#ff6384',
 	data: returnArray,
 	type: 'line',
@@ -178,7 +178,7 @@ function articlesTimelineFinancialDerivation(data) {
 
 	}
 
-	return [{label: 'number of articles published each month',
+	return [{label: 'Anzahl der veröffentlichten Artikeln pro Monat',
 	borderColor: '#ff6384',
 	data: returnArray,
 	type: 'line',
@@ -194,7 +194,7 @@ function ressortArticlesTimelineFinancial(data,colorArray,hiddenArray, oldestArt
 	var datasetArray = [];
 	for(var k=0;k<data.length;k++) {// get a ressort
 		var returnArray = [];
-		var dateArray = monthArray(new Date(oldestArticle['oldestArticle']+"T00:00:00Z"),new Date(newestArticle['newestArticle']+"T00:00:00Z"));
+		var dateArray = monthArray(new Date(oldestArticle['oldestArticle']),new Date(newestArticle['newestArticle']));
 		var totalMonthlyArticles = 0;
 		for(var i=0;i<dateArray.length;i++) { //loop through months
 
@@ -237,7 +237,7 @@ function ressortArticlesTimelineFinancialDerivation(data,colorArray,hiddenArray,
 
 		var returnArray = [];
 		//use a init date to determine if next date is in same quarter or not
-		var dateArray = quarterArray(new Date(oldestArticle['oldestArticle']+"T00:00:00Z"),new Date(newestArticle['newestArticle']+"T00:00:00Z"));
+		var dateArray = quarterArray(new Date(oldestArticle['oldestArticle']),new Date(newestArticle['newestArticle']));
 		for(var i=0;i<dateArray.length;i++) {
 			//loop through the empty date array (only dates in it by now) find the articles with another for loop
 			articlesCount = 0;
@@ -269,7 +269,7 @@ function ressortArticlesTimelineFinancialDerivation(data,colorArray,hiddenArray,
 
 function activeMembersFinancial(data, oldestArticle, newestArticle) {
 
-	var dateArray = quarterArray(new Date(oldestArticle['oldestArticle']+"T00:00:00Z"),new Date(newestArticle['newestArticle']+"T00:00:00Z"));
+	var dateArray = quarterArray(new Date(oldestArticle['oldestArticle']),new Date(newestArticle['newestArticle']));
 	var returnArray = [];
 	
 	for(var i=0;i<dateArray.length;i++) { //gives me an quarter
@@ -277,7 +277,7 @@ function activeMembersFinancial(data, oldestArticle, newestArticle) {
 		for(var k=0;k<data.length;k++) { //gives me an author
 			for(var l=0;l<data[k]['articles'].length;l++) { //gives me the article array for the k author
 
-				currentDate = new Date(data[k]['articles'][l]+"T00:00:00Z");
+				currentDate = new Date(data[k]['articles'][l]);
 				currentQuarter = Math.floor(currentDate.getMonth()/3);
 				if(currentQuarter === dateArray[i][1] && currentDate.getFullYear() === dateArray[i][0]) {
 					dateArray[i][2]++;
@@ -290,7 +290,7 @@ function activeMembersFinancial(data, oldestArticle, newestArticle) {
 		returnArray[i] = {t:moment(dateArray[i][0]+"-"+((dateArray[i][1]*3)+1).toString()+"-01",'YYYY-MM-DD').valueOf(),y:dateArray[i][2]};//calculating the first month in each quarter
 	}
 
-	return [{label: 'active authors per quarter',
+	return [{label: 'Aktive Autor*innen pro Quartal',
 	borderColor: '#02a0e4',
 	data: returnArray,
 	type: 'line',
@@ -301,11 +301,13 @@ function activeMembersFinancial(data, oldestArticle, newestArticle) {
 
 }
 
-function financialChart(chart, dataFunc, tooltipString) {
 
-	var ctx = document.getElementById(chart).getContext('2d');
 
-	var cfg = {
+
+
+function financialChart(chart, dataFunc, quarterOrMonth) {
+
+    var configForFinancialCharts = {
 		data: {
 			datasets: dataFunc
 		},
@@ -319,7 +321,7 @@ function financialChart(chart, dataFunc, tooltipString) {
 					distribution: 'linear',
 					offset: true,
 					time: {
-
+                        'tooltipFormat': 'q yyyy'
 					},
 					ticks: {
 						major: {
@@ -334,34 +336,36 @@ function financialChart(chart, dataFunc, tooltipString) {
 						maxTicksLimit: 7,
 					},
 					afterBuildTicks: function(scale, ticks) {
-						var majorUnit = scale._majorUnit;
-						var firstTick = ticks[0];
-						var i, ilen, val, tick, currMajor, lastMajor;
+					    if(ticks != null) {
+                            var majorUnit = scale._majorUnit;
+                            var firstTick = ticks[0];
+                            var i, ilen, val, tick, currMajor, lastMajor;
 
-						val = moment(ticks[0].value);
-						if ((majorUnit === 'minute' && val.second() === 0)
-							|| (majorUnit === 'hour' && val.minute() === 0)
-							|| (majorUnit === 'day' && val.hour() === 9)
-							|| (majorUnit === 'month' && val.date() <= 3 && val.isoWeekday() === 1)
-							|| (majorUnit === 'year' && val.month() === 0)) {
-							firstTick.major = true;
-						} else {
-							firstTick.major = false;
-						}
-						lastMajor = val.get(majorUnit);
+                            val = moment(ticks[0].value);
+                            if ((majorUnit === 'minute' && val.second() === 0)
+                                || (majorUnit === 'hour' && val.minute() === 0)
+                                || (majorUnit === 'day' && val.hour() === 9)
+                                || (majorUnit === 'month' && val.date() <= 3 && val.isoWeekday() === 1)
+                                || (majorUnit === 'year' && val.month() === 0)) {
+                                firstTick.major = true;
+                            } else {
+                                firstTick.major = false;
+                            }
+                            lastMajor = val.get(majorUnit);
 
-						for (i = 1, ilen = ticks.length; i < ilen; i++) {
-							tick = ticks[i];
-							val = moment(tick.value);
-							currMajor = val.get(majorUnit);
-							tick.major = currMajor !== lastMajor;
-							lastMajor = currMajor;
-						}
-						return ticks;
-					}
-
+                            for (i = 1, ilen = ticks.length; i < ilen; i++) {
+                                tick = ticks[i];
+                                val = moment(tick.value);
+                                currMajor = val.get(majorUnit);
+                                tick.major = currMajor !== lastMajor;
+                                lastMajor = currMajor;
+                            }
+                            return ticks;
+					    }
+                    }
 				}],
-				yAxes: [{}] //not sure why i need this
+				yAxes: [{
+                }]
 			},
 			hover: {
 				mode: 'nearest',
@@ -379,17 +383,19 @@ function financialChart(chart, dataFunc, tooltipString) {
 		  			fontSize: 15,
 		  		}
 		  	}
-				
+
 		}
 	};
 
+	var ctx = document.getElementById(chart).getContext('2d');
 
-			if(tooltipString == 'month') {
-				cfg.options.scales.xAxes[0].time['tooltipFormat'] = "MMM yyyy"
-			} else if(tooltipString == 'quarter') {
-				cfg.options.scales.xAxes[0].time['tooltipFormat'] = "q yyyy"
-			}
 
-			var chart = new Chart(ctx, cfg);
+	if(quarterOrMonth == 'month') {
+		configForFinancialCharts.options.scales.xAxes[0].time['tooltipFormat'] = "MMM yyyy"
+	} else if(quarterOrMonth == 'quarter') {
+		configForFinancialCharts.options.scales.xAxes[0].time['tooltipFormat'] = "q yyyy"
+	}
+
+	var chart = new Chart(ctx, configForFinancialCharts);
 		
 }
