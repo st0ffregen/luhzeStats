@@ -1,11 +1,11 @@
 body {
   margin: 0 auto;
-  max-width: 100em;
+  max-width: 75vw;
   /* font */
   font-family: "Helvetica", "Arial", sans-serif;
   /* spacing */
   line-height: 1.5;
-  padding: 1em 1em;
+  padding: 1vh 1vw;
   /* coloring */
   color: #555;
   background: #eee;
@@ -14,13 +14,13 @@ body {
 
 .luhzeSprichtHeader {
     text-align: center;
-    margin-bottom: 1vw;
+    margin-bottom: 1vh;
 }
 
 #luhzeSprichtInput {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 1vw;
+    margin-bottom: 1vh;
 }
 
 #luhzeSprichtForm {
@@ -52,7 +52,7 @@ body {
 .footer {
 	left: 0;
 	bottom: 0;
-	margin-top: 10px;
+	margin-top: vh;
 	width: 100%;
 	text-align: center;
 }
@@ -104,7 +104,7 @@ p > span {
 
 p {
 	font-family: "Helvetica", "Arial", sans-serif;
-	font-size: 17px;
+	font-size: 2vh;
 	color: #555;
 }
 
@@ -119,12 +119,12 @@ h1 {
 
 .googleChartAuthor {
   width: 100%; 
-  min-height: 600px;
+  min-height: 70vh;
 }
 
 .googleChartRessort {
   width: 100%; 
-  min-height: 750px;
+  min-height: 80vh;
 }
 
 .row {
@@ -133,29 +133,28 @@ h1 {
 
 .socialmedia {
 	float: right;
-	top: 0;
-	right: 0;
 }
 
 
 .socialmedialist {
 	list-style: none;
 	display: flex;
-	margin-top: 0.6em;
+
 }
 
 .socialmedialist li {
 	display: inline;
+	margin-left: 1vw;
 
 
 }
 .socialmedia img {
-	max-width: 4em;
+	max-width: 2.8vw;
 }
 
 .upArrowButtonDiv {
 	text-align: center;
-	margin-top: 1.5em;
+	margin-top: 1vh;
 }
 
 .takeMeForth {

@@ -1,8 +1,8 @@
-#canvas-holder {
+/*#canvas-holder { weiss nicht was das hier ist
 	width: 100%;
 	margin-top: 50px;
 	text-align: center;
-}
+} */
 #chartjs-tooltip {
 	opacity: 1;
 	position: absolute;

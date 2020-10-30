@@ -102,6 +102,7 @@ def mainFunc():
                             calculateTotalWordOccurence(cur, createQuarterArray(cur, fetchLastModified(cur, "True")[0])),
                             True)
 
+        print("commiting json for files")
         insertSQLStatements(cur, con, fileArray, "fileArray")
 
 
