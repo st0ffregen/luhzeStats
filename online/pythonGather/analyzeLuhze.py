@@ -458,16 +458,24 @@ def insertSQLStatements(cur, con, sqlStatements, total):
 
 
 def fetchLastModified(cur, total):
-    # fetch lastmodiefied
-    if total:
-        cur.execute('SELECT lastmodifiedTotalWordOccurence from lastmodified')
-    else:
-        cur.execute('SELECT lastmodifiedWordOccurence from lastmodified')
-    lastmodified = cur.fetchone()  # letztes mal das analysiert wurde
-    return lastmodified
+    print("fetch lastmodified")
+    try:
+        # fetch lastmodiefied
+        if total:
+            cur.execute('SELECT lastmodifiedTotalWordOccurence from lastmodified')
+        else:
+            cur.execute('SELECT lastmodifiedWordOccurence from lastmodified')
+        lastmodified = cur.fetchone()  # letztes mal das analysiert wurde
+        return lastmodified
+    except MySQLdb.Error as e:
+        print(f"Error while fetching lastmodified: {e}")
+        print(sys.exc_info())
+        sys.exit(1)  # kann man eh stoppen, da constraints der db blockieren
+
 
 
 def calculateWordOccurence(cur):
+    print("calculate word occurence for each quarter")
     # berechnet zu jedem wort eine relative zahl die die absolute Anzahl der Erscheinen des Wortes dividiert durch eine bestimmte
     # Zahl dartsellt (z.B. 100 000)
     # ich nutze die lastmodified tabelle um nicht alle artikel nochmals zu analysieren zu müssen
@@ -485,6 +493,7 @@ def calculateWordOccurence(cur):
     # loop durch die neuen quarter und fasse dokumente aus den quarter zusammen
     # immer auf der Grundlage dass es das eventuell ein überschneidendes Quarter gibt, quasi ein laufender Monat wo schon dinge drinstehen
     # das ist immer maximal ein yearAndQuarter, das wissen wir anhand von lastmodified
+    print("new quarters:")
     print(quarterArray)
     for yearAndQuarter in quarterArray:
 
@@ -536,6 +545,7 @@ def calculateWordOccurence(cur):
     return sqlStatements
 
 def calculateTotalWordOccurence(cur, quarterArray):
+    print("Calculate total word occurence")
     countPerWordDict = {}
     sqlStatements = []
     totalWordCount = 0
