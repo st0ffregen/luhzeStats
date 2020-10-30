@@ -273,7 +273,7 @@ def readInSite(url):
 		text = urlopen(url).read()
 	except error.URLError as e:
 		traceback.print_exc()
-		print("Cannot connect to " + web + str(i))
+		print("Cannot connect to " + url)
 		print(sys.exc_info())
 		sys.exit(1)
 
@@ -309,7 +309,7 @@ def scrapeWebsite(con):
 
 
 			
-	for i in range(0,15)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
+	for i in range(70,80)[::-1]: #3 as a random number to start looking for new articles, otherwise its max on luhze site +1
 			
 		soup = readInSite(web + str(i))
 	

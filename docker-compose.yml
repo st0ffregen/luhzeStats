@@ -1,11 +1,11 @@
 version: '3'
 services:
   web:
-    image: php:7.4-apache
+    image: httpd:latest
     ports:
       - "8000:80"
     volumes:
-      - ./online/apache/src:/var/www/html
+      - ./online/apache/src:/usr/local/apache2/htdocs/
     depends_on:
       - db
       - pythonapi
@@ -18,9 +18,10 @@ services:
      # - ./online/mariadb/data/:/var/lib/mysql
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
-      #MYSQL_USER: admin
-      #MYSQL_PASSWORD: test 
-      #MYSQL_DATABASE: luhze
+      MYSQL_USER_API: api
+      MYSQL_PASSWORD_API: testAPI
+      MYSQL_USER_GATHERER: gatherer
+      MYSQL_PASSWORD_GATHERER: testGatherer
     ports:
       - "8889:3306"
     

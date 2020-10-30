@@ -571,7 +571,7 @@ def calculateTotalWordOccurence(cur, quarterArray):
 def removeTrailingPunctuations(w):
     unwantedPunctuations = ["-", ",", ":", ".", "!", "?", "\"", "“", ")"]
 
-    if w[-1] in unwantedPunctuations and len(w) > 2 and w is not "student!": #student! darf das Ausrufezeichen behalten
+    if w[-1] in unwantedPunctuations and len(w) > 2 and w != "STUDENT!": #student! darf das Ausrufezeichen behalten
         return removeTrailingPunctuations(w[:-1])
     else:
         return w
