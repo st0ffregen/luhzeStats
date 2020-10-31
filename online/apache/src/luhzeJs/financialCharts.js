@@ -1,5 +1,5 @@
 Chart.defaults.global.defaultFontColor = '#555';
-
+var DateTime = luxon.DateTime;
 function customTooltip(data) {
 
 	return customTooltips = function(tooltip) {
@@ -146,8 +146,10 @@ function articlesTimelineFinancial(data) {
 				totalArticleCount += data[k]['count'];
 			}
 		}
+		var month = (dateArray[i][1]+1).toString();
+		if(month.length < 2) month = "0" + month;
 
-		returnArray[i] = {t:moment(dateArray[i][0]+"-"+(dateArray[i][1]+1).toString()+"-01",'YYYY-MM-DD').valueOf(),y:totalArticleCount};
+		returnArray[i] = {t:DateTime.fromISO(dateArray[i][0].toString()+"-"+month+"-01").valueOf(),y:totalArticleCount};
 
 	}
 
@@ -174,7 +176,10 @@ function articlesTimelineFinancialDerivation(data) {
 			}
 		}
 
-		returnArray[i] = {t:moment(dateArray[i][0]+"-"+(dateArray[i][1]+1).toString()+"-01",'YYYY-MM-DD').valueOf(),y:dateArray[i][2]};
+		var month = (dateArray[i][1]+1).toString();
+		if(month.length < 2) month = "0" + month;
+
+		returnArray[i] = {t:DateTime.fromISO(dateArray[i][0].toString()+"-"+month+"-01").valueOf(),y:dateArray[i][2]};
 
 	}
 
@@ -209,8 +214,11 @@ function ressortArticlesTimelineFinancial(data,colorArray,hiddenArray, oldestArt
 				var index = data[k]['countPerMonth'].map(function(e) {return e.date;}).indexOf(currentDateFromDateArray); //gives me the index 	
 				totalMonthlyArticles += data[k]['countPerMonth'][index]['count']
 
-			} 
-		returnArray[i] = {t:moment(dateArray[i][0]+"-"+(dateArray[i][1]+1).toString()+"-01",'YYYY-MM-DD').valueOf(),y:totalMonthlyArticles}; //(dateArray[i][1]+1).toString()
+			}
+
+		var month = (dateArray[i][1]+1).toString();
+		if(month.length < 2) month = "0" + month;
+		returnArray[i] = {t:DateTime.fromISO(dateArray[i][0].toString()+"-"+month+"-01").valueOf(),y:totalMonthlyArticles}; //(dateArray[i][1]+1).toString()
 		}
 
 		datasetArray.push({label: data[k]['ressort'],
@@ -250,7 +258,10 @@ function ressortArticlesTimelineFinancialDerivation(data,colorArray,hiddenArray,
 				}
 			}
 			//after finding all articles and adding them up to articlesCount, we can change the dateArray entry to what we want for the chartjs
-			returnArray[i] = {t:moment(dateArray[i][0]+"-"+((dateArray[i][1]*3)+1).toString()+"-01",'YYYY-MM-DD').valueOf(),y:articlesCount};//calculating the first month in each quarter
+
+			var month = ((dateArray[i][1]*3)+1).toString();
+		    if(month.length < 2) month = "0" + month;
+			returnArray[i] = {t:DateTime.fromISO(dateArray[i][0].toString()+"-"+month+"-01").valueOf(),y:articlesCount};//calculating the first month in each quarter
 		}
 
 		datasetArray.push({label: data[k]['ressort'],
@@ -287,7 +298,9 @@ function activeMembersFinancial(data, oldestArticle, newestArticle) {
 			}
 		}
 		//after finding all articles and adding them up to articlesCount, we can change the dateArray entry to what we want for the chartjs
-		returnArray[i] = {t:moment(dateArray[i][0]+"-"+((dateArray[i][1]*3)+1).toString()+"-01",'YYYY-MM-DD').valueOf(),y:dateArray[i][2]};//calculating the first month in each quarter
+		var month = ((dateArray[i][1]*3)+1).toString();
+		if(month.length < 2) month = "0" + month;
+		returnArray[i] = {t:DateTime.fromISO(dateArray[i][0].toString()+"-"+month+"-01").valueOf(),y:dateArray[i][2]};//calculating the first month in each quarter
 	}
 
 	return [{label: 'Aktive Autor*innen pro Quartal',
@@ -341,12 +354,12 @@ function financialChart(chart, dataFunc, quarterOrMonth) {
                             var firstTick = ticks[0];
                             var i, ilen, val, tick, currMajor, lastMajor;
 
-                            val = moment(ticks[0].value);
-                            if ((majorUnit === 'minute' && val.second() === 0)
-                                || (majorUnit === 'hour' && val.minute() === 0)
-                                || (majorUnit === 'day' && val.hour() === 9)
-                                || (majorUnit === 'month' && val.date() <= 3 && val.isoWeekday() === 1)
-                                || (majorUnit === 'year' && val.month() === 0)) {
+                            val = DateTime.fromISO(ticks[0].value);
+                            if ((majorUnit === 'minute' && val.second === 0)
+                                || (majorUnit === 'hour' && val.minute === 0)
+                                || (majorUnit === 'day' && val.hour === 9)
+                                || (majorUnit === 'month' && val.day <= 3 && val.weekday === 1)
+                                || (majorUnit === 'year' && val.month === 0)) {
                                 firstTick.major = true;
                             } else {
                                 firstTick.major = false;
@@ -355,7 +368,7 @@ function financialChart(chart, dataFunc, quarterOrMonth) {
 
                             for (i = 1, ilen = ticks.length; i < ilen; i++) {
                                 tick = ticks[i];
-                                val = moment(tick.value);
+                                val = DateTime.fromISO(tick.value);
                                 currMajor = val.get(majorUnit);
                                 tick.major = currMajor !== lastMajor;
                                 lastMajor = currMajor;

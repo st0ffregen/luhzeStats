@@ -3,6 +3,8 @@ var colorArray = ["rgb(189, 154, 66)","rgb(119, 204, 102)","rgb(151, 172, 211)"]
 
 var colorArrayAlpha = ["rgba(189, 154, 66,0.5)","rgba(119, 204, 102,0.5)","rgba(151, 172, 211,0.5)"];
 
+var DateTime = luxon.DateTime;
+
 async function addDataToWordOccurenceChart(word, chart) {
 			
 	//only add a word with max 4 words
@@ -49,10 +51,10 @@ async function addDataToWordOccurenceChart(word, chart) {
                             if(data[k]['yearAndQuarter'] == i.toString() + q.toString()) {
 
                                 foundInDataSet = true;
-                                dataArray.push({t:moment(date,'YYYY-MM-DD').valueOf(),y:data[k]['occurencePerWords']});
+                                dataArray.push({t:DateTime.fromISO(date).valueOf(),y:data[k]['occurencePerWords']});
                             }
                         }
-                        if(foundInDataSet == false) dataArray.push({t:moment(date,'YYYY-MM-DD').valueOf(),y:0});
+                        if(foundInDataSet == false) dataArray.push({t:DateTime.fromISO(date).valueOf(),y:0});
 
                     }
                     firstQuarter = 1;
@@ -97,9 +99,9 @@ async function hideOrShowDateBeforeYear(chart, button) {
         for(var i=0;i<chart.data.datasets.length;i++) { //loop durch die dargestellten woerter
             var newArray = [];
             for(var k=0;k<chart.data.datasets[i]['data'].length;k++) {
-                var momentDate = moment(chart.data.datasets[i]['data'][k]['t']);
-                console.log(momentDate.month());
-                if(momentDate.year() >= 2015 && !(momentDate.month() < 3 && momentDate.year() == 2015 )) {
+                var momentDate = DateTime.fromMillis(chart.data.datasets[i]['data'][k]['t']);
+                console.log(momentDate.month);
+                if(momentDate.year >= 2015 && !(momentDate.month < 3 && momentDate.year == 2015 )) {
 
                     newArray.push(chart.data.datasets[i]['data'][k]);
                 }
@@ -155,7 +157,7 @@ function initLuhzeChart(chart, word1, word2) {
             //erstellen eines array mit durchgehenden daten
             fetchParameterAPI("wordOccurence", "word", word1, (data) => {
                 if("Error. The word does not exists." === data) {
-                    console.log("Error. The word " + word + " does not exists.");
+                    console.log("Error. The word " + word1 + " does not exists.");
                     var input = document.getElementById("wordInput");
                     input.value = "";
                     input.placeholder = "Wort nicht gefunden";
@@ -164,24 +166,36 @@ function initLuhzeChart(chart, word1, word2) {
                 var word1Data = data;
                 fetchParameterAPI("wordOccurence", "word", word2, (data) => {
 
+                if("Error. The word does not exists." === data) {
+                    console.log("Error. The word " + word2 + " does not exists.");
+                    var input = document.getElementById("wordInput");
+                    input.value = "";
+                    input.placeholder = "Wort nicht gefunden";
+                    return 1;
+                }
+
                 var word2Data = data;
 
                 for(var i=firstYear;i<=lastYear;i++) {
                     for(var q=firstQuarter;q<=4;q++) {
                         // translate quarter to date
                         var month = ((q * 3) -2).toString();
-                        var date = i.toString() + "-" + month + "-01";
-
+                        if(month.length < 2) {
+                            var date = i.toString() + "-0" + month + "-01";
+                        } else {
+                            var date = i.toString() + "-" + month + "-01";
+                        }
                         //check if current date (i+q) is in data array
                         var foundInDataSetWord1 = false;
                         for(var k=0;k<word1Data.length;k++) { //overwrites den eintrag von zuvor
                             if(word1Data[k]['yearAndQuarter'] == i.toString() + q.toString()) {
 
                                 foundInDataSetWord1 = true;
-                                dataArrayWord1.push({t:moment(date,'YYYY-MM-DD').valueOf(),y:word1Data[k]['occurencePerWords']});
+                                console.log(date + " | " + DateTime.fromISO(date).valueOf());
+                                dataArrayWord1.push({t:DateTime.fromISO(date).valueOf(),y:word1Data[k]['occurencePerWords']});
                             }
                         }
-                        if(foundInDataSetWord1 == false) dataArrayWord1.push({t:moment(date,'YYYY-MM-DD').valueOf(),y:0});
+                        if(foundInDataSetWord1 == false) dataArrayWord1.push({t:DateTime.fromISO(date).valueOf(),y:0});
 
                         //check if current date (i+q) is in data array
                         var foundInDataSetWord2 = false;
@@ -189,10 +203,11 @@ function initLuhzeChart(chart, word1, word2) {
                             if(word2Data[k]['yearAndQuarter'] == i.toString() + q.toString()) {
 
                                 foundInDataSetWord2 = true;
-                                dataArrayWord2.push({t:moment(date,'YYYY-MM-DD').valueOf(),y:word2Data[k]['occurencePerWords']});
+                                console.log(date + " | " + DateTime.fromISO(date).valueOf());
+                                dataArrayWord2.push({t:DateTime.fromISO(date).valueOf(),y:word2Data[k]['occurencePerWords']});
                             }
                         }
-                        if(foundInDataSetWord2 == false) dataArrayWord2.push({t:moment(date,'YYYY-MM-DD').valueOf(),y:0});
+                        if(foundInDataSetWord2 == false) dataArrayWord2.push({t:DateTime.fromISO(date).valueOf(),y:0});
 
                     }
                     firstQuarter = 1;
@@ -250,12 +265,12 @@ function initLuhzeChart(chart, word1, word2) {
                             var firstTick = ticks[0];
                             var i, ilen, val, tick, currMajor, lastMajor;
 
-                            val = moment(ticks[0].value);
-                            if ((majorUnit === 'minute' && val.second() === 0)
-                                || (majorUnit === 'hour' && val.minute() === 0)
-                                || (majorUnit === 'day' && val.hour() === 9)
-                                || (majorUnit === 'month' && val.date() <= 3 && val.isoWeekday() === 1)
-                                || (majorUnit === 'year' && val.month() === 0)) {
+                            val = DateTime.fromISO(ticks[0].value);
+                            if ((majorUnit === 'minute' && val.second === 0)
+                                || (majorUnit === 'hour' && val.minute === 0)
+                                || (majorUnit === 'day' && val.hour === 9)
+                                || (majorUnit === 'month' && val.day <= 3 && val.weekday === 1)
+                                || (majorUnit === 'year' && val.month === 0)) {
                                 firstTick.major = true;
                             } else {
                                 firstTick.major = false;
@@ -264,7 +279,7 @@ function initLuhzeChart(chart, word1, word2) {
 
                             for (i = 1, ilen = ticks.length; i < ilen; i++) {
                                 tick = ticks[i];
-                                val = moment(tick.value);
+                                val = DateTime.fromISO(tick.value);
                                 currMajor = val.get(majorUnit);
                                 tick.major = currMajor !== lastMajor;
                                 lastMajor = currMajor;

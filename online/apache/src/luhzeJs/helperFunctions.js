@@ -32,7 +32,7 @@ function monthArray(oldestDate,newestDate) {
     var dateArray = [];
     //fill an array with all months so that we can make sure that we have for all months data
     while((oldestDate.getMonth() <= newestDate.getMonth() && oldestDate.getFullYear()<=newestDate.getFullYear()) || oldestDate.getFullYear()<newestDate.getFullYear()) {//till its the same month and year
-        
+
         dateArray.push([oldestDate.getFullYear(), oldestDate.getMonth(),0]);
         oldestDate.setMonth(oldestDate.getMonth()+1);
     } 
