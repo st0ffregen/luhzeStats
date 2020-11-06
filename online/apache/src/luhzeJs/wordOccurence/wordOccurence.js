@@ -211,7 +211,7 @@ function initLuhzeChart(chart, word1, word2) {
                             if (word2Data[k]['yearAndQuarter'] == i.toString() + q.toString()) {
 
                                 foundInDataSetWord2 = true;
-                                console.log(date + " | " + DateTime.fromISO(date).valueOf());
+
                                 dataArrayWord2.push({
                                     t: DateTime.fromISO(date).valueOf(),
                                     y: word2Data[k]['occurencePerWords']

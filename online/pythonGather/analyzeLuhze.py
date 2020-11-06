@@ -597,6 +597,10 @@ def removeLeadingPunctuations(w):
         return w
 
 
+
+
+
+
 def writeToDB(cur, con):
     try:
         for file in fileArray:

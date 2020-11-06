@@ -191,7 +191,7 @@ def totalWordOccurence():
 		con = connectToDB()
 		with con:
 			cur = con.cursor()
-			cur.execute('SELECT word, occurencePerWords, occurence, totalWordCount FROM totalWordOccurence WHERE word like "' + word + '%" order by occurencePerWords desc limit 5')
+			cur.execute('SELECT word, occurencePerWords, occurence, totalWordCount FROM totalWordOccurence WHERE BINARY word like CONCAT(%s,\'%%\') order by occurencePerWords desc limit 5', [ecscapeSpecialCharacters(word)]) # escape das % mit einem weiteren %
 			occ = cur.fetchall()
 
 			result = []
@@ -210,6 +210,13 @@ def totalWordOccurence():
 	else:
 		return jsonify("Error. No word filed provided. Please specify a word")
 
+
+def ecscapeSpecialCharacters(wordToEscapeCharactersIn):
+    # die methode escapet im string special charcters in der mysql like funktion
+    # das ist % welches wildcard fuer mehrere zeichen ist und _ was fuer ein zeichen ist
+    specialCharactersInMySQL = ['_', '%']
+    if wordToEscapeCharactersIn is not None and wordToEscapeCharactersIn != "":
+        return wordToEscapeCharactersIn.replace("_","\_").replace("%", "\%")
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0", port="5001", debug=True)
