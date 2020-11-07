@@ -134,6 +134,7 @@ def minYearAndQuarter():
 		cur = con.cursor()
 		cur.execute('SELECT MIN(yearAndQuarter), MAX(yearAndQuarter) from wordOccurenceOverTheQuarters')
 		res = cur.fetchone()
+		cur.close()
 		return Response(json.dumps({'minYearAndQuarter': res[0], 'maxYearAndQuarter': res[1]}), mimetype='application/json')
 
 @app.route('/json/maxYearAndQuarter', methods=['GET'])
@@ -172,7 +173,7 @@ def wordOccurence():
 						continue
 
 					for entry in occurences:
-						if len(result) > 1:
+						if len(result) > 0:
 							#wenn es den result array schon mit werten gibt search in result array for same yearAndQuarter
 							# wenn aber das spezifische yearAndQuarter noch nicht gibt wird es neu hinzugefügt -> found variable
 							found = False
@@ -200,6 +201,7 @@ def wordOccurence():
 				for entry in occurences:
 					result.append({'yearAndQuarter': entry[0], 'occurencePerWords': entry[1], 'occurence': entry[2]})
 
+			cur.close()
 			return Response(json.dumps(sorted(result, key=lambda x: x['yearAndQuarter'])),  mimetype='application/json')
 	else:
 		return jsonify("Error. No word provided. Please specify a word")
@@ -213,17 +215,47 @@ def totalWordOccurence():
 		con = connectToDB()
 		with con:
 			cur = con.cursor()
-			cur.execute('SELECT word, occurencePerWords, occurence, totalWordCount FROM totalWordOccurence WHERE BINARY word like CONCAT(%s,\'%%\') order by occurencePerWords desc limit 5', [ecscapeSpecialCharacters(word)]) # escape das % mit einem weiteren %
-			occ = cur.fetchall()
 
-			result = []
-			restOfResult = [] # gibt quasi ein first result das ist das wort was eigeben wurde, falls vorhanden in der db, nach oben zu schieben auch wenn es weniger treffer als andere hat
+			if "+++" in word:
+				wordsToFetchArray = word.split("+++")
+				result = []
+				for w in wordsToFetchArray:
 
-			for w in occ:
-				if w[0] == word:
-					result = [{'word': w[0], 'occurencePerWords': w[1], 'occurence': w[2]}]
-				else:
-					restOfResult.append({'word': w[0], 'occurencePerWords': w[1], 'occurence': w[2]})
+					restOfResult = []  # gibt quasi ein first result das ist das wort was eigeben wurde, falls vorhanden in der db, nach oben zu schieben auch wenn es weniger treffer als andere hat
+
+					if w == "": #passiert gerade dann wenn nach dem +++ nichts eingegeben wurde
+						continue
+
+					cur.execute(
+						'SELECT word, occurencePerWords, occurence, totalWordCount FROM totalWordOccurence WHERE BINARY word like CONCAT(%s,\'%%\') order by occurencePerWords desc limit 5',
+						[ecscapeSpecialCharacters(w)])  # escape das % mit einem weiteren %
+					occ = cur.fetchall()
+
+					if len(result) > 0:
+						for entry in occ:
+							if entry[0] == w:
+								result[0]['occurencePerWords'] += entry[1]
+								result[0]['occurence'] += entry[2]
+							else:
+								restOfResult.append({'word': word.split(w)[0] + entry[0], 'occurencePerWords': result[0]['occurencePerWords'] + entry[1], 'occurence': result[0]['occurence'] + entry[2]})
+					else: # first word in wordsToFetchArray
+						for entry in occ:
+							if entry[0] == w:
+								result = [{'word': word, 'occurencePerWords': entry[1], 'occurence': entry[2]}]
+							else:
+								restOfResult.append({'word': word, 'occurencePerWords': entry[1], 'occurence': entry[2]})
+			else:
+				result = []
+				restOfResult = []  # gibt quasi ein first result das ist das wort was eigeben wurde, falls vorhanden in der db, nach oben zu schieben auch wenn es weniger treffer als andere hat
+
+				cur.execute('SELECT word, occurencePerWords, occurence, totalWordCount FROM totalWordOccurence WHERE BINARY word like CONCAT(%s,\'%%\') order by occurencePerWords desc limit 5', [ecscapeSpecialCharacters(word)]) # escape das % mit einem weiteren %
+				occ = cur.fetchall()
+
+				for w in occ:
+					if w[0] == word:
+						result = [{'word': w[0], 'occurencePerWords': w[1], 'occurence': w[2]}]
+					else:
+						restOfResult.append({'word': w[0], 'occurencePerWords': w[1], 'occurence': w[2]})
 
 			result.extend(restOfResult)
 			cur.close()
