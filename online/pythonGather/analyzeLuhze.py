@@ -209,12 +209,14 @@ def topAuthorsPerRessort(cur, filename):
     authorArray = []
     for e in entries:
         if ressort == e[0]:
-            authorArray.append({"name": e[2] + " " + e[3], "count": e[4]})
+            name = (e[2] + " " + e[3]).strip()
+            authorArray.append({"name": name, "count": e[4]})
             if e == entries[len(entries) - 1]:  # if it is last element
                 arr.append({"ressort": ressort, "authors": authorArray[:3]})
         else:
             arr.append({"ressort": ressort, "authors": authorArray[:3]})
-            authorArray = [{"name": e[2] + " " + e[3], "count": e[4]}]
+            name = (e[2] + " " + e[3]).strip()
+            authorArray = [{"name": name, "count": e[4]}]
             ressort = e[0]
             if e == entries[len(entries) - 1]:  # if it is last element
                 arr.append({"ressort": ressort, "authors": authorArray[:3]})
@@ -230,7 +232,8 @@ def authorTimeline(cur, filename, minAuthor):
     entries = cur.fetchall()
     arr = []  # adjustFormat function only takes array with 2-tupel (2 entries in tupel)
     for e in entries:
-        arr.append({"name": e[1] + " " + e[2], "min": e[3], "max": e[4]})
+        name = (e[1] + " " + e[2]).strip()
+        arr.append({"name": name, "min": e[3], "max": e[4]})
     fileArray.append([json.dumps(arr, default=str), filename])
     return 0
 
@@ -268,7 +271,8 @@ def averageCharactersPerDay(cur, filename, minAuthor):
     for e in entries:
         cur.execute('SELECT DATEDIFF(MAX(created),MIN(created))+1 as average from articles where authorId=%s',[str(e[0])])
         res = cur.fetchone()
-        arr.append({"name":  e[1] + " " + e[2], "count": round(e[3] / res[0])})
+        name = (e[1] + " " + e[2]).strip()
+        arr.append({"name":  name, "count": round(e[3] / res[0])})
     fileArray.append([json.dumps(sorted(arr, key=lambda x: x['count'], reverse=True)), filename])
     return 0
 
@@ -319,72 +323,83 @@ def ranking(cur, filename, backInTime):
         # berechnet sum(wordcount) für alle artikel vor dem gebenen Zeitpunkt, also z.B. alles vor jetzt oder alle vor jetzt minus ein Jahr
         cur.execute(
             'SELECT sum(wordcount) as count from (select distinct(link), d.wordcount as wordcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)) as sub', [str(e[0]), str(backInTime)])
-        ressum = cur.fetchone()
-        if (ressum[0] == "NULL" or ressum[0] == None):  # den autor gabs damals noch nicht
+        wordcountResult = cur.fetchone()
+        if (wordcountResult[0] == "NULL" or wordcountResult[0] == None):  # den autor gabs damals noch nicht
             continue
 
-        cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 as average from articles where authorId=%s', [str(backInTime), str(e[0])])
-        rescpd = cur.fetchone()
-        rankingCPD = cpdFunction(round((ressum[0] / rescpd[0])))
+        cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 as average from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime)])
+        daysSinceFirstArticleResult = cur.fetchone()
+        #rankingCPD = cpdFunction(round((ressum[0] / rescpd[0])))
 
-        cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 as average from articles where authorId=%s', [str(backInTime), str(e[0])])
-        restsla = cur.fetchone()
-        rankingTSFA = tslaFunction(restsla[0])
+        cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 as average from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime)])
+        daysSinceLastArticleResult = cur.fetchone()
+        #rankingTSFA = tslaFunction(restsla[0])
 
-        cur.execute('SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(e[0]),str(backInTime)])
-        resac = cur.fetchone()
-        rankingAC = acFunction(resac[0])
-        scoreNow = round(rankingAC + rankingTSFA + rankingCPD)
+        cur.execute('SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(e[0]), str(backInTime)])
+        articleCountResult = cur.fetchone()
+        #rankingAC = acFunction(resac[0])
+        #scoreNow = round(rankingAC + rankingTSFA + rankingCPD)
 
         # two months before bzw. plus backInTime
-        ressum = "NULL"
-        rescpd = "NULL"
-        restsla = "NULL"
-
         cur.execute(
             'SELECT sum(wordcount) as count from (select distinct(link), d.wordcount as wordcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)) as sub', [str(e[0]), str(intervall + backInTime)])
-        ressum = cur.fetchone()
-        if (ressum[0] == "NULL" or ressum[0] == None):  # no article published two months before
-            scoreBackThen = 0
+        wordcountResultBackInTime = cur.fetchone()
+        if (wordcountResultBackInTime[0] == "NULL" or  wordcountResultBackInTime[0] == None):  # no article published two months before
+            name = (e[1] + " " + e[2]).strip()
+            arr.append({"name": name, "wordcount": int(wordcountResult[0]),
+                        "wordcountBackInTime": 0,
+                        "daysSinceFirstArticle": daysSinceFirstArticleResult[0],
+                        "daysSinceFirstArticleBackInTime": 0,
+                        "daysSinceLastArticle": daysSinceLastArticleResult[0],
+                        "daysSinceLastArticleBackInTime": 0,
+                        "articleCount": articleCountResult[0],
+                        "articleCountBackInTime": 0})
+            continue
         else:
-            cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 as average from articles where authorId= %s', [str(intervall + backInTime), str(e[0])])
-            rescpd = cur.fetchone()
-            rankingCPD = cpdFunction(round((int(ressum[0]) / rescpd[0])))
+            cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 as average from articles where authorId= %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime + intervall)])
+            daysSinceFirstArticleResultBackInTime = cur.fetchone()
+            #rankingCPD = cpdFunction(round((int(ressum[0]) / rescpd[0])))
 
-            cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 as average from articles where authorId=%s', [str(intervall + backInTime), str(e[0])])
-            restsla = cur.fetchone()
-            rankingTSFA = tslaFunction(restsla[0])
+            cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 as average from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime + intervall)])
+            daysSinceLastArticleResultBackInTime = cur.fetchone()
+            #rankingTSFA = tslaFunction(restsla[0])
 
-            cur.execute('SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(e[0]), str(intervall-backInTime)])
-            resac = cur.fetchone()
-            rankingAC = acFunction(resac[0])
-            scoreBackThen = round(rankingAC + rankingTSFA + rankingCPD)
+            cur.execute('SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(e[0]), str(intervall + backInTime)])
+            articleCountResultBackInTime = cur.fetchone()
+            #rankingAC = acFunction(resac[0])
+            #scoreBackThen = round(rankingAC + rankingTSFA + rankingCPD)
 
-        # calculatin div and adjectiv
-        div = scoreNow - scoreBackThen
-        adjectiv = ""
-        color = ""
-        if div >= 50:
-            adjectiv = "rising star"
-            color = "#32CD32"
-        elif div >= 10:
-            adjectiv = "ascending"
-            color = "#6B8E23"
-        elif div < 10 and div > -10:
-            adjectiv = "stagnating"
-            color = "#FFA500"
-        elif div <= -50:
-            adjectiv = "free falling"
-            color = "#FF0000"
-        elif div <= -10:
-            adjectiv = "decending"
-            color = "#8B0000"
+        # # calculatin div and adjectiv
+        # div = scoreNow - scoreBackThen
+        # adjectiv = ""
+        # color = ""
+        # if div >= 50:
+        #     adjectiv = "rising star"
+        #     color = "#32CD32"
+        # elif div >= 10:
+        #     adjectiv = "ascending"
+        #     color = "#6B8E23"
+        # elif div < 1https://duckduckgo.com/?t=ffab&q=object+of+type+decimal+is+not+json+serializiable&ia=web0 and div > -10:
+        #     adjectiv = "stagnating"
+        #     color = "#FFA500"
+        # elif div <= -50:
+        #     adjectiv = "free falling"
+        #     color = "#FF0000"
+        # elif div <= -10:
+        #     adjectiv = "decending"
+        #     color = "#8B0000"
+        #
+        # if div >= 0:  # add plus sign
+        #     div = "+" + str(div)
 
-        if div >= 0:  # add plus sign
-            div = "+" + str(div)
+        #arr.append({"name": e[1] + " " + e[2], "score": scoreNow, 'div': div, 'adjectiv': adjectiv, 'color': color})
+        name = (e[1] + " " + e[2]).strip()
+        arr.append({"name": name, "wordcount": int(wordcountResult[0]), "wordcountBackInTime": int(wordcountResultBackInTime[0]),
+                    "daysSinceFirstArticle": daysSinceFirstArticleResult[0], "daysSinceFirstArticleBackInTime": daysSinceFirstArticleResultBackInTime[0],
+                    "daysSinceLastArticle": daysSinceLastArticleResult[0], "daysSinceLastArticleBackInTime":  daysSinceLastArticleResultBackInTime[0],
+                    "articleCount": articleCountResult[0], "articleCountBackInTime": articleCountResultBackInTime[0]})
 
-        arr.append({"name": e[1] + " " + e[2], "score": scoreNow, 'div': div, 'adjectiv': adjectiv, 'color': color})
-    fileArray.append([json.dumps(sorted(arr, key=lambda x: x['score'], reverse=True)), filename])
+    fileArray.append([json.dumps(arr), filename])
     return 0
 
 
