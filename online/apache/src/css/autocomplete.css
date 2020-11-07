@@ -5,7 +5,9 @@
   display: inline-block;
 }
 
-
+.autocomplete-right {
+  float: right;
+}
 
 input {
   border: 1px solid transparent;

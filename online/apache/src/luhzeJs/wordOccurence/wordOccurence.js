@@ -1,14 +1,17 @@
-var colorArray = ["rgb(189, 154, 66)", "rgb(119, 204, 102)", "rgb(151,172,211)"];
-
-var colorArrayAlpha = ["rgba(189, 154, 66,0.5)", "rgba(119, 204, 102,0.5)", "rgba(151, 172, 211,0.5)"];
+//var colorArray = ["rgb(189, 154, 66)", "rgb(119, 204, 102)", "rgb(151,172,211)"];
+//var colorArray = [ "rgb(214, 26, 70)","rgb(253, 220, 34)","rgb(35, 106, 185)","rgb(204, 181, 36)","rgb(247, 212, 220)"];
+var colorArray = ["rgb(12, 102, 192)", "rgb(255, 133, 82)", "rgb(170, 220, 4)", "rgb(119, 81, 68)", "rgb(149, 53, 212)"];
+var colorArrayAlpha = ["rgba(12, 102, 192, 0.1)", "rgba(255, 133, 82, 0.1)", "rgba(170, 220, 4, 0.1)", "rgba(119, 81, 68, 0.1)", "rgba(149, 53, 212, 0.1)"];
+//var colorArrayAlpha = [ "rgba(214, 26, 70, 0.1)","rgba(253, 220, 34, 0.1)","rgba(35, 106, 185, 0.1)","rgba(204, 181, 36, 0.1)","rgba(247, 212, 220,0.1)"];
+//var colorArrayAlpha = ["rgba(189, 154, 66,0.1)", "rgba(119, 204, 102,0.1)", "rgba(151, 172, 211,0.1)"];
 
 var DateTime = luxon.DateTime;
 
-async function addDataToWordOccurenceChart(word, chart) {
+async function addDataToWordOccurenceChart(word, chart, newColor, newColorAlpha) {
 
-    //only add a word with max 4 words
-    var maxValue = 4; //in die env???
-    if (chart.data.datasets.length <= maxValue) {
+    //only add a word with max 5 words
+    var maxValue = 5; //in die env???
+    if (newColor != null || chart.data.datasets.length < maxValue) {
         fetchFileAPI("minAndMaxYearAndQuarter", function (data) {
 
             var button = document.getElementsByClassName("hideYearsButton")[0];
@@ -38,6 +41,7 @@ async function addDataToWordOccurenceChart(word, chart) {
                     return 1;
                 }
 
+
                 for (var i = firstYear; i <= lastYear; i++) {
                     for (var q = firstQuarter; q <= 4; q++) {
                         // translate quarter to date
@@ -65,10 +69,19 @@ async function addDataToWordOccurenceChart(word, chart) {
                 }
 
 
+
+                if(newColor != null) {
+                    var color = newColor;
+                    var colorAlpha = newColorAlpha;
+                } else {
+                    var color = colorArray[chart.data.datasets.length];
+                    var colorAlpha = colorArrayAlpha[chart.data.datasets.length];
+
+                }
                 var newDataset = {
                     label: word.toUpperCase(),
-                    borderColor: colorArray[chart.data.datasets.length],
-                    backgroundColor: colorArrayAlpha[chart.data.datasets.length],
+                    borderColor: color,
+                    backgroundColor: colorAlpha,
                     data: dataArray,
                     type: 'line',
                     pointRadius: 0,
@@ -86,11 +99,15 @@ async function addDataToWordOccurenceChart(word, chart) {
         });
     } else {
         //handle errors
+
+        //get the color from first item
+        var newColor = chart.data.datasets[0]['borderColor'];
+        var newColorAlpha = chart.data.datasets[0]['backgroundColor'];
         //delete first word and add the givin input word
         chart.data.datasets = deleteDataFromWordOccurenceChart(chart.data.datasets[0]['label'], chart);
 
         //add the givin input word
-        addDataToWordOccurenceChart(word, chart);
+        addDataToWordOccurenceChart(word, chart, newColor, newColorAlpha);
     }
 
 }
@@ -129,7 +146,7 @@ async function hideOrShowDateBeforeYear(chart, button) {
         button.innerHTML = "Verberge Daten vor 2015, 2. Quartal";
 
         for (var i = 0; i < wordsToFetchAgain.length; i++) {
-            addDataToWordOccurenceChart(wordsToFetchAgain[i], chart);
+            addDataToWordOccurenceChart(wordsToFetchAgain[i], chart, null,null);
             await Sleep(500);
         }
 
