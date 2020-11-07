@@ -47,10 +47,6 @@ def date():
 def minAuthor():
 	return readInGenericFile("minAuthor")
 
-#@app.route('/json/date',methods=['GET'])
-#def date():
-#	return readInGenericFile("date")
-
 @app.route('/json/activeMembers',methods=['GET'])
 def activeMembers():
 	return readInGenericFile("activeMembers")

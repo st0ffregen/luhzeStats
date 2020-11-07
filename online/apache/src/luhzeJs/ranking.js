@@ -36,7 +36,7 @@ function rankingFunction(backInTime) {
 				addInnterHTML += "<hr><h1 class=\"dangerzone\">!!!DANGER ZONE!!!</h1><div class=\"danger\">";
 			}
 			 
-			addInnterHTML += "<div class=\"ranks\"><div class=\"rankName\">" + data[i]['name'] + "</div><div class=\"rankScore\">" + data[i]['score'] + "</div><div class=\"rankAdjective\" style=\"color: "+ data[i]['color'] + ";\">" + data[i]['adjectiv'] + "</div><div class=\"rankDiff\">" + data[i]['div'] + " </div></div>";
+			addInnterHTML += "<div class=\"ranks\"><div class=\"rankName\"><a href=\"javascript:showAutorinnenSeite()\" class=\"linkToAutorinnenSeite\">" + data[i]['name'] + "</a></div><div class=\"rankScore\">" + data[i]['score'] + "</div><div class=\"rankAdjective\" style=\"color: "+ data[i]['color'] + ";\">" + data[i]['adjectiv'] + "</div><div class=\"rankDiff\">" + data[i]['div'] + " </div></div>";
 			
 
 		}
@@ -56,17 +56,19 @@ function rankingFunction(backInTime) {
 
 
 
-function showRanking(el, graphContent) {
+function showRanking() {
 
 
 	document.getElementsByClassName("graphContent")[0].style.display = "none";
+	document.getElementsByClassName("autorinnenSeite")[0].style.display = "none";
 	rankingFunction('Default');
 	
 }
 
-function hideRanking(el) {
+function hideRanking() {
 
 	document.getElementsByClassName("ranking")[0].style.display = "none";
+	document.getElementsByClassName("autorinnenSeite")[0].style.display = "none";
 	document.getElementsByClassName("graphContent")[0].style.display = "block";
 
 	fetchChartsSite();

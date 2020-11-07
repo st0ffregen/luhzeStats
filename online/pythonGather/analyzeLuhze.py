@@ -25,7 +25,7 @@ def tslaFunction(value):
     # function is using months not days so:
     value = round(value / 30.5)
     # to avoid math overflow when passing month thats to big
-    if value > 10:
+    if value > 5: #also letzter artikel älter als 5 monate
         return round(-0.5 * value)  # linear loosing points over time
     else:
         result = round(-10 / (0.1 + 10 * math.exp(-1.3 * value)) + 100)
@@ -316,7 +316,7 @@ def ranking(cur, filename, backInTime):
     arr = []
     for e in entries:  # loop through all authors
 
-        # jetziger Zustand bzw. nach hinten wenn backInTime an ist
+        # berechnet sum(wordcount) für alle artikel vor dem gebenen Zeitpunkt, also z.B. alles vor jetzt oder alle vor jetzt minus ein Jahr
         cur.execute(
             'SELECT sum(wordcount) as count from (select distinct(link), d.wordcount as wordcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)) as sub', [str(e[0]), str(backInTime)])
         ressum = cur.fetchone()
