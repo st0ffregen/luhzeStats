@@ -26,12 +26,14 @@ def readInGenericFile(filename):
 	with con:
 		cur = con.cursor()
 		cur.execute('SELECT json FROM files WHERE filename=%s', [filename])
-		entries = cur.fetchone() #fetchone?
+		entries = cur.fetchone()
 		
 		if entries is None or len(entries) == 0:
 			print("no entries in db for "  + filename)
-			return jsonify("NaN")
+			cur.close()
+			return jsonify("No file in db found with file name " + filename)
 		else:
+			cur.close()
 			return Response(entries[0],  mimetype='application/json')
 
 @app.route('/json/date',methods=['GET'])
@@ -121,6 +123,46 @@ def rankingTwoYears():
 
 @app.route('/json/rankingFiveYears', methods=['GET'])
 def rankingFiveYears():
+	return readInGenericFile("rankingFiveYears")
+
+# for single authors:
+
+def getRankingForSingleAuthor(filename):
+	con = connectToDB()
+	with con:
+		cur = con.cursor()
+		cur.execute('SELECT json FROM files WHERE filename=%s', [filename])
+		entries = cur.fetchone()
+
+		if entries is None or len(entries) == 0:
+			print("no entries in db for " + filename)
+			cur.close()
+			return jsonify("No file in db found with file name " + filename)
+		else:
+			cur.close()
+			return Response(entries[0], mimetype='application/json')
+
+
+@app.route('/json/singleRankingDefault', methods=['GET'])
+def singleRanking():
+	if 'author' in request.args:
+
+		return readInGenericFile("rankingDefault")[request.args['author']]
+
+@app.route('/json/singleRankingMonth', methods=['GET'])
+def singleRankingMonth():
+	return readInGenericFile("rankingMonth")
+
+@app.route('/json/singleRankingYear', methods=['GET'])
+def singleRankingYear():
+	return readInGenericFile("rankingYear")
+
+@app.route('/json/singleRankingTwoYears', methods=['GET'])
+def singleRankingTwoYears():
+	return readInGenericFile("rankingTwoYears")
+
+@app.route('/json/singleRankingFiveYears', methods=['GET'])
+def singleRankingFiveYears():
 	return readInGenericFile("rankingFiveYears")
 
 @app.route('/json/minAndMaxYearAndQuarter', methods=['GET'])

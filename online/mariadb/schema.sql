@@ -15,7 +15,8 @@ USE luhze;
 CREATE TABLE lastmodified (
 	lastModifiedWordOccurence DATETIME PRIMARY KEY, # gilt fuer den ersten schritt der analyse wo nur die quarter tabellen befüllt werden
 	lastModifiedTotalWordOccurence DATETIME NOT NULL, # hier wird die total tabelle befüllt
-	lastModifiedFiles DATETIME NOT NULL # hier werden die files befüllt
+	lastModifiedFiles DATETIME NOT NULL, # hier werden die files befüllt
+	lastModifiedRanking DATETIME NOT NULL # hier wird das ranking befüllt
 );
 
 CREATE TABLE authors (
@@ -24,6 +25,20 @@ CREATE TABLE authors (
 	lastName VARCHAR(64) NOT NULL,
 	mostUsedWords VARCHAR(255), # kann weg, brauche eine tabelle pro autor*in
 	UNIQUE(firstName, lastName)
+);
+
+CREATE TABLE ranking ( # gibs auch als file aber um nur von einer autorin abzufragen, diese tabelle hier
+    authorId INT PRIMARY KEY NOT NULL,
+    wordcount INT NOT NULL,
+    daysSinceFirstArticle INT NOT NULL,
+    daysSinceLastArticle INT NOT NULL,
+    articleCount INT NOT NULL,
+    wordcountBackInTime INT NOT NULL,
+    daysSinceFirstArticleBackInTime INT NOT NULL,
+    daysSinceLastArticleBackInTime INT NOT NULL,
+    articleCountBackInTime INT NOT NULL,
+    backInTime INT NOT NULL, #in months
+    FOREIGN KEY (authorId) REFERENCES authors(id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
 CREATE TABLE files ( #speichert vorbereitete json dateien

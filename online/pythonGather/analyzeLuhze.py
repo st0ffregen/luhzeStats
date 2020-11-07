@@ -21,6 +21,8 @@ rankingArticlesCountWeight = 1.2
 intervall = 2
 
 
+
+
 def tslaFunction(value):
     # function is using months not days so:
     value = round(value / 30.5)
@@ -89,11 +91,16 @@ def mainFunc():
         ressortTimeline(cur,'ressortTimeline')
         oldestArticle(cur,'oldestArticle')
         newestArticle(cur,'newestArticle')
-        ranking(cur, 'rankingDefault', 0)
-        ranking(cur, 'rankingMonth', 1)
-        ranking(cur, 'rankingYear', 12)
-        ranking(cur, 'rankingTwoYears', 24)
-        ranking(cur, 'rankingFiveYears', 60)
+
+        # ranking
+        rankingSQLStatements = []
+        rankingSQLStatements.extend(ranking(cur, 'rankingDefault', 0))
+        rankingSQLStatements.extend(ranking(cur, 'rankingMonth', 1))
+        rankingSQLStatements.extend(ranking(cur, 'rankingYear', 12))
+        rankingSQLStatements.extend(ranking(cur, 'rankingTwoYears', 24))
+        rankingSQLStatements.extend(ranking(cur, 'rankingFiveYears', 60))
+
+        insertSQLStatements(cur, con, rankingSQLStatements, "ranking")
 
         # erstellt und füllt die tabellen für die quarter
         insertSQLStatements(cur, con, calculateWordOccurence(cur), "False")
@@ -317,7 +324,7 @@ def ranking(cur, filename, backInTime):
     print("calculate ranking")
     cur.execute('SELECT distinct(ar.authorId), au.firstName, au.lastName  from articles ar join authors au on ar.authorId=au.id')
     entries = cur.fetchall()
-    arr = []
+    sqlStatements = [];
     for e in entries:  # loop through all authors
 
         # berechnet sum(wordcount) für alle artikel vor dem gebenen Zeitpunkt, also z.B. alles vor jetzt oder alle vor jetzt minus ein Jahr
@@ -329,78 +336,52 @@ def ranking(cur, filename, backInTime):
 
         cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 as average from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime)])
         daysSinceFirstArticleResult = cur.fetchone()
-        #rankingCPD = cpdFunction(round((ressum[0] / rescpd[0])))
 
         cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 as average from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime)])
         daysSinceLastArticleResult = cur.fetchone()
-        #rankingTSFA = tslaFunction(restsla[0])
 
         cur.execute('SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(e[0]), str(backInTime)])
         articleCountResult = cur.fetchone()
-        #rankingAC = acFunction(resac[0])
-        #scoreNow = round(rankingAC + rankingTSFA + rankingCPD)
 
         # two months before bzw. plus backInTime
         cur.execute(
             'SELECT sum(wordcount) as count from (select distinct(link), d.wordcount as wordcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)) as sub', [str(e[0]), str(intervall + backInTime)])
         wordcountResultBackInTime = cur.fetchone()
         if (wordcountResultBackInTime[0] == "NULL" or  wordcountResultBackInTime[0] == None):  # no article published two months before
-            name = (e[1] + " " + e[2]).strip()
-            arr.append({"name": name, "wordcount": int(wordcountResult[0]),
-                        "wordcountBackInTime": 0,
-                        "daysSinceFirstArticle": daysSinceFirstArticleResult[0],
-                        "daysSinceFirstArticleBackInTime": 0,
-                        "daysSinceLastArticle": daysSinceLastArticleResult[0],
-                        "daysSinceLastArticleBackInTime": 0,
-                        "articleCount": articleCountResult[0],
-                        "articleCountBackInTime": 0})
+
+            sqlStatements.append(['INSERT INTO ranking VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE wordcount=VALUES(wordcount),'
+                                  'daysSinceFirstArticle=VALUES(daysSinceFirstArticle), daysSinceLastArticle=VALUES(daysSinceLastArticle),'
+                                  'articleCount=VALUES(articleCount), wordcountBackInTime=VALUES(wordcountBackInTime),'
+                                  'daysSinceFirstArticleBackInTime=VALUES(daysSinceFirstArticleBackInTime),'
+                                  'daysSinceLastArticleBackInTime=VALUES(daysSinceLastArticleBackInTime),'
+                                  'articleCountBackInTime=VALUES(articleCountBackInTime)', [None, e[0], int(wordcountResult[0]), 0, daysSinceFirstArticleResult[0],
+                                                                                            0, daysSinceLastArticleResult[0], 0, articleCountResult[0], 0]])
+
             continue
         else:
             cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 as average from articles where authorId= %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime + intervall)])
             daysSinceFirstArticleResultBackInTime = cur.fetchone()
-            #rankingCPD = cpdFunction(round((int(ressum[0]) / rescpd[0])))
 
             cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 as average from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime + intervall)])
             daysSinceLastArticleResultBackInTime = cur.fetchone()
-            #rankingTSFA = tslaFunction(restsla[0])
 
             cur.execute('SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(e[0]), str(intervall + backInTime)])
             articleCountResultBackInTime = cur.fetchone()
-            #rankingAC = acFunction(resac[0])
-            #scoreBackThen = round(rankingAC + rankingTSFA + rankingCPD)
 
-        # # calculatin div and adjectiv
-        # div = scoreNow - scoreBackThen
-        # adjectiv = ""
-        # color = ""
-        # if div >= 50:
-        #     adjectiv = "rising star"
-        #     color = "#32CD32"
-        # elif div >= 10:
-        #     adjectiv = "ascending"
-        #     color = "#6B8E23"
-        # elif div < 1 and div > -10:
-        #     adjectiv = "stagnating"
-        #     color = "#FFA500"
-        # elif div <= -50:
-        #     adjectiv = "free falling"
-        #     color = "#FF0000"
-        # elif div <= -10:
-        #     adjectiv = "decending"
-        #     color = "#8B0000"
-        #
-        # if div >= 0:  # add plus sign
-        #     div = "+" + str(div)
 
-        #arr.append({"name": e[1] + " " + e[2], "score": scoreNow, 'div': div, 'adjectiv': adjectiv, 'color': color})
-        name = (e[1] + " " + e[2]).strip()
-        arr.append({"name": name, "wordcount": int(wordcountResult[0]), "wordcountBackInTime": int(wordcountResultBackInTime[0]),
-                    "daysSinceFirstArticle": daysSinceFirstArticleResult[0], "daysSinceFirstArticleBackInTime": daysSinceFirstArticleResultBackInTime[0],
-                    "daysSinceLastArticle": daysSinceLastArticleResult[0], "daysSinceLastArticleBackInTime":  daysSinceLastArticleResultBackInTime[0],
-                    "articleCount": articleCountResult[0], "articleCountBackInTime": articleCountResultBackInTime[0]})
 
-    fileArray.append([json.dumps(arr), filename])
-    return 0
+        sqlStatements.append(['INSERT INTO ranking VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE wordcount=VALUES(wordcount),'
+                                 'daysSinceFirstArticle=VALUES(daysSinceFirstArticle), daysSinceLastArticle=VALUES(daysSinceLastArticle),'
+                                 'articleCount=VALUES(articleCount), wordcountBackInTime=VALUES(wordcountBackInTime),'
+                                 'daysSinceFirstArticleBackInTime=VALUES(daysSinceFirstArticleBackInTime),'
+                                 'daysSinceLastArticleBackInTime=VALUES(daysSinceLastArticleBackInTime),'
+                                 'articleCountBackInTime=VALUES(articleCountBackInTime)',
+                                 [None, e[0], int(wordcountResult[0]), wordcountResultBackInTime[0],
+                                  daysSinceFirstArticleResult[0], daysSinceFirstArticleResultBackInTime[0],
+                                  daysSinceLastArticleResult[0], daysSinceLastArticleResultBackInTime[0],
+                                  articleCountResult[0], articleCountResultBackInTime[0]]])
+
+    return sqlStatements
 
 
 def createQuarterArray(cur, lastmodified):
@@ -433,10 +414,10 @@ def createQuarterArray(cur, lastmodified):
 
     return quarterArray
 
-def insertSQLStatements(cur, con, sqlStatements, total):
+def insertSQLStatements(cur, con, sqlStatements, whatAction):
     if sqlStatements is not None and len(sqlStatements) > 0:
         try:
-            if total == "fileArray":
+            if whatAction == "fileArray":
                 for statement in sqlStatements:
                     cur.execute('INSERT INTO files VALUES(%s,%s,%s) ON DUPLICATE KEY UPDATE json=VALUES(json)', [None, statement[1], statement[0]])
 
@@ -448,12 +429,16 @@ def insertSQLStatements(cur, con, sqlStatements, total):
                     #print(statement[1])
                     cur.execute(statement[0], statement[1])
 
-                if total == "True":
+                if whatAction == "True":
                     cur.execute('UPDATE lastmodified set lastModifiedTotalWordOccurence = %s', [datetime.now().strftime(
                         '%Y-%m-%d %H:%M:%S')])  # update lastmodified
-                if total == "False":
+                elif whatAction == "False":
                     cur.execute('UPDATE lastmodified set lastModifiedWordOccurence = %s', [datetime.now().strftime(
                         '%Y-%m-%d %H:%M:%S')])  # update lastmodified
+                elif whatAction == "ranking":
+                    cur.execute('UPDATE lastmodified set lastModifiedRanking = %s', [datetime.now().strftime(
+                        '%Y-%m-%d %H:%M:%S')])  # update lastmodified
+
 
             print("commiting statements")
             con.commit()
