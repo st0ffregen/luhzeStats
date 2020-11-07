@@ -379,7 +379,7 @@ def ranking(cur, filename, backInTime):
         # elif div >= 10:
         #     adjectiv = "ascending"
         #     color = "#6B8E23"
-        # elif div < 1https://duckduckgo.com/?t=ffab&q=object+of+type+decimal+is+not+json+serializiable&ia=web0 and div > -10:
+        # elif div < 1 and div > -10:
         #     adjectiv = "stagnating"
         #     color = "#FFA500"
         # elif div <= -50:

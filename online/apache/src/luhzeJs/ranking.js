@@ -1,3 +1,10 @@
+var rankingTimeSinceLastArticleWeight = 1.4
+var rankingCharactersPerDayWeight = 1.4
+var rankingArticlesCountWeight = 1.2
+
+
+
+
 function rankingFunction(backInTime) {
 
 	document.getElementsByClassName("graphContent")[0].style.display = "none";
@@ -28,18 +35,81 @@ function rankingFunction(backInTime) {
 	fetchFileAPI("ranking" + backInTimeString,(data) => {
 
 		var addInnterHTML = "";
+		var scoreOfLastDataIndex; //um danger zone zu setzen
+		var authorArray = [];
 		
 		for(var i=0;i<data.length;i++) {
 
-			
-			if(i!=0 && data[i]['score']<0 && data[i-1]['score']>=0) { //put danger zone
-				addInnterHTML += "<hr><h1 class=\"dangerzone\">!!!DANGER ZONE!!!</h1><div class=\"danger\">";
+			var rankingCPD = cpdFunction(Math.round(data[i]['wordcount'] / data[i]['daysSinceFirstArticle']));
+			var rankingTSLA = tslaFunction(data[i]['daysSinceLastArticle']);
+			var rankingAC = acFunction(data[i]['articleCount']);
+			var scoreNow = Math.round(rankingAC + rankingTSLA + rankingCPD);
+
+
+			var scoreBackInTime = 0;
+			if(data[i]['articleCountBackInTime'] > 0) { //die autorin gab es damals noch nicht
+				rankingCPD = cpdFunction(Math.round(data[i]['wordcountBackInTime'] / data[i]['daysSinceFirstArticleBackInTime']));
+				rankingTSLA = tslaFunction(data[i]['daysSinceLastArticleBackInTime']);
+				rankingAC = acFunction(data[i]['articleCountBackInTime']);
+				scoreBackInTime = Math.round(rankingAC + rankingTSLA + rankingCPD);
 			}
-			 
-			addInnterHTML += "<div class=\"ranks\"><div class=\"rankName\"><a href=\"javascript:showAutorinnenSeite()\" class=\"linkToAutorinnenSeite\">" + data[i]['name'] + "</a></div><div class=\"rankScore\">" + data[i]['score'] + "</div><div class=\"rankAdjective\" style=\"color: "+ data[i]['color'] + ";\">" + data[i]['adjectiv'] + "</div><div class=\"rankDiff\">" + data[i]['div'] + " </div></div>";
-			
+
+			var diff = scoreNow - scoreBackInTime;
+
+
+
+			var adjectiv = "";
+			var color = "";
+
+			if (diff >= 50) {
+				adjectiv = "rising star";
+				color = "#32CD32";
+			} else if (diff >= 10) {
+				adjectiv = "ascending";
+				color = "#6B8E23";
+			} else if (diff < 10 && diff > -10) {
+				adjectiv = "stagnating";
+				color = "#FFA500";
+			} else if (diff <= -50) {
+				adjectiv = "free falling";
+				color = "#FF0000";
+			} else if (diff <= -10) {
+				adjectiv = "decending";
+				color = "#8B0000";
+			}
+
+			if(diff > -1) {
+				diff = "+" + diff.toString();
+			} else {
+				diff = "-" + diff.toString();
+			}
+
+			authorArray.push({
+				"name": data[i]['name'],
+				"score": scoreNow.toString(),
+				"color": color,
+				"adjectiv": adjectiv,
+				"diff": diff
+			});
 
 		}
+
+		authorArray.sort(function (a, b) {
+		  return b.score - a.score;
+		});
+
+		for(var i=0;i<authorArray.length;i++) {
+
+			if (i != 0 && authorArray[i]['score'] < 0 && scoreOfLastDataIndex >= 0) { //put danger zone
+				addInnterHTML += "<hr><h1 class=\"dangerzone\">!!!DANGER ZONE!!!</h1><div class=\"danger\">";
+			}
+
+			addInnterHTML += "<div class=\"ranks\"><div class=\"rankName\"><a href=\"javascript:showAutorinnenSeite()\" class=\"linkToAutorinnenSeite\">" + authorArray[i]['name'] + "</a></div><div class=\"rankScore\">" + authorArray[i]['score'] + "</div><div class=\"rankAdjective\" style=\"color: " + authorArray[i]['color'] + ";\">" + authorArray[i]['adjectiv'] + "</div><div class=\"rankDiff\">" + authorArray[i]['diff'] + " </div></div>";
+
+			scoreOfLastDataIndex = authorArray[i]['score'];
+
+		}
+
 		addInnterHTML += "</div>"; //end danger zone div
 
 		rankingSection.innerHTML = addInnterHTML;
@@ -53,6 +123,32 @@ function rankingFunction(backInTime) {
 	
 }
 
+
+
+
+
+function tslaFunction(value) {
+    // function is using months not days so
+    var value = Math.round(value / 30.5)
+    // to avoid math overflow when passing month thats to big
+    if(value > 5) { //also letzter artikel älter als 5 monate
+        return Math.round(-0.5 * value)  // linear loosing points over time
+    } else {
+		var result = Math.round(-10 / (0.1 + 10 * Math.exp(-1.3 * value)) + 100)
+		return Math.round(result * rankingTimeSinceLastArticleWeight)
+	}
+}
+
+function cpdFunction(value) {
+	var result = Math.round(10 / (0.103 + 2.5 * Math.exp(-0.02 * value)))
+	return Math.round(result * rankingCharactersPerDayWeight)
+}
+
+
+function acFunction(value) {
+	var result = Math.round(10 / (0.1 + Math.exp(-0.4 * value)) - 10)
+	return Math.round(result * rankingArticlesCountWeight)
+}
 
 
 
