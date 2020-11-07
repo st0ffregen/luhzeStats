@@ -24,7 +24,7 @@ async function fetchParameterAPI(route, parameter, parameterValue, useDataFuncti
 
 
 	try {
-		await fetch("http://localhost/json/" + route + "?" + parameter + "=" + parameterValue)
+		await fetch("http://localhost/json/" + route + "?" + parameter + "=" + encodeURIComponent(parameterValue))
 		.then(res => {
 			if(res.ok) {
 				return res.json();

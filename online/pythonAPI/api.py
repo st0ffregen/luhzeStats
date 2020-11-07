@@ -150,35 +150,57 @@ def wordOccurence():
 	if 'word' in request.args:
 		word = request.args['word'].upper()
 		con = connectToDB()
+		result = []
+
 		with con:
 
 			cur = con.cursor()
-			"""
-			cur.execute('SELECT wholeTableName FROM createdTables')
-			tableNames = cur.fetchall()
-			#craft result with all table names and entries
-			result = []
-			for table in tableNames:
-				#translate table name back to a date
-				initQuarter = ((( - 1) // 3) + 1)  # gib quarter von 1 bis 4
-				month = str((int(table[0][-1:]) * 3) -2)
-				if int(month)<10:
-					month = "0" + month
-				year = table[0].split("e")[2][:4]
-				date = year + "-" + month + "-01"
-				"""
-			result = []
-			# prepare statement here
-			cur.execute('SELECT yearAndQuarter, occurencePerWords, occurence FROM wordOccurenceOverTheQuarters WHERE word = %s', [word])
-			occurences = cur.fetchall()
+			if "+++" in word:
+				wordsToFetchArray = word.split("+++")
 
-			if occurences is None or len(occurences) == 0:
-				return jsonify("Error. The word does not exists.")
+				for w in wordsToFetchArray:
 
-			for entry in occurences:
-				result.append({'yearAndQuarter': entry[0], 'occurencePerWords': entry[1], 'occurence': entry[2]})
+					if w == "": #passiert gerade dann wenn nach dem +++ nichts eingegeben wurde
+						continue
 
-			return Response(json.dumps(result),  mimetype='application/json')
+					cur.execute(
+						'SELECT yearAndQuarter, occurencePerWords, occurence FROM wordOccurenceOverTheQuarters WHERE word = %s',
+						[w])
+					occurences = cur.fetchall()
+
+					if occurences is None or len(occurences) == 0:
+						continue
+
+					for entry in occurences:
+						if len(result) > 1:
+							#wenn es den result array schon mit werten gibt search in result array for same yearAndQuarter
+							# wenn aber das spezifische yearAndQuarter noch nicht gibt wird es neu hinzugefügt -> found variable
+							found = False
+							for yearAndQuarterEntry in result:
+								if yearAndQuarterEntry['yearAndQuarter'] == entry[0]:
+									found = True
+									yearAndQuarterEntry['occurencePerWords'] += entry[1] # aufaddieren
+									yearAndQuarterEntry['occurence'] += entry[2] # aufaddieren
+							if not found:
+								# muss dann im frontend nach datum sortiert werden
+								result.append(
+									{'yearAndQuarter': entry[0], 'occurencePerWords': entry[1], 'occurence': entry[2]})
+						else:
+							result.append(
+								{'yearAndQuarter': entry[0], 'occurencePerWords': entry[1], 'occurence': entry[2]})
+
+			else:
+
+				cur.execute('SELECT yearAndQuarter, occurencePerWords, occurence FROM wordOccurenceOverTheQuarters WHERE word = %s', [word])
+				occurences = cur.fetchall()
+
+				if occurences is None or len(occurences) == 0:
+					return jsonify("Error. The word " + word + " does not exist.")
+
+				for entry in occurences:
+					result.append({'yearAndQuarter': entry[0], 'occurencePerWords': entry[1], 'occurence': entry[2]})
+
+			return Response(json.dumps(sorted(result, key=lambda x: x['yearAndQuarter'])),  mimetype='application/json')
 	else:
 		return jsonify("Error. No word provided. Please specify a word")
 
