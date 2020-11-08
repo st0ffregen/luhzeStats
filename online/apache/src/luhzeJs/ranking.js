@@ -80,12 +80,12 @@ function rankingFunction(backInTime) {
 
 			if(diff > -1) {
 				diff = "+" + diff.toString();
-			} else {
-				diff = "-" + diff.toString();
 			}
 
+			var name = (data[i]['firstName'] + " " + data[i]['lastName']).trim();
+
 			authorArray.push({
-				"name": data[i]['name'],
+				"name": name,
 				"score": scoreNow.toString(),
 				"color": color,
 				"adjectiv": adjectiv,
