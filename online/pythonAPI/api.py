@@ -105,65 +105,103 @@ def oldestArticle():
 def newestArticle():
 	return readInGenericFile("newestArticle")
 
-@app.route('/json/rankingDefault', methods=['GET'])
-def ranking():
-	return readInGenericFile("rankingDefault")
+# for all authors
 
-@app.route('/json/rankingMonth', methods=['GET'])
-def rankingMonth():
-	return readInGenericFile("rankingMonth")
-
-@app.route('/json/rankingYear', methods=['GET'])
-def rankingYear():
-	return readInGenericFile("rankingYear")
-
-@app.route('/json/rankingTwoYears', methods=['GET'])
-def rankingTwoYears():
-	return readInGenericFile("rankingTwoYears")
-
-@app.route('/json/rankingFiveYears', methods=['GET'])
-def rankingFiveYears():
-	return readInGenericFile("rankingFiveYears")
-
-# for single authors:
-
-def getRankingForSingleAuthor(filename):
+def getRankingForAllAuthors(backInTime):
 	con = connectToDB()
 	with con:
 		cur = con.cursor()
-		cur.execute('SELECT json FROM files WHERE filename=%s', [filename])
-		entries = cur.fetchone()
+		cur.execute('SELECT a.firstName, a.lastName, r.charcount, r.daysSinceFirstArticle, r.daysSinceLastArticle,'
+					' r.articleCount, r.charcountBackInTime, r.daysSinceFirstArticleBackInTime,'
+					' r.daysSinceLastArticleBackInTime, r.articleCountBackInTime '
+					'FROM ranking r join authors a on r.authorId=a.id WHERE backInTime=%s', [backInTime])
+		entries = cur.fetchall()
 
 		if entries is None or len(entries) == 0:
-			print("no entries in db for " + filename)
+			print("no entries in db for backInTime = " + str(backInTime))
 			cur.close()
-			return jsonify("No file in db found with file name " + filename)
+			return jsonify("no entries in db for backInTime = " + str(backInTime))
+		else:
+			response = [];
+			for entry in entries:
+				response.append({'firstName': entry[0], 'lastName': entry[1], 'charcount': entry[2],
+							'daysSinceFirstArticle': entry[3],
+							'daysSinceLastArticle': entry[4], 'articleCount': entry[5], 'charcountBackInTime': entry[6],
+							'daysSinceFirstArticleBackInTime': entry[7], 'daysSinceLastArticleBackInTime': entry[8],
+							'articleCountBackInTime': entry[9], 'backInTime': backInTime})
+			cur.close()
+			return Response(json.dumps(response), mimetype='application/json')
+
+@app.route('/json/rankingDefault', methods=['GET'])
+def ranking():
+	return getRankingForAllAuthors(0)
+
+@app.route('/json/rankingMonth', methods=['GET'])
+def rankingMonth():
+	return getRankingForAllAuthors(1)
+
+@app.route('/json/rankingYear', methods=['GET'])
+def rankingYear():
+	return getRankingForAllAuthors(12)
+
+@app.route('/json/rankingTwoYears', methods=['GET'])
+def rankingTwoYears():
+	return getRankingForAllAuthors(24)
+
+@app.route('/json/rankingFiveYears', methods=['GET'])
+def rankingFiveYears():
+	return getRankingForAllAuthors(60)
+
+# for single authors:
+
+def getRankingForSingleAuthor(backInTime, firstName, lastName):
+	con = connectToDB()
+	with con:
+		cur = con.cursor()
+		cur.execute('SELECT a.firstName, a.lastName, r.charcount, r.daysSinceFirstArticle, r.daysSinceLastArticle,'
+					' r.articleCount, r.charcountBackInTime, r.daysSinceFirstArticleBackInTime,'
+					' r.daysSinceLastArticleBackInTime, r.articleCountBackInTime '
+					'FROM ranking r join authors a on r.authorId=a.id WHERE backInTime=%s and a.firstName=%s and a.lastName=%s', [backInTime, firstName, lastName])
+		entry = cur.fetchone()
+
+		if entry is None or len(entry) == 0:
+			name = (firstName + lastName).strip()
+			print("no entries in db for " + name + " with backInTime = " + str(backInTime))
+			cur.close()
+			return jsonify("no entries in db for " + name + " with backInTime = " + str(backInTime))
 		else:
 			cur.close()
-			return Response(entries[0], mimetype='application/json')
+			response = {'firstName':entry[0], 'lastName':entry[1], 'charcount':entry[2], 'daysSinceFirstArticle':entry[3],
+						'daysSinceLastArticle':entry[4], 'articleCount':entry[5], 'charcountBackInTime':entry[6],
+						'daysSinceFirstArticleBackInTime':entry[7], 'daysSinceLastArticleBackInTime':entry[8],
+						'articleCountBackInTime':entry[9], 'backInTime': backInTime}
+			return Response(json.dumps(response), mimetype='application/json')
 
 
 @app.route('/json/singleRankingDefault', methods=['GET'])
 def singleRanking():
-	if 'author' in request.args:
-
-		return readInGenericFile("rankingDefault")[request.args['author']]
+	if 'firstName' and 'lastName' in request.args:
+		return getRankingForSingleAuthor(0,request.args['firstName'],request.args['lastName'])
 
 @app.route('/json/singleRankingMonth', methods=['GET'])
 def singleRankingMonth():
-	return readInGenericFile("rankingMonth")
+	if 'firstName' and 'lastName' in request.args:
+		return getRankingForSingleAuthor(1, request.args['firstName'], request.args['lastName'])
 
 @app.route('/json/singleRankingYear', methods=['GET'])
 def singleRankingYear():
-	return readInGenericFile("rankingYear")
+	if 'firstName' and 'lastName' in request.args:
+		return getRankingForSingleAuthor(12, request.args['firstName'], request.args['lastName'])
 
 @app.route('/json/singleRankingTwoYears', methods=['GET'])
 def singleRankingTwoYears():
-	return readInGenericFile("rankingTwoYears")
+	if 'firstName' and 'lastName' in request.args:
+		return getRankingForSingleAuthor(24, request.args['firstName'], request.args['lastName'])
 
 @app.route('/json/singleRankingFiveYears', methods=['GET'])
 def singleRankingFiveYears():
-	return readInGenericFile("rankingFiveYears")
+	if 'firstName' and 'lastName' in request.args:
+		return getRankingForSingleAuthor(60, request.args['firstName'], request.args['lastName'])
 
 @app.route('/json/minAndMaxYearAndQuarter', methods=['GET'])
 def minYearAndQuarter():

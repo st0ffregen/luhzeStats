@@ -1,5 +1,7 @@
 CREATE USER IF NOT EXISTS 'api' IDENTIFIED BY 'testApi';
 CREATE USER IF NOT EXISTS 'gatherer' IDENTIFIED BY 'testGatherer';
+CREATE USER IF NOT EXISTS 'root' IDENTIFIED  BY 'root'; # remove for production
+GRANT ALL PRIVILEGES ON luhze.* TO 'root'@'%'; # remove for production
 
 
 CREATE DATABASE IF NOT EXISTS luhze CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -28,17 +30,18 @@ CREATE TABLE authors (
 );
 
 CREATE TABLE ranking ( # gibs auch als file aber um nur von einer autorin abzufragen, diese tabelle hier
-    authorId INT PRIMARY KEY NOT NULL,
-    wordcount INT NOT NULL,
+    authorId INT NOT NULL,
+    charcount INT NOT NULL,
     daysSinceFirstArticle INT NOT NULL,
     daysSinceLastArticle INT NOT NULL,
     articleCount INT NOT NULL,
-    wordcountBackInTime INT NOT NULL,
+    charcountBackInTime INT NOT NULL,
     daysSinceFirstArticleBackInTime INT NOT NULL,
     daysSinceLastArticleBackInTime INT NOT NULL,
     articleCountBackInTime INT NOT NULL,
     backInTime INT NOT NULL, #in months
-    FOREIGN KEY (authorId) REFERENCES authors(id) ON UPDATE CASCADE ON DELETE RESTRICT
+    FOREIGN KEY (authorId) REFERENCES authors(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    PRIMARY KEY (authorId, backInTime)
 );
 
 CREATE TABLE files ( #speichert vorbereitete json dateien
@@ -52,7 +55,7 @@ CREATE TABLE documents ( #speichert den sourcecode der texte
 	# dann kann ich mit dem lastmodified Datum die Artikel bestimmen, die ich noch nicht ausgewertet habe
 	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 	document TEXT NOT NULL,
-	wordcount INT NOT NULL, #wie viele wörter der text hat
+	charcount INT NOT NULL, #wie viele chars der text hat
 	createdDate DATETIME NOT NULL, # das entstehungs datum des artikels, dann kann ich heruasfinden zu welchem quartal das document gehört
 	addedDate DATETIME NOT NULL, #datum an den es der db hinzugefügt wurde, ist datetime um es mit lastModified zu vergleichen
 	UNIQUE(document)
@@ -96,6 +99,7 @@ GRANT SELECT ON luhze.authors TO 'api'@'%';
 GRANT SELECT ON luhze.totalWordOccurence TO 'api'@'%';
 GRANT SELECT ON luhze.wordOccurenceOverTheQuarters TO 'api'@'%';
 GRANT SELECT ON luhze.lastmodified TO 'api'@'%';
+GRANT SELECT ON luhze.ranking TO 'api'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.authors TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.documents TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.files TO 'gatherer'@'%';
@@ -103,6 +107,8 @@ GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.articles TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.lastmodified TO 'gatherer'@'%';
 GRANT INSERT, UPDATE, SELECT ON luhze.totalWordOccurence TO 'gatherer'@'%';
 GRANT INSERT, UPDATE, SELECT ON luhze.wordOccurenceOverTheQuarters TO 'gatherer'@'%';
+GRANT INSERT, UPDATE, SELECT ON luhze.ranking TO 'gatherer'@'%';
+
 
 # insert start date to lastmodified 
-INSERT INTO lastmodified (lastModifiedWordOccurence, lastModifiedTotalWordOccurence, lastModifiedFiles) VALUES ('1900-01-01 00:00:00','1900-01-01 00:00:00','1900-01-01 00:00:00' );
+INSERT INTO lastmodified (lastModifiedWordOccurence, lastModifiedTotalWordOccurence, lastModifiedFiles, lastModifiedRanking) VALUES ('1900-01-01 00:00:00','1900-01-01 00:00:00','1900-01-01 00:00:00','1900-01-01 00:00:00');

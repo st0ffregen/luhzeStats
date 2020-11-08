@@ -20,7 +20,7 @@ rankingCharactersPerDayWeight = 1.4
 rankingArticlesCountWeight = 1.2
 intervall = 2
 
-
+# allles resetten und dann checken ob analyze läuft, dann api umstellen
 
 
 def tslaFunction(value):
@@ -260,7 +260,7 @@ def mostArticlesPerTime(cur, filename, minAuthor):
 def authorAverage(cur, filename, minAuthor):
     print("get author average")
     cur.execute(
-        'SELECT ar.authorId, au.firstName, au.lastName, round(avg(wordcount)) as count from (select distinct(link), d.wordcount as wordcount, authorId from articles art join documents d on art.documentId=d.id where authorId in (select authorId from articles group by authorId having count(distinct link) >=%s)) as ar join authors au on ar.authorId=au.id group by authorId order by count desc', [str(minAuthor)])
+        'SELECT ar.authorId, au.firstName, au.lastName, round(avg(charcount)) as count from (select distinct(link), d.charcount as charcount, authorId from articles art join documents d on art.documentId=d.id where authorId in (select authorId from articles group by authorId having count(distinct link) >=%s)) as ar join authors au on ar.authorId=au.id group by authorId order by count desc', [str(minAuthor)])
     entries = cur.fetchall()
     arr = []
     for e in entries:
@@ -272,7 +272,7 @@ def authorAverage(cur, filename, minAuthor):
 def averageCharactersPerDay(cur, filename, minAuthor):
     print("get average characters per day")
     cur.execute(
-        'SELECT ar.authorId, au.firstName, au.lastName, sum(wordcount) as count from (select distinct(link), d.wordcount as wordcount, authorId from articles art join documents d on art.documentId=d.id where authorId in (select authorId from articles group by authorId having count(distinct link) >= %s )) as ar join authors as au on ar.authorId=au.id group by authorId order by count desc', [str(minAuthor)])
+        'SELECT ar.authorId, au.firstName, au.lastName, sum(charcount) as count from (select distinct(link), d.charcount as charcount, authorId from articles art join documents d on art.documentId=d.id where authorId in (select authorId from articles group by authorId having count(distinct link) >= %s )) as ar join authors as au on ar.authorId=au.id group by authorId order by count desc', [str(minAuthor)])
     entries = cur.fetchall()
     arr = []
     for e in entries:
@@ -287,7 +287,7 @@ def averageCharactersPerDay(cur, filename, minAuthor):
 def ressortAverage(cur, filename):
     print("get ressort average")
     cur.execute(
-        'SELECT ressort, round(avg(wordcount)) as count from (select distinct(link), d.wordcount as wordcount, ressort from articles ar join documents as d on ar.documentId=d.id where ressort in (select ressort from articles group by ressort having count(distinct link) >=%s)) as sub group by ressort order by count desc', [str(minRessort)])
+        'SELECT ressort, round(avg(charcount)) as count from (select distinct(link), d.charcount as charcount, ressort from articles ar join documents as d on ar.documentId=d.id where ressort in (select ressort from articles group by ressort having count(distinct link) >=%s)) as sub group by ressort order by count desc', [str(minRessort)])
     entries = cur.fetchall()
     arr = []
     for e in entries:
@@ -321,23 +321,23 @@ def ressortTimeline(cur, filename):
 
 
 def ranking(cur, filename, backInTime):
-    print("calculate ranking")
+    print("calculate ranking for backInTime " + str(backInTime))
     cur.execute('SELECT distinct(ar.authorId), au.firstName, au.lastName  from articles ar join authors au on ar.authorId=au.id')
     entries = cur.fetchall()
     sqlStatements = [];
     for e in entries:  # loop through all authors
 
-        # berechnet sum(wordcount) für alle artikel vor dem gebenen Zeitpunkt, also z.B. alles vor jetzt oder alle vor jetzt minus ein Jahr
+        # berechnet sum(charcount) für alle artikel vor dem gebenen Zeitpunkt, also z.B. alles vor jetzt oder alle vor jetzt minus ein Jahr
         cur.execute(
-            'SELECT sum(wordcount) as count from (select distinct(link), d.wordcount as wordcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)) as sub', [str(e[0]), str(backInTime)])
-        wordcountResult = cur.fetchone()
-        if (wordcountResult[0] == "NULL" or wordcountResult[0] == None):  # den autor gabs damals noch nicht
+            'SELECT sum(charcount) as count from (select distinct(link), d.charcount as charcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)) as sub', [str(e[0]), str(backInTime)])
+        charcountResult = cur.fetchone()
+        if (charcountResult[0] == "NULL" or charcountResult[0] == None):  # den autor gabs damals noch nicht
             continue
 
-        cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 as average from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime)])
+        cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime)])
         daysSinceFirstArticleResult = cur.fetchone()
 
-        cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 as average from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime)])
+        cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime)])
         daysSinceLastArticleResult = cur.fetchone()
 
         cur.execute('SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(e[0]), str(backInTime)])
@@ -345,24 +345,24 @@ def ranking(cur, filename, backInTime):
 
         # two months before bzw. plus backInTime
         cur.execute(
-            'SELECT sum(wordcount) as count from (select distinct(link), d.wordcount as wordcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)) as sub', [str(e[0]), str(intervall + backInTime)])
-        wordcountResultBackInTime = cur.fetchone()
-        if (wordcountResultBackInTime[0] == "NULL" or  wordcountResultBackInTime[0] == None):  # no article published two months before
+            'SELECT sum(charcount) as count from (select distinct(link), d.charcount as charcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)) as sub', [str(e[0]), str(intervall + backInTime)])
+        charcountResultBackInTime = cur.fetchone()
+        if (charcountResultBackInTime[0] == "NULL" or  charcountResultBackInTime[0] == None):  # no article published two months before
 
-            sqlStatements.append(['INSERT INTO ranking VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE wordcount=VALUES(wordcount),'
+            sqlStatements.append(['INSERT INTO ranking VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE charcount=VALUES(charcount),'
                                   'daysSinceFirstArticle=VALUES(daysSinceFirstArticle), daysSinceLastArticle=VALUES(daysSinceLastArticle),'
-                                  'articleCount=VALUES(articleCount), wordcountBackInTime=VALUES(wordcountBackInTime),'
+                                  'articleCount=VALUES(articleCount), charcountBackInTime=VALUES(charcountBackInTime),'
                                   'daysSinceFirstArticleBackInTime=VALUES(daysSinceFirstArticleBackInTime),'
                                   'daysSinceLastArticleBackInTime=VALUES(daysSinceLastArticleBackInTime),'
-                                  'articleCountBackInTime=VALUES(articleCountBackInTime)', [None, e[0], int(wordcountResult[0]), 0, daysSinceFirstArticleResult[0],
-                                                                                            0, daysSinceLastArticleResult[0], 0, articleCountResult[0], 0]])
+                                  'articleCountBackInTime=VALUES(articleCountBackInTime)', [e[0], int(charcountResult[0]), daysSinceFirstArticleResult[0],
+                                                                                            daysSinceLastArticleResult[0], articleCountResult[0], 0, 0, 0, 0, backInTime]])
 
             continue
         else:
-            cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 as average from articles where authorId= %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime + intervall)])
+            cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 from articles where authorId= %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime + intervall), str(e[0]), str(backInTime + intervall)])
             daysSinceFirstArticleResultBackInTime = cur.fetchone()
 
-            cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 as average from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime + intervall)])
+            cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime + intervall), str(e[0]), str(backInTime + intervall)])
             daysSinceLastArticleResultBackInTime = cur.fetchone()
 
             cur.execute('SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(e[0]), str(intervall + backInTime)])
@@ -370,16 +370,16 @@ def ranking(cur, filename, backInTime):
 
 
 
-        sqlStatements.append(['INSERT INTO ranking VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE wordcount=VALUES(wordcount),'
+        sqlStatements.append(['INSERT INTO ranking VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE charcount=VALUES(charcount),'
                                  'daysSinceFirstArticle=VALUES(daysSinceFirstArticle), daysSinceLastArticle=VALUES(daysSinceLastArticle),'
-                                 'articleCount=VALUES(articleCount), wordcountBackInTime=VALUES(wordcountBackInTime),'
+                                 'articleCount=VALUES(articleCount), charcountBackInTime=VALUES(charcountBackInTime),'
                                  'daysSinceFirstArticleBackInTime=VALUES(daysSinceFirstArticleBackInTime),'
                                  'daysSinceLastArticleBackInTime=VALUES(daysSinceLastArticleBackInTime),'
                                  'articleCountBackInTime=VALUES(articleCountBackInTime)',
-                                 [None, e[0], int(wordcountResult[0]), wordcountResultBackInTime[0],
-                                  daysSinceFirstArticleResult[0], daysSinceFirstArticleResultBackInTime[0],
-                                  daysSinceLastArticleResult[0], daysSinceLastArticleResultBackInTime[0],
-                                  articleCountResult[0], articleCountResultBackInTime[0]]])
+                                 [e[0], int(charcountResult[0]), daysSinceFirstArticleResult[0], daysSinceLastArticleResult[0],
+                                  articleCountResult[0], charcountResultBackInTime[0],
+                                  daysSinceFirstArticleResultBackInTime[0], daysSinceLastArticleResultBackInTime[0],
+                                  articleCountResultBackInTime[0], backInTime]])
 
     return sqlStatements
 

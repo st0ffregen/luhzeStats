@@ -144,7 +144,7 @@ fetchFileAPI("oldestArticle",(data) => { //unnötig hier die variablen mehrmals 
 });
 
 fetchFileAPI("ressortAverage",(data) => {
-	barChart('ressortAverageChart',data,'bar','Durchschnittliche Anzahl an Zeichen pro Ressort',true);
+	barChart('ressortAverageChart',data,'bar','Durchschnittliche Anzahl an Zeichen pro Ressort pro Artikel',true);
 });
 
 }
