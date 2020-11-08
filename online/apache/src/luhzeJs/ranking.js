@@ -82,10 +82,9 @@ function rankingFunction(backInTime) {
 				diff = "+" + diff.toString();
 			}
 
-			var name = (data[i]['firstName'] + " " + data[i]['lastName']).trim();
-
 			authorArray.push({
-				"name": name,
+				"firstName": data[i]['firstName'],
+				"lastName": data[i]['lastName'],
 				"score": scoreNow.toString(),
 				"color": color,
 				"adjectiv": adjectiv,
@@ -104,7 +103,7 @@ function rankingFunction(backInTime) {
 				addInnterHTML += "<hr><h1 class=\"dangerzone\">!!!DANGER ZONE!!!</h1><div class=\"danger\">";
 			}
 
-			addInnterHTML += "<div class=\"ranks\"><div class=\"rankName\"><a href=\"javascript:showAutorinnenSeite()\" class=\"linkToAutorinnenSeite\">" + authorArray[i]['name'] + "</a></div><div class=\"rankScore\">" + authorArray[i]['score'] + "</div><div class=\"rankAdjective\" style=\"color: " + authorArray[i]['color'] + ";\">" + authorArray[i]['adjectiv'] + "</div><div class=\"rankDiff\">" + authorArray[i]['diff'] + " </div></div>";
+			addInnterHTML += '<div class="ranks"><div class="rankName"><a href=\'javascript:showAutorinnenSeite("' + authorArray[i]['firstName'] + '","' + authorArray[i]['lastName']  +  '","' +  backInTimeString + '")\' class="linkToAutorinnenSeite">' + (authorArray[i]['firstName'] + ' ' + authorArray[i]['lastName']).trim() + '</a></div><div class="rankScore">' + authorArray[i]['score'] + '</div><div class="rankAdjective" style="color: ' + authorArray[i]['color'] + ';">' + authorArray[i]['adjectiv'] + '</div><div class="rankDiff">' + authorArray[i]['diff'] + ' </div></div>';
 
 			scoreOfLastDataIndex = authorArray[i]['score'];
 
@@ -129,25 +128,25 @@ function rankingFunction(backInTime) {
 
 function tslaFunction(value) {
     // function is using months not days so
-    var value = Math.round(value / 30.5)
+    var value = value / 30.5;
     // to avoid math overflow when passing month thats to big
     if(value > 5) { //also letzter artikel älter als 5 monate
-        return Math.round(-0.5 * value)  // linear loosing points over time
+        return -1 * value;  // linear loosing points over time
     } else {
-		var result = Math.round(-10 / (0.1 + 10 * Math.exp(-1.3 * value)) + 100)
-		return Math.round(result * rankingTimeSinceLastArticleWeight)
+		var result = -10 / (0.1 + 10 * Math.exp(-1.3 * value)) + 100;
+		return result * rankingTimeSinceLastArticleWeight;
 	}
 }
 
 function cpdFunction(value) {
-	var result = Math.round(10 / (0.103 + 2.5 * Math.exp(-0.02 * value)))
-	return Math.round(result * rankingCharactersPerDayWeight)
+	var result = 10 / (0.103 + 2.5 * Math.exp(-0.02 * value));
+	return result * rankingCharactersPerDayWeight;
 }
 
 
 function acFunction(value) {
-	var result = Math.round(10 / (0.1 + Math.exp(-0.4 * value)) - 10)
-	return Math.round(result * rankingArticlesCountWeight)
+	var result = 10 / (0.1 + Math.exp(-0.4 * value)) - 10;
+	return result * rankingArticlesCountWeight;
 }
 
 

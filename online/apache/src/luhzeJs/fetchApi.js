@@ -45,6 +45,31 @@ async function fetchParameterAPI(route, parameter, parameterValue, useDataFuncti
 
 }
 
+async function fetchTwoParameterAPI(route, firstParameter, secondParameter, firstValue, secondValue, useDataFunction) {
+
+
+	try {
+		await fetch("http://localhost/json/" + route + "?" + firstParameter + "=" + encodeURIComponent(firstValue) + "&" + secondParameter + "=" + encodeURIComponent(secondValue))
+		.then(res => {
+			if(res.ok) {
+				return res.json();
+			} else {
+				return Promise.reject(res.status);
+			}
+		}).then(data => useDataFunction(data)
+
+		).catch(err => {
+			console.log('Error: ', err);
+		});
+
+	} catch(e) {
+		console.error(e.message);
+	}
+
+	return 1;
+
+}
+
 
 //fetchChartsSite();
 
