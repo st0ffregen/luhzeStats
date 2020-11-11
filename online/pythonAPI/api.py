@@ -111,8 +111,8 @@ def getRankingForAllAuthors(backInTime):
 	con = connectToDB()
 	with con:
 		cur = con.cursor()
-		cur.execute('SELECT a.firstName, a.lastName, r.charcount, r.daysSinceFirstArticle, r.daysSinceLastArticle,'
-					' r.articleCount, r.charcountBackInTime, r.daysSinceFirstArticleBackInTime,'
+		cur.execute('SELECT a.firstName, a.lastName, r.charsPerDay, r.daysSinceFirstArticle, r.daysSinceLastArticle,'
+					' r.articleCount, r.charsPerDayBackInTime, r.daysSinceFirstArticleBackInTime,'
 					' r.daysSinceLastArticleBackInTime, r.articleCountBackInTime '
 					'FROM ranking r join authors a on r.authorId=a.id WHERE backInTime=%s', [backInTime])
 		entries = cur.fetchall()
@@ -124,9 +124,9 @@ def getRankingForAllAuthors(backInTime):
 		else:
 			response = [];
 			for entry in entries:
-				response.append({'firstName': entry[0], 'lastName': entry[1], 'charcount': entry[2],
+				response.append({'firstName': entry[0], 'lastName': entry[1], 'charsPerDay': entry[2],
 							'daysSinceFirstArticle': entry[3],
-							'daysSinceLastArticle': entry[4], 'articleCount': entry[5], 'charcountBackInTime': entry[6],
+							'daysSinceLastArticle': entry[4], 'articleCount': entry[5], 'charsPerDayBackInTime': entry[6],
 							'daysSinceFirstArticleBackInTime': entry[7], 'daysSinceLastArticleBackInTime': entry[8],
 							'articleCountBackInTime': entry[9], 'backInTime': backInTime})
 			cur.close()
@@ -158,8 +158,8 @@ def getRankingForSingleAuthor(backInTime, firstName, lastName):
 	con = connectToDB()
 	with con:
 		cur = con.cursor()
-		cur.execute('SELECT a.firstName, a.lastName, r.charcount, r.daysSinceFirstArticle, r.daysSinceLastArticle,'
-					' r.articleCount, r.charcountBackInTime, r.daysSinceFirstArticleBackInTime,'
+		cur.execute('SELECT a.firstName, a.lastName, r.charsPerDay, r.daysSinceFirstArticle, r.daysSinceLastArticle,'
+					' r.articleCount, r.charsPerDayBackInTime, r.daysSinceFirstArticleBackInTime,'
 					' r.daysSinceLastArticleBackInTime, r.articleCountBackInTime '
 					'FROM ranking r join authors a on r.authorId=a.id WHERE backInTime=%s and a.firstName=%s and a.lastName=%s', [backInTime, firstName, lastName])
 		entry = cur.fetchone()
@@ -171,8 +171,8 @@ def getRankingForSingleAuthor(backInTime, firstName, lastName):
 			return jsonify("no entries in db for " + name + " with backInTime = " + str(backInTime))
 		else:
 			cur.close()
-			response = {'firstName':entry[0], 'lastName':entry[1], 'charcount':entry[2], 'daysSinceFirstArticle':entry[3],
-						'daysSinceLastArticle':entry[4], 'articleCount':entry[5], 'charcountBackInTime':entry[6],
+			response = {'firstName':entry[0], 'lastName':entry[1], 'charsPerDay':entry[2], 'daysSinceFirstArticle':entry[3],
+						'daysSinceLastArticle':entry[4], 'articleCount':entry[5], 'charsPerDayBackInTime':entry[6],
 						'daysSinceFirstArticleBackInTime':entry[7], 'daysSinceLastArticleBackInTime':entry[8],
 						'articleCountBackInTime':entry[9], 'backInTime': backInTime}
 			return Response(json.dumps(response), mimetype='application/json')

@@ -40,7 +40,7 @@ function rankingFunction(backInTime) {
 		
 		for(var i=0;i<data.length;i++) {
 
-			var rankingCPD = cpdFunction(Math.round(data[i]['charcount'] / data[i]['daysSinceFirstArticle']));
+			var rankingCPD = cpdFunction(Math.round(data[i]['charsPerDay'] / data[i]['daysSinceFirstArticle']));
 			var rankingTSLA = tslaFunction(data[i]['daysSinceLastArticle']);
 			var rankingAC = acFunction(data[i]['articleCount']);
 			var scoreNow = Math.round(rankingAC + rankingTSLA + rankingCPD);
@@ -48,7 +48,7 @@ function rankingFunction(backInTime) {
 
 			var scoreBackInTime = 0;
 			if(data[i]['articleCountBackInTime'] > 0) { //die autorin gab es damals noch nicht
-				rankingCPD = cpdFunction(Math.round(data[i]['charcountBackInTime'] / data[i]['daysSinceFirstArticleBackInTime']));
+				rankingCPD = cpdFunction(Math.round(data[i]['charsPerDayBackInTime'] / data[i]['daysSinceFirstArticleBackInTime']));
 				rankingTSLA = tslaFunction(data[i]['daysSinceLastArticleBackInTime']);
 				rankingAC = acFunction(data[i]['articleCountBackInTime']);
 				scoreBackInTime = Math.round(rankingAC + rankingTSLA + rankingCPD);
@@ -139,6 +139,7 @@ function tslaFunction(value) {
 }
 
 function cpdFunction(value) {
+
 	var result = 10 / (0.103 + 2.5 * Math.exp(-0.02 * value));
 	return result * rankingCharactersPerDayWeight;
 }

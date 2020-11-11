@@ -18,41 +18,76 @@ function displayAuthorSite(firstName, lastName, backInTime) {
 	document.getElementsByClassName("autorinnenName")[0].innerHTML = (firstName + " " +  lastName).trim();
 	document.getElementsByClassName("backInTimeHeader")[0].innerHTML = backInTime;
 
-	addAuthorRankingChart(backInTime, tslaFunction, "Punkte", "Punkte", "Tage seit dem letzten Artikel", firstName, lastName, 0,200,10, tslaChart);
+	fetchTwoParameterAPI("singleRanking" + backInTime, "firstName", "lastName", firstName, lastName, function (data) {
 
-	addAuthorRankingChart(backInTime, cpdFunction, "Punkte", "Punkte", "Geschriebene Zeichen pro Tag", firstName, lastName, 0,500,20, cpdChart);
+		var tsla = tslaFunction(data['daysSinceLastArticle']).toFixed(1);
+		var tslaBackInTime = tslaFunction(data['daysSinceLastArticleBackInTime']).toFixed(1);
 
-	addAuthorRankingChart(backInTime, acFunction, "Punkte", "Punkte", "Anzahl der Artikel", firstName, lastName, 0,70,5, acChart);
+		var cpd = cpdFunction(data['charsPerDay']).toFixed(1);
+		var cpdBackInTime = cpdFunction(data['charsPerDayBackInTime']).toFixed(1);
 
+		var ac = acFunction(data['articleCount']).toFixed(1);
+		var acBackInTime = acFunction(data['articleCountBackInTime']).toFixed(1);
+
+		addAuthorRankingChart(backInTime, tslaFunction, "Punkte", "Punkte", "Tage seit dem letzten Artikel", firstName, lastName, 0, 200, 0.5, tslaChart, data['daysSinceLastArticle'], data['daysSinceLastArticleBackInTime']);
+
+		addAuthorRankingChart(backInTime, cpdFunction, "Punkte", "Punkte", "Geschriebene Zeichen pro Tag", firstName, lastName, 0, 500, 0.5, cpdChart, data['charsPerDay'], data['charsPerDayBackInTime']);
+
+		addAuthorRankingChart(backInTime, acFunction, "Punkte", "Punkte", "Anzahl der Artikel", firstName, lastName, 0, 70, 0.5, acChart, data['articleCount'], data['articleCountBackInTime']);
+
+	});
 }
 
 
-function addAuthorRankingChart(backInTime, functionToPass, labelString, yLabelString, xLabelString, firstName, lastName, start, stop, step, chart) {
 
-	fetchTwoParameterAPI("singleRanking" + backInTime, "firstName", "lastName", firstName, lastName, function (data) {
 
-		dataArray = [];
-		labelArray = [];
+function addAuthorRankingChart(backInTime, functionToPass, labelString, yLabelString, xLabelString, firstName, lastName, start, stop, step, chart, firstIndex, secondIndex) {
+
+		var dataArray = [];
+		var labelArray = [];
 
 		for(var i=start;i<stop;i+=step) {
-			dataArray.push(functionToPass(i).toFixed(2));
+			dataArray.push(functionToPass(i).toFixed(1));
 			labelArray.push(i);
 		}
 
+
 		var config = {
 			type: 'line',
+			cubicInterpolationMode: 'default',
 			data: {labels: labelArray,
 					datasets: [{
 					label: labelString,
-					backgroundColor: "red",
-					borderColor: "red",
-					pointRadius: 0,
+					backgroundColor: function(context) {
+						var index = context.dataIndex;
+						if(index === firstIndex) {
+							return "red";
+						} else if (index === secondIndex) {
+							return "blue";
+						}
+						return "red";
+					},
+					borderColor: function(context) {
+						var index = context.dataIndex;
+						if(index === firstIndex) {
+							return "red";
+						} else if (index === secondIndex) {
+							return "blue";
+						}
+						return "red";
+					},
+					pointRadius: function(context) {
+						var index = context.dataIndex;
+						if(index === firstIndex) {
+							return 10;
+						} else if (index === secondIndex) {
+							return 10;
+						}
+						return 0;
+					},
 					fill: false,
-					lineTension: 0,
-					borderWidth: 2	,
+					borderWidth: 2,
 					data: dataArray
-
-
 				}]},
 			options: {
 				responsive: true,
@@ -61,16 +96,27 @@ function addAuthorRankingChart(backInTime, functionToPass, labelString, yLabelSt
 					text: 'Vielleicht was statt den <p im graphContent??'
 				},
 				tooltips: {
-					mode: 'index',
+					// Disable the on-canvas tooltip
+					enabled: true,
 					intersect: false,
+					mode: 'index',
+					/*filter: function (tooltipItem) {
+						return tooltipItem.datasetIndex === 10;
+					}*/
+					//custom: customTooltip,
 				},
 				hover: {
 					mode: 'nearest',
-					intersect: true
+					intersect: false,
 				},
 				scales: {
 					xAxes: [{
 						display: true,
+						distribution: 'linear',
+						offset: true,
+						ticks: {
+							maxTicksLimit: 10
+						},
 						scaleLabel: {
 							display: true,
 							labelString: xLabelString
@@ -84,16 +130,12 @@ function addAuthorRankingChart(backInTime, functionToPass, labelString, yLabelSt
 						}
 					}]
 				}
+
 			}
 		};
 
 		new Chart(chart.getContext('2d'), config);
 
-	});
-
-
 
 }
-
-
 

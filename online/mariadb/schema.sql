@@ -1,7 +1,6 @@
 CREATE USER IF NOT EXISTS 'api' IDENTIFIED BY 'testApi';
 CREATE USER IF NOT EXISTS 'gatherer' IDENTIFIED BY 'testGatherer';
-CREATE USER IF NOT EXISTS 'root' IDENTIFIED  BY 'root'; # remove for production
-GRANT ALL PRIVILEGES ON luhze.* TO 'root'@'%'; # remove for production
+
 
 
 CREATE DATABASE IF NOT EXISTS luhze CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -31,11 +30,11 @@ CREATE TABLE authors (
 
 CREATE TABLE ranking ( # gibs auch als file aber um nur von einer autorin abzufragen, diese tabelle hier
     authorId INT NOT NULL,
-    charcount INT NOT NULL,
+    charsPerDay INT NOT NULL,
     daysSinceFirstArticle INT NOT NULL,
     daysSinceLastArticle INT NOT NULL,
     articleCount INT NOT NULL,
-    charcountBackInTime INT NOT NULL,
+    charsPerDayBackInTime INT NOT NULL,
     daysSinceFirstArticleBackInTime INT NOT NULL,
     daysSinceLastArticleBackInTime INT NOT NULL,
     articleCountBackInTime INT NOT NULL,
@@ -108,7 +107,8 @@ GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.lastmodified TO 'gatherer'@'%';
 GRANT INSERT, UPDATE, SELECT ON luhze.totalWordOccurence TO 'gatherer'@'%';
 GRANT INSERT, UPDATE, SELECT ON luhze.wordOccurenceOverTheQuarters TO 'gatherer'@'%';
 GRANT INSERT, UPDATE, SELECT ON luhze.ranking TO 'gatherer'@'%';
-
+CREATE USER IF NOT EXISTS 'root123' IDENTIFIED BY 'root123'; # remove for production
+GRANT ALL PRIVILEGES ON luhze.* TO 'root'@'%'; # remove for production
 
 # insert start date to lastmodified 
 INSERT INTO lastmodified (lastModifiedWordOccurence, lastModifiedTotalWordOccurence, lastModifiedFiles, lastModifiedRanking) VALUES ('1900-01-01 00:00:00','1900-01-01 00:00:00','1900-01-01 00:00:00','1900-01-01 00:00:00');
