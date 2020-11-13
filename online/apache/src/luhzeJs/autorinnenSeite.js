@@ -20,28 +20,73 @@ function displayAuthorSite(firstName, lastName, backInTime) {
 
 	fetchTwoParameterAPI("singleRanking" + backInTime, "firstName", "lastName", firstName, lastName, function (data) {
 
-		var tsla = tslaFunction(data['daysSinceLastArticle']).toFixed(1);
-		var tslaBackInTime = tslaFunction(data['daysSinceLastArticleBackInTime']).toFixed(1);
+		var cpd = data['charsPerDay'];
+		var tsla = data['daysSinceLastArticle'];
+		var ac = data['articleCount'];
 
-		var cpd = cpdFunction(data['charsPerDay']).toFixed(1);
-		var cpdBackInTime = cpdFunction(data['charsPerDayBackInTime']).toFixed(1);
+		var rankingCPD = cpdFunction(cpd);
+		var rankingTSLA = tslaFunction(tsla);
+		var rankingAC = acFunction(ac);
 
-		var ac = acFunction(data['articleCount']).toFixed(1);
-		var acBackInTime = acFunction(data['articleCountBackInTime']).toFixed(1);
+		var cpdBackInTime = data['charsPerDayBackInTime'];
+		var tslaBackInTime = data['daysSinceLastArticleBackInTime'];
+		var acBackInTime = data['articleCountBackInTime'];
 
-		addAuthorRankingChart(backInTime, tslaFunction, "Punkte", "Punkte", "Tage seit dem letzten Artikel", firstName, lastName, 0, 200, 0.5, tslaChart, data['daysSinceLastArticle'], data['daysSinceLastArticleBackInTime']);
+		var rankingCPDBackInTime = cpdFunction(cpdBackInTime);
+		var rankingTSLABackInTime = tslaFunction(tslaBackInTime);
+		var rankingACBackInTime = acFunction(acBackInTime);
 
-		addAuthorRankingChart(backInTime, cpdFunction, "Punkte", "Punkte", "Geschriebene Zeichen pro Tag", firstName, lastName, 0, 500, 0.5, cpdChart, data['charsPerDay'], data['charsPerDayBackInTime']);
+		var scoreNow = Math.round(rankingAC + rankingTSLA + rankingCPD);
 
-		addAuthorRankingChart(backInTime, acFunction, "Punkte", "Punkte", "Anzahl der Artikel", firstName, lastName, 0, 70, 0.5, acChart, data['articleCount'], data['articleCountBackInTime']);
+		var scoreBacKInTime = Math.round(rankingACBackInTime + rankingTSLABackInTime + rankingCPDBackInTime);
+
+		addAuthorRankingChart(backInTime, tslaFunction, "Punkte", "Punkte",
+			"Tage seit dem letzten Artikel", firstName, lastName, 0, 200, 1, tslaChart,
+			tsla, tslaBackInTime, "time since last article function");
+
+		addAuthorRankingChart(backInTime, cpdFunction, "Punkte", "Punkte",
+			"Geschriebene Zeichen pro Tag", firstName, lastName, 0, 500, 1, cpdChart,
+			cpd, cpdBackInTime, "characters per day function");
+
+		addAuthorRankingChart(backInTime, acFunction, "Punkte", "Punkte",
+			"Anzahl der Artikel", firstName, lastName, 0, 70, 1, acChart,
+			ac, acBackInTime, "article count function");
+
+
+		addMathToDiv("tslaMathDiv", "$$tslaFunc(x) = tslaWeight \\cdot \\begin{cases} 100\e^{-0.01x}, & \\text{if } x<100\\cdot ln(5) \\\\  -\\frac{\\sqrt{2}x}{100} , & \\text{otherwise} \\end{cases}$$");
+
+		addMathToDiv("cpdMathDiv", "$$cpdFunc(x) = -100(\e^{-0.01x}-1) \\cdot cpdWeight$$");
+
+		addMathToDiv("acMathDiv", "$$acFunc(x) = -100(\e^{-0.1x} - 1) \\cdot acWeight$$");
+
+		addMathToDiv("calculationMathDiv", "Für " + firstName + " " + lastName + "" +
+			" ergibt sich am Datum !!! eine aktuelle Punktzahl aus $$tslaFunc(" + tsla + ") + cpdFunc" +
+			"(" + cpd + ") + acFunc(" + ac + ") = " + scoreNow + "$$");
+
+		MathJax.typeset(); //lädt das neue mathjax ein
 
 	});
 }
 
 
+function addMathToDiv(divName, math) {
+
+	var mathDiv = document.getElementById(divName);
+
+	var mathParagraph = document.createElement("p");
+
+	mathParagraph.className = "math";
+
+	var math = document.createTextNode(math);
+
+	mathParagraph.appendChild(math);
+
+	mathDiv.appendChild(mathParagraph);
+
+}
 
 
-function addAuthorRankingChart(backInTime, functionToPass, labelString, yLabelString, xLabelString, firstName, lastName, start, stop, step, chart, firstIndex, secondIndex) {
+function addAuthorRankingChart(backInTime, functionToPass, labelString, yLabelString, xLabelString, firstName, lastName, start, stop, step, chart, firstIndex, secondIndex, functionName) {
 
 		var dataArray = [];
 		var labelArray = [];
@@ -93,7 +138,7 @@ function addAuthorRankingChart(backInTime, functionToPass, labelString, yLabelSt
 				responsive: true,
 				title: {
 					display: true,
-					text: 'Vielleicht was statt den <p im graphContent??'
+					text: functionName
 				},
 				tooltips: {
 					// Disable the on-canvas tooltip

@@ -1,13 +1,10 @@
-var rankingTimeSinceLastArticleWeight = 1.4
-var rankingCharactersPerDayWeight = 1.4
-var rankingArticlesCountWeight = 1.2
-
-
-
+var rankingTimeSinceLastArticleWeight = Math.sqrt(2);
+var rankingCharactersPerDayWeight = Math.sqrt(2);
+var rankingArticlesCountWeight = 1;
 
 function rankingFunction(backInTime) {
 
-	document.getElementsByClassName("graphContent")[0].style.display = "none";
+
 	var div = document.getElementsByClassName("ranking")[0];
 	var rankingSection = div.getElementsByClassName("rankingSection")[0];
 	rankingSection.innerHTML = "";
@@ -40,7 +37,7 @@ function rankingFunction(backInTime) {
 		
 		for(var i=0;i<data.length;i++) {
 
-			var rankingCPD = cpdFunction(Math.round(data[i]['charsPerDay'] / data[i]['daysSinceFirstArticle']));
+			var rankingCPD = cpdFunction(data[i]['charsPerDay']);
 			var rankingTSLA = tslaFunction(data[i]['daysSinceLastArticle']);
 			var rankingAC = acFunction(data[i]['articleCount']);
 			var scoreNow = Math.round(rankingAC + rankingTSLA + rankingCPD);
@@ -48,7 +45,7 @@ function rankingFunction(backInTime) {
 
 			var scoreBackInTime = 0;
 			if(data[i]['articleCountBackInTime'] > 0) { //die autorin gab es damals noch nicht
-				rankingCPD = cpdFunction(Math.round(data[i]['charsPerDayBackInTime'] / data[i]['daysSinceFirstArticleBackInTime']));
+				rankingCPD = cpdFunction(data[i]['charsPerDayBackInTime']);
 				rankingTSLA = tslaFunction(data[i]['daysSinceLastArticleBackInTime']);
 				rankingAC = acFunction(data[i]['articleCountBackInTime']);
 				scoreBackInTime = Math.round(rankingAC + rankingTSLA + rankingCPD);
@@ -127,26 +124,25 @@ function rankingFunction(backInTime) {
 
 
 function tslaFunction(value) {
-    // function is using months not days so
-    var value = value / 30.5;
-    // to avoid math overflow when passing month thats to big
-    if(value > 5) { //also letzter artikel älter als 5 monate
-        return -1 * value;  // linear loosing points over time
+
+    if(value > 100 * Math.log(5)) { //also letzter artikel älter als ca. 6 monate (in 100ln(5) schneiden sich die funktionen)
+        //var result = 20 - (30*(value-100*Math.log(5)))/(200-100*Math.log(5));
+        return (-Math.sqrt(2))/(100) * value * rankingTimeSinceLastArticleWeight;
     } else {
-		var result = -10 / (0.1 + 10 * Math.exp(-1.3 * value)) + 100;
+		var result = 100 * Math.exp(-0.01* value);
 		return result * rankingTimeSinceLastArticleWeight;
 	}
 }
 
 function cpdFunction(value) {
 
-	var result = 10 / (0.103 + 2.5 * Math.exp(-0.02 * value));
+	var result = -100*(Math.exp(-0.01 * value)-1);
 	return result * rankingCharactersPerDayWeight;
 }
 
 
 function acFunction(value) {
-	var result = 10 / (0.1 + Math.exp(-0.4 * value)) - 10;
+	var result = -100*(Math.exp(-0.1 * value)-1);
 	return result * rankingArticlesCountWeight;
 }
 
@@ -154,6 +150,10 @@ function acFunction(value) {
 
 function showRanking() {
 
+	var mathDivArray = document.getElementsByClassName("mathDiv");
+	for(var i=0;i<mathDivArray.length;i++) {
+		mathDivArray[i].innerHTML = "";
+	}
 
 	document.getElementsByClassName("graphContent")[0].style.display = "none";
 	document.getElementsByClassName("autorinnenSeite")[0].style.display = "none";
