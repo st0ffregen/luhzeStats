@@ -5,14 +5,16 @@ from flask import request
 import MySQLdb
 import json
 import os
-
-app = Flask(__name__)
-path = "/usr/src/app/json/"
+from api import app
 
 
+@app.route('/minAuthor',methods=['GET'])
+def minAuthor():
+	return "minAuthor"
+"""
 def connectToDB():
 	con = MySQLdb.connect(
-		host='db',  # was muss hier fuer ein host???
+		host='db',
 		db=os.environ['MYSQL_DB'],
 		user=os.environ['MYSQL_API_USER'],
 		passwd=os.environ['MYSQL_API_PASSWORD']
@@ -20,22 +22,6 @@ def connectToDB():
 	con.set_character_set('utf8mb4')
 	print(con)
 	return con
-
-def readInGenericFile(filename):
-	
-	con = connectToDB()
-	with con:
-		cur = con.cursor()
-		cur.execute('SELECT json FROM files WHERE filename=%s', [filename])
-		entries = cur.fetchone()
-		
-		if entries is None or len(entries) == 0:
-			print("no entries in db for "  + filename)
-			cur.close()
-			return jsonify("No file in db found with file name " + filename)
-		else:
-			cur.close()
-			return Response(entries[0],  mimetype='application/json')
 
 @app.route('/json/date',methods=['GET'])
 def date():
@@ -46,9 +32,7 @@ def date():
 		return Response(json.dumps({'date': cur.fetchone()[0].strftime('%Y-%m-%d %H:%M:%S')}), mimetype='application/json')
 
 
-@app.route('/json/minAuthor',methods=['GET'])
-def minAuthor():
-	return readInGenericFile("minAuthor")
+
 
 @app.route('/json/activeMembers',methods=['GET'])
 def activeMembers():
@@ -349,6 +333,4 @@ def ecscapeSpecialCharacters(wordToEscapeCharactersIn):
     if wordToEscapeCharactersIn is not None and wordToEscapeCharactersIn != "":
         return wordToEscapeCharactersIn.replace("_","\_").replace("%", "\%")
 
-if __name__ == "__main__":
-	app.run(host="0.0.0.0", port="5001", debug=True)
-
+"""
