@@ -3,4 +3,4 @@ restartDb.sh
 resetAll.sh
 .idea/*
 .env
-online/mariadb/data/
+mariadb/data/

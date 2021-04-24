@@ -5,28 +5,28 @@ services:
     ports:
       - "8000:80"
     volumes:
-      - ./online/apache/src:/usr/local/apache2/htdocs/
+      - ./apache/src:/usr/local/apache2/htdocs/
     depends_on:
       - db
-      - pythonapi
+      - api
 
   db:
-    build: ./online/mariadb/
+    build: ./mariadb/
     restart: always
     volumes:
-      - ./online/mariadb/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
-      - ./online/mariadb/data/:/var/lib/mysql
+      - ./mariadb/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - ./mariadb/data/:/var/lib/mysql
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
     ports:
       - "8889:3306"
     
-  pythonapi:
-    build: ./online/pythonAPI/
+  api:
+    build: api/
     ports:
       - "5001:5001"
     volumes:
-      - ./online/pythonAPI:/usr/src/app
+      - ./api:/usr/src/app
     depends_on:
       - db    
     environment:
@@ -34,10 +34,10 @@ services:
     env_file:
       - ./.env
 
-  pythongather:
-    build: ./online/pythonGather/
+  scraper:
+    build: scraper/
     volumes:
-      - ./online/pythonGather:/usr/src/app
+      - ./scraper:/usr/src/app
     depends_on:
       - db
     environment:
@@ -46,25 +46,16 @@ services:
       - ./.env
 
   nginxgateway:
-    build: ./online/nginx/
+    build: ./nginx/
     ports:
       - "80:80"
       #- "443:443"
     #volumes:
-     # - .online/nginx:/etc/nginx/conf.d
+     # - ./nginx:/etc/nginx/conf.d
     restart: always
     depends_on:
       - db
-      - pythonapi
+      - api
       - web
   #certbot:
   #  image: certbot/certbot
-
-#  pythonanalyze:
- #   build: ./online/pythonAnalyze/
-  #  volumes:
-   #   - ./online/pythonAnalyze:/usr/src/app
-   # depends_on:
-     # - db
-    #environment:
-     # WAIT_HOSTS: db:3306
