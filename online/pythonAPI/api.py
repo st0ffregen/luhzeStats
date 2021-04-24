@@ -4,6 +4,7 @@ from flask import Response
 from flask import request
 import MySQLdb
 import json
+import os
 
 app = Flask(__name__)
 path = "/usr/src/app/json/"
@@ -11,10 +12,10 @@ path = "/usr/src/app/json/"
 
 def connectToDB():
 	con = MySQLdb.connect(
-		host='db',
-		db='luhze',
-		user='api',
-		passwd='testApi'
+		host='db',  # was muss hier fuer ein host???
+		db=os.environ['MYSQL_DB'],
+		user=os.environ['MYSQL_API_USER'],
+		passwd=os.environ['MYSQL_API_PASSWORD']
 	)
 	con.set_character_set('utf8mb4')
 	print(con)

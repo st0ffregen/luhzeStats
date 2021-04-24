@@ -15,13 +15,9 @@ services:
     restart: always
     volumes:
       - ./online/mariadb/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
-     # - ./online/mariadb/data/:/var/lib/mysql
+      - ./online/mariadb/data/:/var/lib/mysql
     environment:
-      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
-      MYSQL_USER_API: api
-      MYSQL_PASSWORD_API: testAPI
-      MYSQL_USER_GATHERER: gatherer
-      MYSQL_PASSWORD_GATHERER: testGatherer
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
     ports:
       - "8889:3306"
     
@@ -35,6 +31,8 @@ services:
       - db    
     environment:
       WAIT_HOSTS: db:3306
+    env_file:
+      - ./.env
 
   pythongather:
     build: ./online/pythonGather/
@@ -44,6 +42,8 @@ services:
       - db
     environment:
       WAIT_HOSTS: db:3306
+    env_file:
+      - ./.env
 
   nginxgateway:
     build: ./online/nginx/

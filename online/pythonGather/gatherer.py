@@ -24,9 +24,9 @@ def connectToDB():
 	try: 
 		con = MySQLdb.connect(
 			host='db', # was muss hier fuer ein host???
-			db='luhze',
-			user='gatherer',
-			passwd='testGatherer'
+			db=os.environ['MYSQL_DB'],
+			user=os.environ['MYSQL_SCRAPING_USER'],
+			passwd=os.environ['MYSQL_SCRAPING_PASSWORD']
 		)
 		con.set_character_set('utf8mb4')
 		con.autocommit(False)
@@ -351,13 +351,13 @@ def main():
 	print("starting gathering")
 	print(datetime.now())
 	con = connectToDB()
-	
+
 	if scrapeWebsite(con) == 0:
 		analyzeLuhze.mainFunc()
 	else:
 		print("exiting")
 		sys.exit(1)
-		return 1
-	
+
+
 if __name__ == "__main__":
 	main()
