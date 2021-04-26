@@ -1,7 +1,9 @@
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
-from scraper.databaseFunctions import checkIfLinkIsInDb
 
+textToBeIgnoredArray = [
+    'Hochschuljournalismus wie dieser ist teuer. Dementsprechend schwierig ist es, eine unabhängige, ehrenamtlich betriebene Zeitung am Leben zu halten. Wir brauchen also eure Unterstützung: Schon für den Preis eines veganen Gerichts in der Mensa könnt ihr unabhängigen, jungen Journalismus für Studierende, Hochschulangehörige und alle anderen Leipziger*innen auf Steady unterstützen. '
+]
 
 def scrapeRessort(text):
     footer = text.find('iv', {'class': 'articleFooter'})
@@ -83,6 +85,8 @@ def scrapeWordcountAndText(text, title):
         allParagraphs = text.find('div', {'class': 'field-content'}).find_all('p')
         paragraphsInFooter = footer.find_all('p')
         for p in allParagraphs:
+            if p.get_text() in textToBeIgnoredArray:
+                continue
             if p not in paragraphsInFooter:
                 wordcount += len(p.get_text())
                 articleText += p.get_text() + ' '
@@ -90,6 +94,8 @@ def scrapeWordcountAndText(text, title):
         allParagraphs = article.find_all('p')
         paragraphsInFooter = footer.find_all('p')
         for p in allParagraphs:
+            if p.get_text() in textToBeIgnoredArray:
+                continue
             if p.get_text() is not None and p.get('id') is None and p not in paragraphsInFooter:
                 wordcount += len(p.get_text())
                 articleText += p.get_text() + ' '
@@ -97,6 +103,8 @@ def scrapeWordcountAndText(text, title):
         allParagraphs = article.find_all('p')
         paragraphsInFooter = footer.find_all('p')
         for p in allParagraphs:
+            if p.get_text() in textToBeIgnoredArray:
+                continue
             if p.get_text() is not None and p.get('id') is None and \
                     'contentWrapper' in p.find_parent('div')['class'] and p not in paragraphsInFooter:
                 wordcount += len(p.get_text())

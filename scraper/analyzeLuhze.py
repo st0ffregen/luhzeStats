@@ -20,6 +20,7 @@ rankingCharactersPerDayWeight = 1.4
 rankingArticlesCountWeight = 1.2
 intervall = 2
 
+
 # allles resetten und dann checken ob analyze läuft, dann api umstellen
 
 
@@ -27,7 +28,7 @@ def tslaFunction(value):
     # function is using months not days so:
     value = round(value / 30.5)
     # to avoid math overflow when passing month thats to big
-    if value > 5: #also letzter artikel älter als 5 monate
+    if value > 5:  # also letzter artikel älter als 5 monate
         return round(-0.5 * value)  # linear loosing points over time
     else:
         result = round(-10 / (0.1 + 10 * math.exp(-1.3 * value)) + 100)
@@ -44,323 +45,106 @@ def acFunction(value):
     return round(result * rankingArticlesCountWeight)
 
 
-def analyzeNewData(con):
-    print("start analyzing")
-    print(datetime.now())
+def analyzeNewData(con, cur):
 
-    try:
-        con.autocommit = False
-        cur = con.cursor()
+    rankingSQLStatements = []
+    rankingSQLStatements.extend(ranking(cur, 'rankingDefault', 0))
+    rankingSQLStatements.extend(ranking(cur, 'rankingMonth', 1))
+    rankingSQLStatements.extend(ranking(cur, 'rankingYear', 12))
+    rankingSQLStatements.extend(ranking(cur, 'rankingTwoYears', 24))
+    rankingSQLStatements.extend(ranking(cur, 'rankingFiveYears', 60))
 
+    insertSQLStatements(cur, con, rankingSQLStatements, "ranking")
 
-        minAuthor = selfCalibrieren(cur)
-        
-        fileArray.append([json.dumps({'minAuthor':minAuthor}),'minAuthor'])
-        #fileArray.append([json.dumps({'date':datetime.now()}, default = str),'date']) #treats datetime as string
-        articlesTimeline(cur, 'articlesTimeline')
+    # erstellt und füllt die tabellen für die quarter
+    insertSQLStatements(cur, con, calculateWordOccurence(cur), "False")
+    # füllt die tabelle für die totalWordOccurence
+    insertSQLStatements(cur, con,
+                        calculateTotalWordOccurence(cur, createQuarterArray(cur, fetchLastModified(cur, "True")[0])),
+                        True)
 
-        activeMembers(cur, 'activeMembers')
-        ressortTopList(cur,'ressortTopList')
-
-        ressortArticlesTimeline(cur,'ressortArticlesTimeline')
-        topAuthorsPerRessort(cur,'topAuthorsPerRessort')
-        authorTimeline(cur,'authorTimeline',minAuthor)
-        mostArticlesPerTime(cur,'mostArticlesPerTime',minAuthor)
-        authorAverage(cur,'authorAverage',minAuthor)
-        averageCharactersPerDay(cur,'averageCharactersPerDay',minAuthor)
-        ressortAverage(cur,'ressortAverage')
-        authorTopList(cur,'authorTopList',minAuthor)
-        ressortTimeline(cur,'ressortTimeline')
-        oldestArticle(cur,'oldestArticle')
-        newestArticle(cur,'newestArticle')
-
-        # ranking
-        rankingSQLStatements = []
-        rankingSQLStatements.extend(ranking(cur, 'rankingDefault', 0))
-        rankingSQLStatements.extend(ranking(cur, 'rankingMonth', 1))
-        rankingSQLStatements.extend(ranking(cur, 'rankingYear', 12))
-        rankingSQLStatements.extend(ranking(cur, 'rankingTwoYears', 24))
-        rankingSQLStatements.extend(ranking(cur, 'rankingFiveYears', 60))
-
-        insertSQLStatements(cur, con, rankingSQLStatements, "ranking")
-
-        # erstellt und füllt die tabellen für die quarter
-        insertSQLStatements(cur, con, calculateWordOccurence(cur), "False")
-        # füllt die tabelle für die totalWordOccurence
-        insertSQLStatements(cur, con,
-                            calculateTotalWordOccurence(cur, createQuarterArray(cur, fetchLastModified(cur, "True")[0])),
-                            True)
-
-        print("commiting json for files")
-        insertSQLStatements(cur, con, fileArray, "fileArray")
-
-
-        # cur.close()
-    except MySQLdb.Error as e:
-        print(f"MySQL Error in mainFunc(): {e}")
-        return 1
-    except:
-        print(sys.exc_info())
-        sys.exit(1)
-        return 1
-
-
-def selfCalibrieren(cur):
-    print("selfCalibrieren")
-    cur.execute(
-        'SELECT authorId, count(distinct Link) FROM articles GROUP BY authorId ORDER BY 2 DESC LIMIT %s', [limitAuthors])
-    entries = cur.fetchall()
-    minAuthor = entries[len(entries) - 1][1]  # makes sure that always 30 authors are shown
-    print("minAuthor is: " + str(minAuthor))
-    return minAuthor
-
-
-def oldestArticle(cur, filename):
-    print("get oldest article")
-    cur.execute('SELECT MIN(created) FROM articles')
-    entries = cur.fetchall()
-    fileArray.append([json.dumps({'oldestArticle': entries[0][0]}, default=str), filename])
-    return entries[0]
-
-
-def newestArticle(cur, filename):
-    print("get newest article")
-    cur.execute('SELECT MAX(created) FROM articles')
-    entries = cur.fetchall()
-    fileArray.append([json.dumps({'newestArticle': entries[0][0]}, default=str), filename])
-    return entries[0]
-
-
-def articlesTimeline(cur, filename):
-    print("get articles timeline")
-    cur.execute(
-        'select cast(date_format(created,"%Y-%m-01") as date),count(distinct link) as countPerMonth from articles group by year(created),month(created) order by 1 asc')
-    entries = cur.fetchall()
-    fileArray.append([json.dumps(adjustFormatDate(entries)[::-1], default=str), filename])
-    return 0
-
-
-def activeMembers(cur, filename):
-    print("get active members")
-    cur.execute('SELECT authorId FROM articles GROUP BY authorId')
-    entries = cur.fetchall()
-    arr = []
-    for e in entries:
-        cur.execute('SELECT created FROM articles WHERE authorId =%s GROUP BY link', [e[0]])
-        dates = cur.fetchall()
-        dateArray = []
-        for d in dates:
-            dateArray.append(d[0].strftime('%Y-%m-%d %H:%M:%S'))
-        arr.append({"name": e[0], "articles": dateArray})
-    fileArray.append([json.dumps(arr), filename])
-    return 0
-
-
-def ressortTopList(cur, filename):
-    print("get ressort top list")
-    cur.execute(
-        'SELECT ressort, count(distinct link) FROM articles GROUP BY ressort HAVING count(distinct link) >= %s ORDER BY 2 DESC', [str(minRessort)])
-    entries = cur.fetchall()
-    fileArray.append([json.dumps(adjustFormatName(entries)), filename])
-    return 0
-
-
-def ressortArticlesTimeline(cur, filename):
-    print("get ressort articles timeline")
-    cur.execute(
-        'SELECT ressort, cast(date_format(created,"%%Y-%%m-01") as date),count(distinct link) as countPerMonth from articles where ressort in (select ressort from articles group by ressort having count(distinct link) >= %s) group by ressort, year(created), month(created)', [str(minRessort)])
-    entries = cur.fetchall()
-    arr = []  # [{ressort: hopo, articles: [{date: some month, 5},{date: some month, 4}]}]
-    ressort = entries[0][0]  # set ressort to first in fetched list
-    monthArray = []
-    for e in entries:
-        if ressort == e[0]:
-            monthArray.append({"date": e[1], "count": e[2]})
-            if e == entries[len(entries) - 1]:  # if it is last element
-                arr.append({"ressort": ressort, "countPerMonth": monthArray})
-        else:
-            arr.append({"ressort": ressort, "countPerMonth": monthArray})
-            monthArray = [{"date": e[1], "count": e[2]}]
-            ressort = e[0]
-            if e == entries[len(entries) - 1]:  # if it is last element
-                arr.append({"ressort": ressort, "countPerMonth": monthArray})
-
-    fileArray.append([json.dumps(arr, default=str), filename])
-    return 0
-
-
-def topAuthorsPerRessort(cur, filename):
-    print("get top authors per ressort")
-    cur.execute('SELECT ressort, ar.authorId, au.firstName, au.lastName, count(link) as count from articles ar join authors au on ar.authorId=au.id where ressort in (select ressort from articles group by ressort having count(distinct link) >= %s) group by ressort, authorId having count >= 5 order by 1 asc,5 desc', [str(minRessort)])
-    entries = cur.fetchall()
-    arr = []  # should by filled with [{ressort: hopo, authors: [{name: theresa, count:5},{name: someone, count:2}]}] with min count >= 2 (in this example)
-    ressort = entries[0][0]  # set ressort to first in fetched list
-    authorArray = []
-    for e in entries:
-        if ressort == e[0]:
-            name = (e[2] + " " + e[3]).strip()
-            authorArray.append({"name": name, "count": e[4]})
-            if e == entries[len(entries) - 1]:  # if it is last element
-                arr.append({"ressort": ressort, "authors": authorArray[:3]})
-        else:
-            arr.append({"ressort": ressort, "authors": authorArray[:3]})
-            name = (e[2] + " " + e[3]).strip()
-            authorArray = [{"name": name, "count": e[4]}]
-            ressort = e[0]
-            if e == entries[len(entries) - 1]:  # if it is last element
-                arr.append({"ressort": ressort, "authors": authorArray[:3]})
-
-    fileArray.append([json.dumps(arr), filename])
-    return 0
-
-
-def authorTimeline(cur, filename, minAuthor):
-    print("get author timeline")
-    cur.execute(
-        'SELECT ar.authorId, au.firstName, au.lastName, MIN(created), MAX(created) FROM articles ar join authors au on ar.authorId=au.id GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY count(distinct link) DESC', [str(minAuthor)])
-    entries = cur.fetchall()
-    arr = []  # adjustFormat function only takes array with 2-tupel (2 entries in tupel)
-    for e in entries:
-        name = (e[1] + " " + e[2]).strip()
-        arr.append({"name": name, "min": e[3], "max": e[4]})
-    fileArray.append([json.dumps(arr, default=str), filename])
-    return 0
-
-
-def mostArticlesPerTime(cur, filename, minAuthor):
-    print("get most articles per time")
-    cur.execute(
-        'SELECT ar.authorId, au.firstName, au.lastName, ROUND(((DATEDIFF(MAX(created),MIN(created)))/count(distinct link)),1) as diff FROM articles ar join authors au on ar.authorId=au.id GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY diff', [str(minAuthor)])
-    entries = cur.fetchall()
-    arr = []
-    for e in entries:
-        arr.append({'name': e[1] + " " + e[2], 'count': str(e[3])})
-    fileArray.append([json.dumps(arr), filename])  # decimal output from sql is not serializeable, cast to float
-    return 0
-
-
-def authorAverage(cur, filename, minAuthor):
-    print("get author average")
-    cur.execute(
-        'SELECT ar.authorId, au.firstName, au.lastName, round(avg(charcount)) as count from (select distinct(link), d.charcount as charcount, authorId from articles art join documents d on art.documentId=d.id where authorId in (select authorId from articles group by authorId having count(distinct link) >=%s)) as ar join authors au on ar.authorId=au.id group by authorId order by count desc', [str(minAuthor)])
-    entries = cur.fetchall()
-    arr = []
-    for e in entries:
-        arr.append({'name': e[1] + " " + e[2], 'count': str(e[3])})
-    fileArray.append([json.dumps(arr), filename])
-    return 0
-
-
-def averageCharactersPerDay(cur, filename, minAuthor):
-    print("get average characters per day")
-    cur.execute(
-        'SELECT ar.authorId, au.firstName, au.lastName, sum(charcount) as count from (select distinct(link), d.charcount as charcount, authorId from articles art join documents d on art.documentId=d.id where authorId in (select authorId from articles group by authorId having count(distinct link) >= %s )) as ar join authors as au on ar.authorId=au.id group by authorId order by count desc', [str(minAuthor)])
-    entries = cur.fetchall()
-    arr = []
-    for e in entries:
-        cur.execute('SELECT DATEDIFF(MAX(created),MIN(created))+1 as average from articles where authorId=%s',[str(e[0])])
-        res = cur.fetchone()
-        name = (e[1] + " " + e[2]).strip()
-        arr.append({"name":  name, "count": round(e[3] / res[0])})
-    fileArray.append([json.dumps(sorted(arr, key=lambda x: x['count'], reverse=True)), filename])
-    return 0
-
-
-def ressortAverage(cur, filename):
-    print("get ressort average")
-    cur.execute(
-        'SELECT ressort, round(avg(charcount)) as count from (select distinct(link), d.charcount as charcount, ressort from articles ar join documents as d on ar.documentId=d.id where ressort in (select ressort from articles group by ressort having count(distinct link) >=%s)) as sub group by ressort order by count desc', [str(minRessort)])
-    entries = cur.fetchall()
-    arr = []
-    for e in entries:
-        arr.append({'name': e[0], 'count': str(e[1])})
-    fileArray.append([json.dumps(arr), filename])
-    return 0
-
-
-def authorTopList(cur, filename, minAuthor):
-    print("get author top list")
-    cur.execute(
-        'SELECT ar.authorId, au.firstName, au.lastName,count(distinct link) FROM articles ar join authors au on ar.authorId=au.id GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY 4 DESC', [str(minAuthor)])
-    entries = cur.fetchall()
-    res = []
-    for e in entries:
-        res.append({'name': e[1] + " " + e[2], 'count': e[3]})
-    fileArray.append([json.dumps(res), filename])
-    return 0
-
-
-def ressortTimeline(cur, filename):
-    print("get ressort timeline")
-    cur.execute(
-        'SELECT ressort, MIN(created), MAX(created) FROM articles GROUP BY ressort ORDER BY count(distinct link) DESC')
-    entries = cur.fetchall()
-    arr = []  # adjustFormat function only takes array with 2-tupel (2 entries in tupel)
-    for e in entries:
-        arr.append({"name": e[0], "min": e[1], "max": e[2]})
-    fileArray.append([json.dumps(arr, default=str), filename])
-    return 0
+    print("commiting json for files")
+    insertSQLStatements(cur, con, fileArray, "fileArray")
 
 
 def ranking(cur, filename, backInTime):
     print("calculate ranking for backInTime " + str(backInTime))
-    cur.execute('SELECT distinct(ar.authorId), au.firstName, au.lastName  from articles ar join authors au on ar.authorId=au.id')
+    cur.execute(
+        'SELECT distinct(ar.authorId), au.firstName, au.lastName  from articles ar join authors au on ar.authorId=au.id')
     entries = cur.fetchall()
     sqlStatements = [];
     for e in entries:  # loop through all authors
 
         # berechnet sum(charcount) für alle artikel vor dem gebenen Zeitpunkt, also z.B. alles vor jetzt oder alle vor jetzt minus ein Jahr
         cur.execute(
-            'SELECT sum(charcount) from (select distinct(link), d.charcount as charcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)) as sub', [str(e[0]), str(backInTime)])
+            'SELECT sum(charcount) from (select distinct(link), d.charcount as charcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)) as sub',
+            [str(e[0]), str(backInTime)])
         charsPerDayResult = cur.fetchone()
         if (charsPerDayResult[0] == "NULL" or charsPerDayResult[0] == None):  # den autor gabs damals noch nicht
             continue
 
-        cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime)])
+        cur.execute(
+            'SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)',
+            [str(backInTime), str(e[0]), str(backInTime)])
         daysSinceFirstArticleResult = cur.fetchone()
 
-        cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime), str(e[0]), str(backInTime)])
+        cur.execute(
+            'SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)',
+            [str(backInTime), str(e[0]), str(backInTime)])
         daysSinceLastArticleResult = cur.fetchone()
 
-        cur.execute('SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(e[0]), str(backInTime)])
+        cur.execute(
+            'SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)',
+            [str(e[0]), str(backInTime)])
         articleCountResult = cur.fetchone()
 
         # two months before bzw. plus backInTime
         cur.execute(
-            'SELECT sum(charcount) from (select distinct(link), d.charcount as charcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)) as sub', [str(e[0]), str(intervall + backInTime)])
+            'SELECT sum(charcount) from (select distinct(link), d.charcount as charcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)) as sub',
+            [str(e[0]), str(intervall + backInTime)])
         charsPerDayResultBackInTime = cur.fetchone()
-        if (charsPerDayResultBackInTime[0] == "NULL" or  charsPerDayResultBackInTime[0] == None):  # no article published two months before
+        if (charsPerDayResultBackInTime[0] == "NULL" or charsPerDayResultBackInTime[
+            0] == None):  # no article published two months before
 
-            sqlStatements.append(['INSERT INTO ranking VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE charsPerDay=VALUES(charsPerDay),'
-                                  'daysSinceFirstArticle=VALUES(daysSinceFirstArticle), daysSinceLastArticle=VALUES(daysSinceLastArticle),'
-                                  'articleCount=VALUES(articleCount), charsPerDayBackInTime=VALUES(charsPerDayBackInTime),'
-                                  'daysSinceFirstArticleBackInTime=VALUES(daysSinceFirstArticleBackInTime),'
-                                  'daysSinceLastArticleBackInTime=VALUES(daysSinceLastArticleBackInTime),'
-                                  'articleCountBackInTime=VALUES(articleCountBackInTime)', [e[0], round(charsPerDayResult[0]/daysSinceFirstArticleResult[0]),
-                                                                                            daysSinceFirstArticleResult[0],
-                                                                                            daysSinceLastArticleResult[0], articleCountResult[0], 0, 0, 0, 0, backInTime]])
+            sqlStatements.append([
+                                     'INSERT INTO ranking VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE charsPerDay=VALUES(charsPerDay),'
+                                     'daysSinceFirstArticle=VALUES(daysSinceFirstArticle), daysSinceLastArticle=VALUES(daysSinceLastArticle),'
+                                     'articleCount=VALUES(articleCount), charsPerDayBackInTime=VALUES(charsPerDayBackInTime),'
+                                     'daysSinceFirstArticleBackInTime=VALUES(daysSinceFirstArticleBackInTime),'
+                                     'daysSinceLastArticleBackInTime=VALUES(daysSinceLastArticleBackInTime),'
+                                     'articleCountBackInTime=VALUES(articleCountBackInTime)',
+                                     [e[0], round(charsPerDayResult[0] / daysSinceFirstArticleResult[0]),
+                                      daysSinceFirstArticleResult[0],
+                                      daysSinceLastArticleResult[0], articleCountResult[0], 0, 0, 0, 0, backInTime]])
 
             continue
 
-        cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 from articles where authorId= %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime + intervall), str(e[0]), str(backInTime + intervall)])
+        cur.execute(
+            'SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 from articles where authorId= %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)',
+            [str(backInTime + intervall), str(e[0]), str(backInTime + intervall)])
         daysSinceFirstArticleResultBackInTime = cur.fetchone()
 
-        cur.execute('SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(backInTime + intervall), str(e[0]), str(backInTime + intervall)])
+        cur.execute(
+            'SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)',
+            [str(backInTime + intervall), str(e[0]), str(backInTime + intervall)])
         daysSinceLastArticleResultBackInTime = cur.fetchone()
 
-        cur.execute('SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)', [str(e[0]), str(intervall + backInTime)])
+        cur.execute(
+            'SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)',
+            [str(e[0]), str(intervall + backInTime)])
         articleCountResultBackInTime = cur.fetchone()
 
-        sqlStatements.append(['INSERT INTO ranking VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE charsPerDay=VALUES(charsPerDay),'
+        sqlStatements.append([
+                                 'INSERT INTO ranking VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE charsPerDay=VALUES(charsPerDay),'
                                  'daysSinceFirstArticle=VALUES(daysSinceFirstArticle), daysSinceLastArticle=VALUES(daysSinceLastArticle),'
                                  'articleCount=VALUES(articleCount), charsPerDayBackInTime=VALUES(charsPerDayBackInTime),'
                                  'daysSinceFirstArticleBackInTime=VALUES(daysSinceFirstArticleBackInTime),'
                                  'daysSinceLastArticleBackInTime=VALUES(daysSinceLastArticleBackInTime),'
                                  'articleCountBackInTime=VALUES(articleCountBackInTime)',
-                                 [e[0], round(charsPerDayResult[0]/daysSinceFirstArticleResult[0]),
+                                 [e[0], round(charsPerDayResult[0] / daysSinceFirstArticleResult[0]),
                                   daysSinceFirstArticleResult[0], daysSinceLastArticleResult[0],
                                   articleCountResult[0],
-                                  round(charsPerDayResultBackInTime[0]/daysSinceFirstArticleResultBackInTime[0]),
+                                  round(charsPerDayResultBackInTime[0] / daysSinceFirstArticleResultBackInTime[0]),
                                   daysSinceFirstArticleResultBackInTime[0], daysSinceLastArticleResultBackInTime[0],
                                   articleCountResultBackInTime[0], backInTime]])
 
@@ -386,7 +170,8 @@ def createQuarterArray(cur, lastmodified):
         minYear = str(minDate.strftime('%Y-%m-%d %H:%M:%S')).split("-")[0]
         maxYear = str(maxDate.strftime('%Y-%m-%d %H:%M:%S')).split("-")[0]
 
-        initQuarter = (((int(minDate.strftime('%Y-%m-%d %H:%M:%S').split("-")[1]) - 1) // 3) + 1)  # gib quarter von 1 bis 4
+        initQuarter = (((int(
+            minDate.strftime('%Y-%m-%d %H:%M:%S').split("-")[1]) - 1) // 3) + 1)  # gib quarter von 1 bis 4
 
         for year in range(int(minYear), int(maxYear) + 1):  # +1 da maxYear exklusive Grenze
             for quarter in range(initQuarter, 5):  # 5 ist hier wieder exklusiv
@@ -397,19 +182,21 @@ def createQuarterArray(cur, lastmodified):
 
     return quarterArray
 
+
 def insertSQLStatements(cur, con, sqlStatements, whatAction):
     if sqlStatements is not None and len(sqlStatements) > 0:
         try:
             if whatAction == "fileArray":
                 for statement in sqlStatements:
-                    cur.execute('INSERT INTO files VALUES(%s,%s,%s) ON DUPLICATE KEY UPDATE json=VALUES(json)', [None, statement[1], statement[0]])
+                    cur.execute('INSERT INTO files VALUES(%s,%s,%s) ON DUPLICATE KEY UPDATE json=VALUES(json)',
+                                [None, statement[1], statement[0]])
 
                 cur.execute('UPDATE lastmodified set lastModifiedFiles = %s', [datetime.now().strftime(
                     '%Y-%m-%d %H:%M:%S')])  # update lastmodified
             else:
                 for statement in sqlStatements:
-                    #print(statement[0])
-                    #print(statement[1])
+                    # print(statement[0])
+                    # print(statement[1])
                     cur.execute(statement[0], statement[1])
 
                 if whatAction == "True":
@@ -421,7 +208,6 @@ def insertSQLStatements(cur, con, sqlStatements, whatAction):
                 elif whatAction == "ranking":
                     cur.execute('UPDATE lastmodified set lastModifiedRanking = %s', [datetime.now().strftime(
                         '%Y-%m-%d %H:%M:%S')])  # update lastmodified
-
 
             print("commiting statements")
             con.commit()
@@ -457,7 +243,6 @@ def fetchLastModified(cur, total):
         sys.exit(1)  # kann man eh stoppen, da constraints der db blockieren
 
 
-
 def calculateWordOccurence(cur):
     print("calculate word occurence for each quarter")
     # berechnet zu jedem wort eine relative zahl die die absolute Anzahl der Erscheinen des Wortes dividiert durch eine bestimmte
@@ -467,7 +252,7 @@ def calculateWordOccurence(cur):
     lastmodified = fetchLastModified(cur, False)[0]
     # zunächst erstellen der neuen tabellen für die neuen Quartale
     quarterArray = createQuarterArray(cur, lastmodified)
-    sqlStatements = []#createQuarterTables(cur, quarterArray)
+    sqlStatements = []  # createQuarterTables(cur, quarterArray)
 
     # fetch new articles from documents
     cur.execute('SELECT document, YEAR(createdDate), QUARTER(createdDate) FROM documents WHERE addedDate > %s',
@@ -494,10 +279,12 @@ def calculateWordOccurence(cur):
         print("found " + str(documentInThatQuarterCount) + " documents in quarter " + str(yearAndQuarter))
 
         # get last wordcount from table
-        cur.execute("SELECT MAX(quarterWordCount) FROM wordOccurenceOverTheQuarters WHERE yearAndQuarter = %s", [yearAndQuarter])
-        quarterWordCount = cur.fetchone()[0] # anzahl aller wörter auf luhze.de in diesem quartal
+        cur.execute("SELECT MAX(quarterWordCount) FROM wordOccurenceOverTheQuarters WHERE yearAndQuarter = %s",
+                    [yearAndQuarter])
+        quarterWordCount = cur.fetchone()[0]  # anzahl aller wörter auf luhze.de in diesem quartal
         if quarterWordCount is None:
-            print("entries with yearAndQuarter " + yearAndQuarter + " do not exist yet. Treat quarter wordcount as zero.")
+            print(
+                "entries with yearAndQuarter " + yearAndQuarter + " do not exist yet. Treat quarter wordcount as zero.")
             quarterWordCount = 0
         else:
             quarterWordCount = int(quarterWordCount)
@@ -528,6 +315,7 @@ def calculateWordOccurence(cur):
 
     return sqlStatements
 
+
 def calculateTotalWordOccurence(cur, quarterArray):
     print("Calculate total word occurence")
     countPerWordDict = {}
@@ -536,7 +324,9 @@ def calculateTotalWordOccurence(cur, quarterArray):
     print(quarterArray)
     for yearAndQuarter in quarterArray:
 
-        cur.execute('SELECT word, occurence, quarterWordCount FROM wordOccurenceOverTheQuarters WHERE yearAndQuarter = %s', [yearAndQuarter])
+        cur.execute(
+            'SELECT word, occurence, quarterWordCount FROM wordOccurenceOverTheQuarters WHERE yearAndQuarter = %s',
+            [yearAndQuarter])
 
         allEntriesFromThatTable = cur.fetchall()
         # maybe there is no word with that yearAndQuarter
@@ -549,10 +339,8 @@ def calculateTotalWordOccurence(cur, quarterArray):
             else:
                 countPerWordDict[word[0]] = word[1]
 
-
-
     for word in countPerWordDict.keys():
-        if word=="der":
+        if word == "der":
             print(countPerWordDict[word])
         sqlStatements.append([
             'INSERT INTO totalWordOccurence VALUES (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE occurencePerWords=(((occurence + VALUES(occurence))/VALUES(totalWordCount))*100000),occurence=occurence + VALUES(occurence), totalWordCount=VALUES(totalWordCount)',
@@ -565,7 +353,7 @@ def calculateTotalWordOccurence(cur, quarterArray):
 def removeTrailingPunctuations(w):
     unwantedPunctuations = ["-", ",", ":", ".", "!", "?", "\"", "“", ")"]
 
-    if w[-1] in unwantedPunctuations and len(w) > 2 and w != "STUDENT!": #student! darf das Ausrufezeichen behalten
+    if w[-1] in unwantedPunctuations and len(w) > 2 and w != "STUDENT!":  # student! darf das Ausrufezeichen behalten
         return removeTrailingPunctuations(w[:-1])
     else:
         return w
@@ -578,10 +366,6 @@ def removeLeadingPunctuations(w):
         return removeLeadingPunctuations(w[1:])
     else:
         return w
-
-
-
-
 
 
 def writeToDB(cur, con):

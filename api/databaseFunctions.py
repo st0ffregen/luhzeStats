@@ -1,6 +1,7 @@
 import MySQLdb
 import os
-
+from api import app
+from flask import g
 
 def connectToDB():
     con = MySQLdb.connect(
@@ -14,12 +15,20 @@ def connectToDB():
     return con
 
 
-def closeConnectionToDB(con, cur):
-    con.close()
-    cur.close()
+def closeConnectionToDB():
+    g.con.close()
+    g.cur.close()
 
 
-def executeSQL(sqlArray, con, cur):
-    for statement in sqlArray:
-        cur.execute(statement[0], statement[1])
-    con.commit()
+def get_cur():
+    if 'cur' not in g:
+        g.con = connectToDB()
+        g.cur = g.con.cursor()
+
+
+@app.teardown_appcontext
+def teardownDB(exception):
+    cur = g.pop('cur', None)
+
+    if cur is not None:
+        closeConnectionToDB()

@@ -49,8 +49,6 @@ def scrapeAllInformation(linkToArticle):
 
 
 def main():
-    print('starting gathering')
-    print(datetime.now())
     con = connectToDB()
     cur = con.cursor()
 
@@ -74,10 +72,10 @@ def main():
             informationDict['date']
         ))
 
-    executeSQL(sqlStatements, cur, con)
+    executeSQL(sqlStatements, con, cur)
     closeConnectionToDB(con, cur)
 
-    analyzeNewData(cur)
+    analyzeNewData(con, cur)
 
 
 if __name__ == '__main__':
