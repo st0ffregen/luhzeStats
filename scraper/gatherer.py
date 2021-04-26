@@ -5,11 +5,10 @@ from scraper.analyzeLuhze import analyzeNewData
 from scraper.scrapingFunctions import scrapeRessort, scrapeAuthor, scrapeTitle, scrapeDate, scrapeWordcountAndText, \
     readInSite, getLinksToSingleArticlesFromOverviewPages
 from scraper.databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
+import os
 
-directory = 'home/stoffregen/Documents/luhze/archive/'
-maxPageCount = 106  # so many pages are currently on luhze.de 101
 luhzeArticleOverviewPageUrl = 'https://www.luhze.de/page/'
-numberOfOverviewPagesToScrapeAgain = 3
+numberOfOverviewPagesToScrapeAgain = os.environ['NUMBERS_OF_OVERVIEW_PAGES_TO_SCRAPE_AGAIN']
 
 
 def prepareSQLStatements(link, title, authorArray, ressortArray, wordcount, document, date):
@@ -32,7 +31,7 @@ def prepareSQLStatements(link, title, authorArray, ressortArray, wordcount, docu
 
 def scrapeAllInformation(linkToArticle):
 
-    parsedArticlePage = readInSite(linkToArticle, 'html.parser')
+    parsedArticlePage = readInSite(linkToArticle)
     title = scrapeTitle(parsedArticlePage)
     authorArray = scrapeAuthor(parsedArticlePage)
     ressortArray = scrapeRessort(parsedArticlePage)
