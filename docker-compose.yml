@@ -19,7 +19,7 @@ services:
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
     ports:
-      - "8889:3306"
+      - "3306:3306"
     
   api:
     build: api/

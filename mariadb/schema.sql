@@ -22,9 +22,7 @@ CREATE TABLE lastmodified (
 
 CREATE TABLE authors (
 	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-	firstName VARCHAR(64) NOT NULL,  # es gibt manchmal nur einen namen z.B. hastduzeit -> dann nur nachname aufnehmen
-	lastName VARCHAR(64) NOT NULL,
-	mostUsedWords VARCHAR(255), # kann weg, brauche eine tabelle pro autor*in
+	name VARCHAR(128) NOT NULL,
 	UNIQUE(firstName, lastName)
 );
 
@@ -41,12 +39,6 @@ CREATE TABLE ranking ( # gibs auch als file aber um nur von einer autorin abzufr
     backInTime INT NOT NULL, #in months
     FOREIGN KEY (authorId) REFERENCES authors(id) ON UPDATE CASCADE ON DELETE RESTRICT,
     PRIMARY KEY (authorId, backInTime)
-);
-
-CREATE TABLE files ( #speichert vorbereitete json dateien
-	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-	filename VARCHAR(64) NOT NULL UNIQUE,
-	json JSON NOT NULL UNIQUE
 );
 
 CREATE TABLE documents ( #speichert den sourcecode der texte
@@ -69,7 +61,7 @@ CREATE TABLE articles (
 	created DATETIME NOT NULL,
 	documentId INT NOT NULL,
 	FOREIGN KEY (authorId) REFERENCES authors(id) ON UPDATE CASCADE ON DELETE RESTRICT,
-	FOREIGN KEY (documentId) REFERENCES documents(id) ON UPDATE CASCADE ON DELETE RESTRICT
+	FOREIGN KEY (documentId) REFERENCES documents(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE wordOccurenceOverTheQuarters ( # einfach alles in eine Tabelle

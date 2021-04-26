@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import json
 from datetime import datetime
 import MySQLdb
@@ -45,27 +44,9 @@ def acFunction(value):
     return round(result * rankingArticlesCountWeight)
 
 
-def connectToDB():
-    try:
-        con = MySQLdb.connect(
-            host='db',  # was muss hier fuer ein host???
-            db=os.environ['MYSQL_DB'],
-            user=os.environ['MYSQL_SCRAPING_USER'],
-            passwd=os.environ['MYSQL_SCRAPING_PASSWORD']
-        )
-        con.set_character_set('utf8mb4')
-        con.autocommit(False)
-        return con
-    except MySQLdb.Error as e:
-        print(f"Error connecting to MariaDB Platform: {e}")
-
-    return 1
-
-
-def mainFunc():
+def analyzeNewData(con):
     print("start analyzing")
     print(datetime.now())
-    con = connectToDB()
 
     try:
         con.autocommit = False
