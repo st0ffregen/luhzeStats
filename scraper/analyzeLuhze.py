@@ -67,86 +67,9 @@ def analyzeNewData(con, cur):
     insertSQLStatements(cur, con, fileArray, "fileArray")
 
 
-def ranking(cur, filename, backInTime):
+def ranking(cur, backInTime):
     print("calculate ranking for backInTime " + str(backInTime))
-    cur.execute(
-        'SELECT distinct(ar.authorId), au.firstName, au.lastName  from articles ar join authors au on ar.authorId=au.id')
-    entries = cur.fetchall()
-    sqlStatements = [];
-    for e in entries:  # loop through all authors
 
-        # berechnet sum(charcount) für alle artikel vor dem gebenen Zeitpunkt, also z.B. alles vor jetzt oder alle vor jetzt minus ein Jahr
-        cur.execute(
-            'SELECT sum(charcount) from (select distinct(link), d.charcount as charcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)) as sub',
-            [str(e[0]), str(backInTime)])
-        charsPerDayResult = cur.fetchone()
-        if (charsPerDayResult[0] == "NULL" or charsPerDayResult[0] == None):  # den autor gabs damals noch nicht
-            continue
-
-        cur.execute(
-            'SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)',
-            [str(backInTime), str(e[0]), str(backInTime)])
-        daysSinceFirstArticleResult = cur.fetchone()
-
-        cur.execute(
-            'SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)',
-            [str(backInTime), str(e[0]), str(backInTime)])
-        daysSinceLastArticleResult = cur.fetchone()
-
-        cur.execute(
-            'SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)',
-            [str(e[0]), str(backInTime)])
-        articleCountResult = cur.fetchone()
-
-        # two months before bzw. plus backInTime
-        cur.execute(
-            'SELECT sum(charcount) from (select distinct(link), d.charcount as charcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)) as sub',
-            [str(e[0]), str(intervall + backInTime)])
-        charsPerDayResultBackInTime = cur.fetchone()
-        if (charsPerDayResultBackInTime[0] == "NULL" or charsPerDayResultBackInTime[
-            0] == None):  # no article published two months before
-
-            sqlStatements.append([
-                                     'INSERT INTO ranking VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE charsPerDay=VALUES(charsPerDay),'
-                                     'daysSinceFirstArticle=VALUES(daysSinceFirstArticle), daysSinceLastArticle=VALUES(daysSinceLastArticle),'
-                                     'articleCount=VALUES(articleCount), charsPerDayBackInTime=VALUES(charsPerDayBackInTime),'
-                                     'daysSinceFirstArticleBackInTime=VALUES(daysSinceFirstArticleBackInTime),'
-                                     'daysSinceLastArticleBackInTime=VALUES(daysSinceLastArticleBackInTime),'
-                                     'articleCountBackInTime=VALUES(articleCountBackInTime)',
-                                     [e[0], round(charsPerDayResult[0] / daysSinceFirstArticleResult[0]),
-                                      daysSinceFirstArticleResult[0],
-                                      daysSinceLastArticleResult[0], articleCountResult[0], 0, 0, 0, 0, backInTime]])
-
-            continue
-
-        cur.execute(
-            'SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MIN(created))+1 from articles where authorId= %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)',
-            [str(backInTime + intervall), str(e[0]), str(backInTime + intervall)])
-        daysSinceFirstArticleResultBackInTime = cur.fetchone()
-
-        cur.execute(
-            'SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s MONTH),MAX(created))+1 from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)',
-            [str(backInTime + intervall), str(e[0]), str(backInTime + intervall)])
-        daysSinceLastArticleResultBackInTime = cur.fetchone()
-
-        cur.execute(
-            'SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s MONTH)',
-            [str(e[0]), str(intervall + backInTime)])
-        articleCountResultBackInTime = cur.fetchone()
-
-        sqlStatements.append([
-                                 'INSERT INTO ranking VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE charsPerDay=VALUES(charsPerDay),'
-                                 'daysSinceFirstArticle=VALUES(daysSinceFirstArticle), daysSinceLastArticle=VALUES(daysSinceLastArticle),'
-                                 'articleCount=VALUES(articleCount), charsPerDayBackInTime=VALUES(charsPerDayBackInTime),'
-                                 'daysSinceFirstArticleBackInTime=VALUES(daysSinceFirstArticleBackInTime),'
-                                 'daysSinceLastArticleBackInTime=VALUES(daysSinceLastArticleBackInTime),'
-                                 'articleCountBackInTime=VALUES(articleCountBackInTime)',
-                                 [e[0], round(charsPerDayResult[0] / daysSinceFirstArticleResult[0]),
-                                  daysSinceFirstArticleResult[0], daysSinceLastArticleResult[0],
-                                  articleCountResult[0],
-                                  round(charsPerDayResultBackInTime[0] / daysSinceFirstArticleResultBackInTime[0]),
-                                  daysSinceFirstArticleResultBackInTime[0], daysSinceLastArticleResultBackInTime[0],
-                                  articleCountResultBackInTime[0], backInTime]])
 
     return sqlStatements
 

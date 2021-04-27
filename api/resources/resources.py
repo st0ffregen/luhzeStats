@@ -7,6 +7,7 @@ import MySQLdb
 import json
 import os
 from api import app
+from api.resources.rankingHelperFunctions import calculateRankingForAllAuthors, calculateValues
 
 minCountOfArticlesAuthorsNeedToHaveToBeDisplayed = 10
 minCountOfArticlesRessortsNeedToHaveToBeDisplayed = 10
@@ -215,103 +216,29 @@ def ressortTimeline():
     return Response(json.dumps(responseDict), mimetype='application/json')
 
 
-# for all authors
-
-def getRankingForAllAuthors(backInTime):
-    con = connectToDB()
-    with con:
-        g.cur = con.g.cursor()
-        g.cur.execute('SELECT a.firstName, a.lastName, r.charsPerDay, r.daysSinceFirstArticle, r.daysSinceLastArticle,'
-                    ' r.articleCount, r.charsPerDayBackInTime, r.daysSinceFirstArticleBackInTime,'
-                    ' r.daysSinceLastArticleBackInTime, r.articleCountBackInTime '
-                    'FROM ranking r join authors a on r.authorId=a.id WHERE backInTime=%s', [backInTime])
-        entries = g.cur.fetchall()
-
-        if entries is None or len(entries) == 0:
-            print("no entries in db for backInTime = " + str(backInTime))
-            g.cur.close()
-            return jsonify("no entries in db for backInTime = " + str(backInTime))
-        else:
-            response = [];
-            for entry in entries:
-                response.append({'firstName': entry[0], 'lastName': entry[1], 'charsPerDay': entry[2],
-                            'daysSinceFirstArticle': entry[3],
-                            'daysSinceLastArticle': entry[4], 'articleCount': entry[5], 'charsPerDayBackInTime': entry[6],
-                            'daysSinceFirstArticleBackInTime': entry[7], 'daysSinceLastArticleBackInTime': entry[8],
-                            'articleCountBackInTime': entry[9], 'backInTime': backInTime})
-            g.cur.close()
-            return Response(json.dumps(response), mimetype='application/json')
-
-@app.route('/json/rankingDefault', methods=['GET'])
+@app.route('/ranking', methods=['GET'])
 def ranking():
-    return getRankingForAllAuthors(0)
+    daysBackInTime = request.args.get('daysBackInTime', type=int)
+    if daysBackInTime is None:
+        return jsonify('no integer daysBackInTime parameter given for ranking endpoint')
 
-@app.route('/json/rankingMonth', methods=['GET'])
-def rankingMonth():
-    return getRankingForAllAuthors(1)
-
-@app.route('/json/rankingYear', methods=['GET'])
-def rankingYear():
-    return getRankingForAllAuthors(12)
-
-@app.route('/json/rankingTwoYears', methods=['GET'])
-def rankingTwoYears():
-    return getRankingForAllAuthors(24)
-
-@app.route('/json/rankingFiveYears', methods=['GET'])
-def rankingFiveYears():
-    return getRankingForAllAuthors(60)
-
-# for single authors:
-
-def getRankingForSingleAuthor(backInTime, firstName, lastName):
-    con = connectToDB()
-    with con:
-        g.cur = con.g.cursor()
-        g.cur.execute('SELECT a.firstName, a.lastName, r.charsPerDay, r.daysSinceFirstArticle, r.daysSinceLastArticle,'
-                    ' r.articleCount, r.charsPerDayBackInTime, r.daysSinceFirstArticleBackInTime,'
-                    ' r.daysSinceLastArticleBackInTime, r.articleCountBackInTime '
-                    'FROM ranking r join authors a on r.authorId=a.id WHERE backInTime=%s and a.firstName=%s and a.lastName=%s', [backInTime, firstName, lastName])
-        entry = g.cur.fetchone()
-
-        if entry is None or len(entry) == 0:
-            name = (firstName + lastName).strip()
-            print("no entries in db for " + name + " with backInTime = " + str(backInTime))
-            g.cur.close()
-            return jsonify("no entries in db for " + name + " with backInTime = " + str(backInTime))
-        else:
-            g.cur.close()
-            response = {'firstName':entry[0], 'lastName':entry[1], 'charsPerDay':entry[2], 'daysSinceFirstArticle':entry[3],
-                        'daysSinceLastArticle':entry[4], 'articleCount':entry[5], 'charsPerDayBackInTime':entry[6],
-                        'daysSinceFirstArticleBackInTime':entry[7], 'daysSinceLastArticleBackInTime':entry[8],
-                        'articleCountBackInTime':entry[9], 'backInTime': backInTime}
-            return Response(json.dumps(response), mimetype='application/json')
+    return Response(json.dumps(calculateRankingForAllAuthors(daysBackInTime)), mimetype='application/json')
 
 
-@app.route('/json/singleRankingDefault', methods=['GET'])
+@app.route('/singleRanking', methods=['GET'])
 def singleRanking():
-    if 'firstName' and 'lastName' in request.args:
-        return getRankingForSingleAuthor(0,request.args['firstName'],request.args['lastName'])
+    daysBackInTime = request.args.get('daysBackInTime', type=int)
+    name = request.args.get('name', type=str)
+    if daysBackInTime is None or name is None:
+        return jsonify('no daysBackInTime or name parameter given for singleRanking endpoint')
 
-@app.route('/json/singleRankingMonth', methods=['GET'])
-def singleRankingMonth():
-    if 'firstName' and 'lastName' in request.args:
-        return getRankingForSingleAuthor(1, request.args['firstName'], request.args['lastName'])
+    g.cur.execute('SELECT distinct(ar.authorId), au.name  from articles ar join authors au on ar.authorId=au.id where au.name = %s', [name])
+    authorId = g.cur.fetchone()[0]
 
-@app.route('/json/singleRankingYear', methods=['GET'])
-def singleRankingYear():
-    if 'firstName' and 'lastName' in request.args:
-        return getRankingForSingleAuthor(12, request.args['firstName'], request.args['lastName'])
+    return calculateValues(authorId,name, daysBackInTime)
 
-@app.route('/json/singleRankingTwoYears', methods=['GET'])
-def singleRankingTwoYears():
-    if 'firstName' and 'lastName' in request.args:
-        return getRankingForSingleAuthor(24, request.args['firstName'], request.args['lastName'])
 
-@app.route('/json/singleRankingFiveYears', methods=['GET'])
-def singleRankingFiveYears():
-    if 'firstName' and 'lastName' in request.args:
-        return getRankingForSingleAuthor(60, request.args['firstName'], request.args['lastName'])
+## GERADE DABEI GEWESEN DAS RANKING UMZUREFACTOREN; DAS IST NUN GETAN NUN MUSS DAS DIAGRAMM GEREFACTORT WERDEN
 
 @app.route('/json/minAndMaxYearAndQuarter', methods=['GET'])
 def minYearAndQuarter():

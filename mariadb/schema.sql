@@ -26,21 +26,6 @@ CREATE TABLE authors (
 	UNIQUE(firstName, lastName)
 );
 
-CREATE TABLE ranking ( # gibs auch als file aber um nur von einer autorin abzufragen, diese tabelle hier
-    authorId INT NOT NULL,
-    charsPerDay INT NOT NULL,
-    daysSinceFirstArticle INT NOT NULL,
-    daysSinceLastArticle INT NOT NULL,
-    articleCount INT NOT NULL,
-    charsPerDayBackInTime INT NOT NULL,
-    daysSinceFirstArticleBackInTime INT NOT NULL,
-    daysSinceLastArticleBackInTime INT NOT NULL,
-    articleCountBackInTime INT NOT NULL,
-    backInTime INT NOT NULL, #in months
-    FOREIGN KEY (authorId) REFERENCES authors(id) ON UPDATE CASCADE ON DELETE RESTRICT,
-    PRIMARY KEY (authorId, backInTime)
-);
-
 CREATE TABLE documents ( #speichert den sourcecode der texte
 	# braucht addedDate, wann die documents in die tabelle aufgenommen wurden
 	# dann kann ich mit dem lastmodified Datum die Artikel bestimmen, die ich noch nicht ausgewertet habe
