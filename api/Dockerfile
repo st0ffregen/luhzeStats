@@ -1,6 +1,6 @@
 FROM python:3.7
-COPY . /usr/src/app
+COPY . /usr/src/api
 RUN pip install -U Flask
 RUN pip install mysqlclient
-RUN pip install -r /usr/src/app/requirements.txt
-CMD python /usr/src/app/app.py
+RUN pip install -r /usr/src/api/requirements.txt
+CMD python /usr/src/api/run.py

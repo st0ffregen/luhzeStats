@@ -1,3 +1,5 @@
+import os
+import sys
 from flask import Flask
 from flask import jsonify
 from flask import Response
@@ -5,19 +7,24 @@ from flask import request
 from flask import g
 import MySQLdb
 import json
-import os
-from api import app
-from api.resources.rankingHelperFunctions import calculateRankingForAllAuthors, calculateValues
+from flaskapi import app
+from flaskapi.helperFunctions.rankingHelperFunctions import calculateRankingForAllAuthors, calculateValues
+from flaskapi.helperFunctions.wordOccurenceHelperFunctions import getOccurrences, getTotalOccurrences
+
 
 minCountOfArticlesAuthorsNeedToHaveToBeDisplayed = 10
 minCountOfArticlesRessortsNeedToHaveToBeDisplayed = 10
 
 
 
-@app.route('/date', methods=['GET'])
+@app.route('/api/date', methods=['GET'])
 def date():
-    g.cur.execute('SELECT lastModifiedFiles from lastmodified')
-    return Response(json.dumps({'date': g.cur.fetchone()[0].strftime('%Y-%m-%d %H:%M:%S')}), mimetype='application/json')
+    try:
+        g.cur.execute('SELECT lastModifiedFiles from lastmodified')
+        date = g.cur.fetchone()[0].strftime('%Y-%m-%d %H:%M:%S')
+        return Response(json.dumps({'date': date}), mimetype='application/json')
+    except:
+        return "0"
 
 
 @app.route('/minAuthor', methods=['GET'])
@@ -50,7 +57,7 @@ def activeMembers():
         dateArray = []
         for d in fetchedDateArray:
             dateArray.append(d[0].strftime('%Y-%m-%d %H:%M:%S'))
-        responseDict.append({"name": authorId[0], "articles": dateArray})
+        responseDict.append({'ame': authorId[0], 'articles': dateArray})
     return Response(json.dumps(responseDict), mimetype='application/json')
 
 
@@ -68,7 +75,7 @@ def ressortArticlesTimeline():
     # respone: [{ressort: hopo, articles: [{date: some month, 5},{date: some month, 4}]}]
 
     g.cur.execute(
-        'SELECT ressort, cast(date_format(created,"%%Y-%%m-01") as date),count(distinct link) as countPerMonth from articles'
+        'SELECT ressort, cast(date_format(created,\'%Y-%%m-01\') as date),count(distinct link) as countPerMonth from articles'
         ' where ressort in (select ressort from articles group by ressort having count(distinct link) >= %s) '
         'group by ressort, year(created), month(created)',
         [str(minCountOfArticlesRessortsNeedToHaveToBeDisplayed)])
@@ -78,14 +85,14 @@ def ressortArticlesTimeline():
     monthArray = []
     for e in fetchedRessortDateCountPerMonthArray:
         if ressort == e[0]:
-            monthArray.append({"date": e[1], "count": e[2]})
+            monthArray.append({'date': e[1], 'count': e[2]})
         else:
-            responseDict.append({"ressort": ressort, "countPerMonth": monthArray})
-            monthArray = [{"date": e[1], "count": e[2]}]
+            responseDict.append({'ressort': ressort, 'countPerMonth': monthArray})
+            monthArray = [{'date': e[1], 'ount': e[2]}]
             ressort = e[0]
 
         if e == fetchedRessortDateCountPerMonthArray[len(fetchedRessortDateCountPerMonthArray) - 1]:  # if it is last element
-            responseDict.append({"ressort": ressort, "countPerMonth": monthArray})
+            responseDict.append({'ressort': ressort, 'countPerMonth': monthArray})
 
     return Response(json.dumps(responseDict), mimetype='application/json')
 
@@ -105,16 +112,16 @@ def topAuthorsPerRessort():
     authorArray = []
     for e in entries:
         if ressort == e[0]:
-            name = (e[2] + " " + e[3]).strip()
-            authorArray.append({"name": name, "count": e[4]})
+            name = (e[2] + ' ' + e[3]).strip()
+            authorArray.append({'name': name, 'count': e[4]})
         else:
-            responseDict.append({"ressort": ressort, "authors": authorArray[:3]})
-            name = (e[2] + " " + e[3]).strip()
-            authorArray = [{"name": name, "count": e[4]}]
+            responseDict.append({'ressort': ressort, 'authors': authorArray[:3]})
+            name = (e[2] + ' ' + e[3]).strip()
+            authorArray = [{'name': name, 'count': e[4]}]
             ressort = e[0]
 
         if e == entries[len(entries) - 1]:  # if it is last element
-            responseDict.append({"ressort": ressort, "authors": authorArray[:3]})
+            responseDict.append({'ressort': ressort, 'authors': authorArray[:3]})
 
     return Response(json.dumps(responseDict), mimetype='application/json')
 
@@ -127,7 +134,7 @@ def authorTimeline():
     entries = g.cur.fetchall()
     responseDict = []
     for e in entries:
-        responseDict.append({"name": e[1], "min": e[2], "max": e[3]})
+        responseDict.append({'name': e[1], 'min': e[2], 'max': e[3]})
 
     return Response(json.dumps(responseDict, default=str), mimetype='application/json')
 
@@ -135,7 +142,7 @@ def authorTimeline():
 @app.route('/articlesTimeline', methods=['GET'])
 def articlesTimeline():
     g.cur.execute(
-        'select cast(date_format(created,"%Y-%m-01") as date),count(distinct link) as countPerMonth from articles'
+        'select cast(date_format(created,\'Y-%m-01\') as date),count(distinct link) as countPerMonth from articles'
         ' group by year(created),month(created) order by 1 asc')
     responseDict = g.cur.fetchall()
 
@@ -178,7 +185,7 @@ def averageCharactersPerDay():
     for e in entries:
         g.cur.execute('SELECT DATEDIFF(MAX(created),MIN(created))+1 as average from articles where authorId=%s',[str(e[0])])
         res = g.cur.fetchone()
-        responseDict.append({"name":  e[1], "count": round(e[2] / res[0])})
+        responseDict.append({'name':  e[1], 'count': round(e[2] / res[0])})
 
     return Response(json.dumps(sorted(responseDict, key=lambda x: x['count'], reverse=True)), mimetype='application/json')
 
@@ -211,7 +218,7 @@ def ressortTimeline():
     entries = g.cur.fetchall()
     responseDict = []
     for e in entries:
-        responseDict.append({"name": e[0], "min": e[1], "max": e[2]})
+        responseDict.append({'name': e[0], 'min': e[1], 'max': e[2]})
 
     return Response(json.dumps(responseDict), mimetype='application/json')
 
@@ -235,155 +242,62 @@ def singleRanking():
     g.cur.execute('SELECT distinct(ar.authorId), au.name  from articles ar join authors au on ar.authorId=au.id where au.name = %s', [name])
     authorId = g.cur.fetchone()[0]
 
-    return calculateValues(authorId,name, daysBackInTime)
+    return calculateValues(authorId, name, daysBackInTime)
 
 
-## GERADE DABEI GEWESEN DAS RANKING UMZUREFACTOREN; DAS IST NUN GETAN NUN MUSS DAS DIAGRAMM GEREFACTORT WERDEN
-
-@app.route('/json/minAndMaxYearAndQuarter', methods=['GET'])
+@app.route('/minAndMaxYearAndQuarter', methods=['GET'])
 def minYearAndQuarter():
-    con = connectToDB()
-    with con:
-        g.cur = con.g.cursor()
-        g.cur.execute('SELECT MIN(yearAndQuarter), MAX(yearAndQuarter) from wordOcg.curenceOverTheQuarters')
-        res = g.cur.fetchone()
-        g.cur.close()
-        return Response(json.dumps({'minYearAndQuarter': res[0], 'maxYearAndQuarter': res[1]}), mimetype='application/json')
+    g.cur.execute('SELECT MIN(yearAndQuarter), MAX(yearAndQuarter) from wordOccurrenceOverTheQuarters')
+    res = g.cur.fetchone()
+    return Response(json.dumps({'minYearAndQuarter': res[0], 'maxYearAndQuarter': res[1]}), mimetype='application/json')
 
-@app.route('/json/maxYearAndQuarter', methods=['GET'])
+
+@app.route('/maxYearAndQuarter', methods=['GET'])
 def maxYearAndQuarter():
-    con = connectToDB()
-    with con:
-        g.cur = con.g.cursor()
-        g.cur.execute('SELECT MAX(yearAndQuarter) from wordOcg.curenceOverTheQuarters')
-        return Response(json.dumps({'maxYearAndQuarter': g.cur.fetchone()[0]}), mimetype='application/json')
-
-@app.route('/json/wordOcg.curence', methods=['GET'])
-def wordOcg.curence():
-    # read in word
-    if 'word' in request.args:
-        word = request.args['word'].upper()
-        con = connectToDB()
-        result = []
-
-        with con:
-
-            g.cur = con.g.cursor()
-            if "+++" in word:
-                wordsToFetchArray = word.split("+++")
-
-                for w in wordsToFetchArray:
-
-                    if w == "": #passiert gerade dann wenn nach dem +++ nichts eingegeben wurde
-                        continue
-
-                    g.cur.execute(
-                        'SELECT yearAndQuarter, ocg.curencePerWords, ocg.curence FROM wordOcg.curenceOverTheQuarters WHERE word = %s',
-                        [w])
-                    ocg.curences = g.cur.fetchall()
-
-                    if ocg.curences is None or len(ocg.curences) == 0:
-                        continue
-
-                    for entry in ocg.curences:
-                        if len(result) > 0:
-                            #wenn es den result array schon mit werten gibt search in result array for same yearAndQuarter
-                            # wenn aber das spezifische yearAndQuarter noch nicht gibt wird es neu hinzugefügt -> found variable
-                            found = False
-                            for yearAndQuarterEntry in result:
-                                if yearAndQuarterEntry['yearAndQuarter'] == entry[0]:
-                                    found = True
-                                    yearAndQuarterEntry['ocg.curencePerWords'] += entry[1] # aufaddieren
-                                    yearAndQuarterEntry['ocg.curence'] += entry[2] # aufaddieren
-                            if not found:
-                                # muss dann im frontend nach datum sortiert werden
-                                result.append(
-                                    {'yearAndQuarter': entry[0], 'ocg.curencePerWords': entry[1], 'ocg.curence': entry[2]})
-                        else:
-                            result.append(
-                                {'yearAndQuarter': entry[0], 'ocg.curencePerWords': entry[1], 'ocg.curence': entry[2]})
-
-            else:
-
-                g.cur.execute('SELECT yearAndQuarter, ocg.curencePerWords, ocg.curence FROM wordOcg.curenceOverTheQuarters WHERE word = %s', [word])
-                ocg.curences = g.cur.fetchall()
-
-                if ocg.curences is None or len(ocg.curences) == 0:
-                    return jsonify("Error. The word " + word + " does not exist.")
-
-                for entry in ocg.curences:
-                    result.append({'yearAndQuarter': entry[0], 'ocg.curencePerWords': entry[1], 'ocg.curence': entry[2]})
-
-            g.cur.close()
-            return Response(json.dumps(sorted(result, key=lambda x: x['yearAndQuarter'])),  mimetype='application/json')
-    else:
-        return jsonify("Error. No word provided. Please specify a word")
+    g.cur.execute('SELECT MAX(yearAndQuarter) from wordoccurrenceOverTheQuarters')
+    return Response(json.dumps({'maxYearAndQuarter': g.cur.fetchone()[0]}), mimetype='application/json')
 
 
-@app.route('/json/autocomplete', methods=['GET'])
-def totalWordOcg.curence():
-    # read in word
-    if 'word' in request.args:
-        word = request.args['word'].upper()
-        con = connectToDB()
-        with con:
-            g.cur = con.g.cursor()
+@app.route('/wordOccurrence', methods=['GET'])
+def wordOccurrence():
 
-            if "+++" in word:
-                wordsToFetchArray = word.split("+++")
-                result = []
-                for w in wordsToFetchArray:
+    word = request.args.get('word', type=str)
+    if word is  None:
+        return jsonify('no string word parameter given for wordOccurrence endpoint')
 
-                    restOfResult = []  # gibt quasi ein first result das ist das wort was eigeben wurde, falls vorhanden in der db, nach oben zu schieben auch wenn es weniger treffer als andere hat
-
-                    if w == "": #passiert gerade dann wenn nach dem +++ nichts eingegeben wurde
-                        continue
-
-                    g.cur.execute(
-                        'SELECT word, ocg.curencePerWords, ocg.curence, totalWordCount FROM totalWordOcg.curence WHERE BINARY word like CONCAT(%s,\'%%\') order by ocg.curencePerWords desc limit 5',
-                        [ecscapeSpecialCharacters(w)])  # escape das % mit einem weiteren %
-                    occ = g.cur.fetchall()
-
-                    if len(result) > 0:
-                        for entry in occ:
-                            if entry[0] == w:
-                                result[0]['ocg.curencePerWords'] += entry[1]
-                                result[0]['ocg.curence'] += entry[2]
-                            else:
-                                restOfResult.append({'word': word.split(w)[0] + entry[0], 'ocg.curencePerWords': result[0]['ocg.curencePerWords'] + entry[1], 'ocg.curence': result[0]['ocg.curence'] + entry[2]})
-                    else: # first word in wordsToFetchArray
-                        for entry in occ:
-                            if entry[0] == w:
-                                result = [{'word': word, 'ocg.curencePerWords': entry[1], 'ocg.curence': entry[2]}]
-                            else:
-                                restOfResult.append({'word': word, 'ocg.curencePerWords': entry[1], 'ocg.curence': entry[2]})
-            else:
-                result = []
-                restOfResult = []  # gibt quasi ein first result das ist das wort was eigeben wurde, falls vorhanden in der db, nach oben zu schieben auch wenn es weniger treffer als andere hat
-
-                g.cur.execute('SELECT word, ocg.curencePerWords, ocg.curence, totalWordCount FROM totalWordOcg.curence WHERE BINARY word like CONCAT(%s,\'%%\') order by ocg.curencePerWords desc limit 5', [ecscapeSpecialCharacters(word)]) # escape das % mit einem weiteren %
-                occ = g.cur.fetchall()
-
-                for w in occ:
-                    if w[0] == word:
-                        result = [{'word': w[0], 'ocg.curencePerWords': w[1], 'ocg.curence': w[2]}]
-                    else:
-                        restOfResult.append({'word': w[0], 'ocg.curencePerWords': w[1], 'ocg.curence': w[2]})
-
-            result.extend(restOfResult)
-            g.cur.close()
-            return Response(json.dumps(result),  mimetype='application/json')
-
-    else:
-        return jsonify("Error. No word filed provided. Please specify a word")
+    word = word.upper()
+    responseDict = []
 
 
-def ecscapeSpecialCharacters(wordToEscapeCharactersIn):
-    # die methode escapet im string special charcters in der mysql like funktion
-    # das ist % welches wildcard fuer mehrere zeichen ist und _ was fuer ein zeichen ist
-    specialCharactersInMySQL = ['_', '%']
-    if wordToEscapeCharactersIn is not None and wordToEscapeCharactersIn != "":
-        return wordToEscapeCharactersIn.replace("_","\_").replace("%", "\%")
+    for word in word.split('+++'):
+        occurrences = getOccurrences(word, responseDict)
+        if occurrences is None:
+            continue
+
+        responseDict.append(occurrences)
+
+    if len(responseDict) == 0:
+        return jsonify('Error. The word ' + word + ' does not exist.')
+
+    return Response(json.dumps(sorted(responseDict, key=lambda x: x['yearAndQuarter'])), mimetype='application/json')
+
+
+@app.route('/autocomplete', methods=['GET'])
+def totalWordOccurrence():
+
+    word = request.args.get('word', type=str)
+    if word is None:
+        return jsonify('no string word parameter given for totalWordOccurrence endpoint')
+
+    word = word.upper()
+    responseDict = []
+
+    if '+++' in word:
+        for word in word.split('+++'):
+            responseDict.append(getTotalOccurrences(word))
+
+
+    return Response(json.dumps(responseDict),  mimetype='application/json')
 
 
 def adjustFormatDate(entries):

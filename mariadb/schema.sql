@@ -8,14 +8,14 @@ USE luhze;
 
 
 # speichert den letzt analysierten Zustand der DB, d.h. 
-# wenn an wordOccurence Änderung vorgenommen wird
+# wenn an wordOccurrence Änderung vorgenommen wird
 # muss das hier eingetragen werden damit dann bei der nächsten Berechnung der Werte 
 # nur die neuen Artikel ausgewertet werden müssen und nicht nochmal alle 
 # die neuen Artikel werden mit addedDate von documents ermittelt
 # muss ein genaus datum mit uhrzeit haben weil mehrfach am tag die artikel neu ausgewertet werden
 CREATE TABLE lastmodified (
-	lastModifiedWordOccurence DATETIME PRIMARY KEY, # gilt fuer den ersten schritt der analyse wo nur die quarter tabellen befüllt werden
-	lastModifiedTotalWordOccurence DATETIME NOT NULL, # hier wird die total tabelle befüllt
+	lastModifiedWordOccurrence DATETIME PRIMARY KEY, # gilt fuer den ersten schritt der analyse wo nur die quarter tabellen befüllt werden
+	lastModifiedTotalWordOccurrence DATETIME NOT NULL, # hier wird die total tabelle befüllt
 	lastModifiedFiles DATETIME NOT NULL, # hier werden die files befüllt
 	lastModifiedRanking DATETIME NOT NULL # hier wird das ranking befüllt
 );
@@ -23,7 +23,7 @@ CREATE TABLE lastmodified (
 CREATE TABLE authors (
 	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 	name VARCHAR(128) NOT NULL,
-	UNIQUE(firstName, lastName)
+	UNIQUE(name)
 );
 
 CREATE TABLE documents ( #speichert den sourcecode der texte
@@ -49,20 +49,20 @@ CREATE TABLE articles (
 	FOREIGN KEY (documentId) REFERENCES documents(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TABLE wordOccurenceOverTheQuarters ( # einfach alles in eine Tabelle
+CREATE TABLE wordOccurrenceOverTheQuarters ( # einfach alles in eine Tabelle
 	word VARCHAR(128) NOT NULL,
 	yearAndQuarter INT NOT NULL, #e.g. 20203
-	occurencePerWords INT NOT NULL, # durchschnitt, also verhaeltnis aus occurence/100000 Wörter (oder ähnliche Zahl) IN DEM QUARTAL
-	occurence INT NOT NULL, # absulute Zahl wie oft das spezifische wort auftaucht IN DEM QUARTAL
-	quarterWordCount INT NOT NULL, # totaler worcound, also wie viele wörter es insegesamt auf luhze.de IN DEM QUARTAL gibt, absulute Zahl wie oft das wort auftaucht, ist immer der selbe, wird mitgeschrieben damit bei neuen artikel die occurence neu berechnet werden kann
+	occurrencePerWords INT NOT NULL, # durchschnitt, also verhaeltnis aus occurrence/100000 Wörter (oder ähnliche Zahl) IN DEM QUARTAL
+	occurrence INT NOT NULL, # absulute Zahl wie oft das spezifische wort auftaucht IN DEM QUARTAL
+	quarterWordCount INT NOT NULL, # totaler worcound, also wie viele wörter es insegesamt auf luhze.de IN DEM QUARTAL gibt, absulute Zahl wie oft das wort auftaucht, ist immer der selbe, wird mitgeschrieben damit bei neuen artikel die occurrence neu berechnet werden kann
     PRIMARY KEY (word, yearAndQuarter)
 );
 
 
-CREATE TABLE totalWordOccurence ( # bildet fuer die autocomplete api alle worter mit gesamt werten ab
+CREATE TABLE totalWordOccurrence ( # bildet fuer die autocomplete api alle worter mit gesamt werten ab
     word VARCHAR(128) PRIMARY KEY NOT NULL,
-    occurencePerWords INT NOT NULL, # durchschnitt, also verhaeltnis aus occurence/100000 Wörter (oder ähnliche Zahl)
-    occurence INT NOT NULL, # absulute Zahl wie oft das spezifische wort auftaucht
+    occurrencePerWords INT NOT NULL, # durchschnitt, also verhaeltnis aus occurrence/100000 Wörter (oder ähnliche Zahl)
+    occurrence INT NOT NULL, # absulute Zahl wie oft das spezifische wort auftaucht
     totalWordCount INT NOT NULL # totaler worcound, also wie viele wörter es insegesamt auf luhze.de
 
 );
@@ -70,22 +70,19 @@ CREATE TABLE totalWordOccurence ( # bildet fuer die autocomplete api alle worter
 
 
 #grant privileges
-GRANT SELECT ON luhze.files TO 'api'@'%'; #nicht sicher wie sicher hier diese wildcard ist
-GRANT SELECT ON luhze.authors TO 'api'@'%';
-GRANT SELECT ON luhze.totalWordOccurence TO 'api'@'%';
-GRANT SELECT ON luhze.wordOccurenceOverTheQuarters TO 'api'@'%';
+
+GRANT SELECT ON luhze.authors TO 'api'@'%';#nicht sicher wie sicher hier diese wildcard ist
+GRANT SELECT ON luhze.totalWordOccurrence TO 'api'@'%';
+GRANT SELECT ON luhze.wordOccurrenceOverTheQuarters TO 'api'@'%';
 GRANT SELECT ON luhze.lastmodified TO 'api'@'%';
-GRANT SELECT ON luhze.ranking TO 'api'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.authors TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.documents TO 'gatherer'@'%';
-GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.files TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.articles TO 'gatherer'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.lastmodified TO 'gatherer'@'%';
-GRANT INSERT, UPDATE, SELECT ON luhze.totalWordOccurence TO 'gatherer'@'%';
-GRANT INSERT, UPDATE, SELECT ON luhze.wordOccurenceOverTheQuarters TO 'gatherer'@'%';
-GRANT INSERT, UPDATE, SELECT ON luhze.ranking TO 'gatherer'@'%';
+GRANT INSERT, UPDATE, SELECT ON luhze.totalWordOccurrence TO 'gatherer'@'%';
+GRANT INSERT, UPDATE, SELECT ON luhze.wordOccurrenceOverTheQuarters TO 'gatherer'@'%';
 CREATE USER IF NOT EXISTS 'root123' IDENTIFIED BY 'root123'; # remove for production
 GRANT ALL PRIVILEGES ON luhze.* TO 'root'@'%'; # remove for production
 
 # insert start date to lastmodified 
-INSERT INTO lastmodified (lastModifiedWordOccurence, lastModifiedTotalWordOccurence, lastModifiedFiles, lastModifiedRanking) VALUES ('1900-01-01 00:00:00','1900-01-01 00:00:00','1900-01-01 00:00:00','1900-01-01 00:00:00');
+INSERT INTO lastmodified (lastModifiedWordOccurrence, lastModifiedTotalWordOccurrence, lastModifiedFiles, lastModifiedRanking) VALUES ('1900-01-01 00:00:00','1900-01-01 00:00:00','1900-01-01 00:00:00','1900-01-01 00:00:00');
