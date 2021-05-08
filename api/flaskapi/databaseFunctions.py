@@ -4,8 +4,6 @@ from flask import g
 from flaskapi import app
 
 
-# scheint erstmal alles soweit zu gehen, jetzt alle endpoints fixen
-
 def connectToDB():
     con = MySQLdb.connect(
         host=os.environ['DB_CONTAINER_NAME'],

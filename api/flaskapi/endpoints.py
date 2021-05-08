@@ -16,37 +16,35 @@ minCountOfArticlesAuthorsNeedToHaveToBeDisplayed = 10
 minCountOfArticlesRessortsNeedToHaveToBeDisplayed = 10
 
 
-
 @app.route('/api/date', methods=['GET'])
 def date():
-    try:
-        g.cur.execute('SELECT lastModifiedFiles from lastmodified')
-        date = g.cur.fetchone()[0].strftime('%Y-%m-%d %H:%M:%S')
-        return Response(json.dumps({'date': date}), mimetype='application/json')
-    except:
-        return "0"
+    g.cur.execute('select max(updatedAt) from ('
+                  'select max(updatedAt) as updatedAt from authors union all '
+                  'select max(updatedAt) as updatedAt from articles union all '
+                  'select max(updatedAt) as updatedAt from wordOccurrence) as subQuery')
+    return Response(json.dumps({'date': g.cur.fetchone()[0].strftime('%Y-%m-%d %H:%M:%S')}), mimetype='application/json')
 
 
-@app.route('/minAuthor', methods=['GET'])
+@app.route('/api/minAuthor', methods=['GET'])
 def minAuthor():
-    return Response(json.dumps({'minAuthor' : minCountOfArticlesAuthorsNeedToHaveToBeDisplayed}), mimetype='application/json')
+    return Response(json.dumps({'minAuthor': minCountOfArticlesAuthorsNeedToHaveToBeDisplayed}), mimetype='application/json')
 
 
-@app.route('/oldestArticle',methods=['GET'])
+@app.route('/api/oldestArticle', methods=['GET'])
 def oldestArticle():
     g.cur.execute('SELECT MIN(created) FROM articles')
     entries = g.cur.fetchall()
     return Response(json.dumps({'oldestArticle': entries[0][0]}, default=str), mimetype='application/json')
 
 
-@app.route('/newestArticle',methods=['GET'])
+@app.route('/api/newestArticle', methods=['GET'])
 def newestArticle():
     g.cur.execute('SELECT MAX(created) FROM articles')
     entries = g.cur.fetchall()
     return Response(json.dumps({'newestArticle': entries[0][0]}, default=str), mimetype='application/json')
 
 
-@app.route('/activeMembers', methods=['GET'])
+@app.route('/api/activeMembers', methods=['GET'])
 def activeMembers():
     g.cur.execute('SELECT authorId FROM articles GROUP BY authorId')
     authorIdArray = g.cur.fetchall()
@@ -61,7 +59,7 @@ def activeMembers():
     return Response(json.dumps(responseDict), mimetype='application/json')
 
 
-@app.route('/ressortTopList', methods=['GET'])
+@app.route('/api/ressortTopList', methods=['GET'])
 def ressortTopList():
     g.cur.execute(
         'SELECT ressort, count(distinct link) FROM articles GROUP BY ressort HAVING count(distinct link) >= %s ORDER BY 2 DESC',
@@ -70,7 +68,7 @@ def ressortTopList():
     return Response(json.dumps(adjustFormatName(responseDict)), mimetype='application/json')
 
 
-@app.route('/ressortArticlesTimeline', methods=['GET'])
+@app.route('/api/ressortArticlesTimeline', methods=['GET'])
 def ressortArticlesTimeline():
     # respone: [{ressort: hopo, articles: [{date: some month, 5},{date: some month, 4}]}]
 
@@ -97,7 +95,7 @@ def ressortArticlesTimeline():
     return Response(json.dumps(responseDict), mimetype='application/json')
 
 
-@app.route('/topAuthorsPerRessort', methods=['GET'])
+@app.route('/api/topAuthorsPerRessort', methods=['GET'])
 def topAuthorsPerRessort():
     # response: [{ressort: hopo, authors: [{name: theresa, count:5},{name: someone, count:2}]}]
     g.cur.execute(
@@ -126,7 +124,7 @@ def topAuthorsPerRessort():
     return Response(json.dumps(responseDict), mimetype='application/json')
 
 
-@app.route('/authorTimeline', methods=['GET'])
+@app.route('/api/authorTimeline', methods=['GET'])
 def authorTimeline():
     g.cur.execute(
         'SELECT ar.authorId, au.name, MIN(created), MAX(created) FROM articles ar join authors au on ar.authorId=au.id GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY count(distinct link) DESC',
@@ -139,7 +137,7 @@ def authorTimeline():
     return Response(json.dumps(responseDict, default=str), mimetype='application/json')
 
 
-@app.route('/articlesTimeline', methods=['GET'])
+@app.route('/api/articlesTimeline', methods=['GET'])
 def articlesTimeline():
     g.cur.execute(
         'select cast(date_format(created,\'Y-%m-01\') as date),count(distinct link) as countPerMonth from articles'
@@ -149,7 +147,7 @@ def articlesTimeline():
     return Response(json.dumps(adjustFormatDate(responseDict)[::-1]), mimetype='application/json')
 
 
-@app.route('/mostArticlesPerTime', methods=['GET'])
+@app.route('/api/mostArticlesPerTime', methods=['GET'])
 def mostArticlesPerTime():
     g.cur.execute(
         'SELECT ar.authorId, au.name, ROUND(((DATEDIFF(MAX(created),MIN(created)))/count(distinct link)),1) as diff '
@@ -160,7 +158,7 @@ def mostArticlesPerTime():
     return Response(json.dumps(adjustFormatNameStartOnSecondIndex(responseDict)), mimetype='application/json')
 
 
-@app.route('/authorAverage', methods=['GET'])
+@app.route('/api/authorAverage', methods=['GET'])
 def authorAverage():
     g.cur.execute(
         'SELECT ar.authorId, au.name, round(avg(charcount)) as count'
@@ -173,7 +171,7 @@ def authorAverage():
     return Response(json.dumps(adjustFormatNameStartOnSecondIndex(responseDict)), mimetype='application/json')
 
 
-@app.route('/averageCharactersPerDay',methods=['GET'])
+@app.route('/api/averageCharactersPerDay', methods=['GET'])
 def averageCharactersPerDay():
     g.cur.execute(
         'SELECT ar.authorId, au.name, sum(charcount) as count from '
@@ -190,7 +188,7 @@ def averageCharactersPerDay():
     return Response(json.dumps(sorted(responseDict, key=lambda x: x['count'], reverse=True)), mimetype='application/json')
 
 
-@app.route('/ressortAverage', methods=['GET'])
+@app.route('/api/ressortAverage', methods=['GET'])
 def ressortAverage():
     g.cur.execute(
         'SELECT ressort, round(avg(charcount)) as count from (select distinct(link), d.charcount as charcount,'
@@ -202,7 +200,7 @@ def ressortAverage():
     return Response(json.dumps(adjustFormatName(responseDict)), mimetype='application/json')
 
 
-@app.route('/authorTopList', methods=['GET'])
+@app.route('/api/authorTopList', methods=['GET'])
 def authorTopList():
     g.cur.execute(
         'SELECT ar.authorId, au.name, count(distinct link) FROM articles ar join authors au on ar.authorId=au.id GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY 4 DESC', [str(minAuthor)])
@@ -211,7 +209,7 @@ def authorTopList():
     return Response(json.dumps(adjustFormatNameStartOnSecondIndex(responseDict)), mimetype='application/json')
 
 
-@app.route('/ressortTimeline', methods=['GET'])
+@app.route('/api/ressortTimeline', methods=['GET'])
 def ressortTimeline():
     g.cur.execute(
         'SELECT ressort, MIN(created), MAX(created) FROM articles GROUP BY ressort ORDER BY count(distinct link) DESC')
@@ -223,7 +221,7 @@ def ressortTimeline():
     return Response(json.dumps(responseDict), mimetype='application/json')
 
 
-@app.route('/ranking', methods=['GET'])
+@app.route('/api/ranking', methods=['GET'])
 def ranking():
     daysBackInTime = request.args.get('daysBackInTime', type=int)
     if daysBackInTime is None:
@@ -232,7 +230,7 @@ def ranking():
     return Response(json.dumps(calculateRankingForAllAuthors(daysBackInTime)), mimetype='application/json')
 
 
-@app.route('/singleRanking', methods=['GET'])
+@app.route('/api/singleRanking', methods=['GET'])
 def singleRanking():
     daysBackInTime = request.args.get('daysBackInTime', type=int)
     name = request.args.get('name', type=str)
@@ -245,20 +243,20 @@ def singleRanking():
     return calculateValues(authorId, name, daysBackInTime)
 
 
-@app.route('/minAndMaxYearAndQuarter', methods=['GET'])
+@app.route('/api/minAndMaxYearAndQuarter', methods=['GET'])
 def minYearAndQuarter():
     g.cur.execute('SELECT MIN(yearAndQuarter), MAX(yearAndQuarter) from wordOccurrenceOverTheQuarters')
     res = g.cur.fetchone()
     return Response(json.dumps({'minYearAndQuarter': res[0], 'maxYearAndQuarter': res[1]}), mimetype='application/json')
 
 
-@app.route('/maxYearAndQuarter', methods=['GET'])
+@app.route('/api/maxYearAndQuarter', methods=['GET'])
 def maxYearAndQuarter():
     g.cur.execute('SELECT MAX(yearAndQuarter) from wordoccurrenceOverTheQuarters')
     return Response(json.dumps({'maxYearAndQuarter': g.cur.fetchone()[0]}), mimetype='application/json')
 
 
-@app.route('/wordOccurrence', methods=['GET'])
+@app.route('/api/wordOccurrence', methods=['GET'])
 def wordOccurrence():
 
     word = request.args.get('word', type=str)
@@ -282,7 +280,7 @@ def wordOccurrence():
     return Response(json.dumps(sorted(responseDict, key=lambda x: x['yearAndQuarter'])), mimetype='application/json')
 
 
-@app.route('/autocomplete', methods=['GET'])
+@app.route('/api/autocomplete', methods=['GET'])
 def totalWordOccurrence():
 
     word = request.args.get('word', type=str)

@@ -21,9 +21,6 @@ rankingArticlesCountWeight = 1.2
 intervall = 2
 
 
-# allles resetten und dann checken ob analyze läuft, dann api umstellen
-
-
 def tslaFunction(value):
     # function is using months not days so:
     value = round(value / 30.5)
@@ -56,6 +53,7 @@ def analyzeNewData(con, cur):
 
     insertSQLStatements(cur, con, rankingSQLStatements, "ranking")
 
+
     # erstellt und füllt die tabellen für die quarter
     insertSQLStatements(cur, con, calculateWordOccurence(cur), "False")
     # füllt die tabelle für die totalWordOccurence
@@ -63,8 +61,6 @@ def analyzeNewData(con, cur):
                         calculateTotalWordOccurence(cur, createQuarterArray(cur, fetchLastModified(cur, "True")[0])),
                         True)
 
-    print("commiting json for files")
-    insertSQLStatements(cur, con, fileArray, "fileArray")
 
 
 def ranking(cur, backInTime):
@@ -107,20 +103,12 @@ def createQuarterArray(cur, lastmodified):
 
 
 def insertSQLStatements(cur, con, sqlStatements, whatAction):
-    if sqlStatements is not None and len(sqlStatements) > 0:
-        try:
-            if whatAction == "fileArray":
-                for statement in sqlStatements:
-                    cur.execute('INSERT INTO files VALUES(%s,%s,%s) ON DUPLICATE KEY UPDATE json=VALUES(json)',
-                                [None, statement[1], statement[0]])
 
-                cur.execute('UPDATE lastmodified set lastModifiedFiles = %s', [datetime.now().strftime(
-                    '%Y-%m-%d %H:%M:%S')])  # update lastmodified
-            else:
-                for statement in sqlStatements:
-                    # print(statement[0])
-                    # print(statement[1])
-                    cur.execute(statement[0], statement[1])
+    for statement in sqlStatements:
+        print(statement[0])
+        print(statement[1])
+        cur.execute(statement[0], statement[1])
+
 
                 if whatAction == "True":
                     cur.execute('UPDATE lastmodified set lastModifiedTotalWordOccurence = %s', [datetime.now().strftime(

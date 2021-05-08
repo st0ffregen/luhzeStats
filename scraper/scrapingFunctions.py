@@ -119,7 +119,7 @@ def readInSite(url):
     return BeautifulSoup(urlopen(url).read(), 'html.parser')
 
 
-def getLinksToSingleArticlesFromOverviewPages( numberOfOverviewPagesToScrapeAgain, luhzeArticleOverviewPageUrl):
+def getLinksToSingleArticlesFromOverviewPages(numberOfOverviewPagesToScrapeAgain, luhzeArticleOverviewPageUrl):
 
     linksToArticleArray = []
 
