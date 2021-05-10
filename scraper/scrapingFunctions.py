@@ -2,8 +2,12 @@ from bs4 import BeautifulSoup
 from urllib.request import urlopen
 
 textToBeIgnoredArray = [
-    'Hochschuljournalismus wie dieser ist teuer. Dementsprechend schwierig ist es, eine unabhängige, ehrenamtlich betriebene Zeitung am Leben zu halten. Wir brauchen also eure Unterstützung: Schon für den Preis eines veganen Gerichts in der Mensa könnt ihr unabhängigen, jungen Journalismus für Studierende, Hochschulangehörige und alle anderen Leipziger*innen auf Steady unterstützen. '
+    'Hochschuljournalismus wie dieser ist teuer. Dementsprechend schwierig ist es, eine unabhängige, ehrenamtlich '
+    'betriebene Zeitung am Leben zu halten. Wir brauchen also eure Unterstützung: Schon für den Preis eines veganen '
+    'Gerichts in der Mensa könnt ihr unabhängigen, jungen Journalismus für Studierende, Hochschulangehörige und alle '
+    'anderen Leipziger*innen auf Steady unterstützen. '
 ]
+
 
 def scrapeRessort(text):
     footer = text.find('iv', {'class': 'articleFooter'})

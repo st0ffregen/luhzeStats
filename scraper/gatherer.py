@@ -75,7 +75,7 @@ def main():
     executeSQL(sqlStatements, con, cur)
     closeConnectionToDB(con, cur)
 
-    analyzeNewData(con, cur)
+    analyzeNewData()
 
 
 if __name__ == '__main__':

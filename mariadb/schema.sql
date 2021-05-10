@@ -17,8 +17,7 @@ CREATE TABLE authors (
 CREATE TABLE documents (
 	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 	document TEXT NOT NULL,
-	charcount INT NOT NULL,
-	publishDate DATETIME NOT NULL,
+	charCount INT NOT NULL,
 	createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updatedAt TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	UNIQUE(document)
@@ -40,13 +39,14 @@ CREATE TABLE articles (
 
 CREATE TABLE wordOccurrence (
 	word VARCHAR(128) NOT NULL,
-	yearAndQuarter INT NOT NULL, #e.g. 20203
+	year INT NOT NULL,
+	quarter INT NOT NULL,
 	occurrence INT NOT NULL,
 	quarterWordCount INT NOT NULL,
     occurrenceRatio INT NOT NULL, # occurrence/100000 Wörter
 	createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updatedAt TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (word, yearAndQuarter)
+    PRIMARY KEY (word, year, quarter)
 );
 
 

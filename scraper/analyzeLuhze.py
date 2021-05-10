@@ -7,6 +7,7 @@ import math
 import re
 import sys
 import os
+from scraper.databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
 
 minRessort = 14
 limitAuthors = 25
@@ -20,6 +21,8 @@ rankingCharactersPerDayWeight = 1.4
 rankingArticlesCountWeight = 1.2
 intervall = 2
 
+
+occurrenceRatioMultiplier = 100000
 
 def tslaFunction(value):
     # function is using months not days so:
@@ -42,45 +45,36 @@ def acFunction(value):
     return round(result * rankingArticlesCountWeight)
 
 
-def analyzeNewData(con, cur):
+def analyzeNewData():
+    con = connectToDB()
+    cur = con.cursor()
 
-    rankingSQLStatements = []
-    rankingSQLStatements.extend(ranking(cur, 'rankingDefault', 0))
-    rankingSQLStatements.extend(ranking(cur, 'rankingMonth', 1))
-    rankingSQLStatements.extend(ranking(cur, 'rankingYear', 12))
-    rankingSQLStatements.extend(ranking(cur, 'rankingTwoYears', 24))
-    rankingSQLStatements.extend(ranking(cur, 'rankingFiveYears', 60))
+    lastModifiedDate = getLastModifiedDate(cur)
 
-    insertSQLStatements(cur, con, rankingSQLStatements, "ranking")
+    executeSQL(calculateWordOccurrence(cur, lastModifiedDate), con, cur)
 
+    executeSQL(fillDbWithMissingYearsAndQuarters(cur, lastModifiedDate), con, cur)
 
-    # erstellt und füllt die tabellen für die quarter
-    insertSQLStatements(cur, con, calculateWordOccurence(cur), "False")
     # füllt die tabelle für die totalWordOccurence
     insertSQLStatements(cur, con,
                         calculateTotalWordOccurence(cur, createQuarterArray(cur, fetchLastModified(cur, "True")[0])),
                         True)
 
 
-
-def ranking(cur, backInTime):
-    print("calculate ranking for backInTime " + str(backInTime))
+    closeConnectionToDB(con, cur)
 
 
-    return sqlStatements
+def fillDbWithMissingYearsAndQuarters(cur, lastModifiedDate):
+# hier weitermachen, die methode soll ab jetzt einfach alle wörter in der db durchgehen und für jedes feststellen
+# dass für alle years and quarter ein eintrag existiert. Falls keiner da ist soll einer mit 0,0,0 insertet werden
 
-
-def createQuarterArray(cur, lastmodified):
-    # erstellt für jedes Quartal eine wordOccurence Tabelle
-    # ermittelt den neuesten ältesten artikel, also ein minimales datum
-    cur.execute('SELECT cast(date_format(MIN(created),"%%Y-%%m-01") as date) FROM articles WHERE created > %s',
-                [lastmodified.strftime('%Y-%m-%d %H:%M:%S')])
+    cur.execute('SELECT cast(date_format(MIN(publishedDate),"%%Y-%%m-01") as date) FROM articles WHERE publishedDate > %s',
+                [lastModifiedDate])
     minDate = cur.fetchone()[0]
 
-    # ermittelt den neuesten jüngsten artikel, also ein maximales datum
     cur.execute(
-        'SELECT cast(date_format(MAX(created),"%%Y-%%m-01") as date) FROM articles WHERE created > %s',
-        [lastmodified.strftime('%Y-%m-%d %H:%M:%S')])
+        'SELECT cast(date_format(MAX(publishedDate),"%%Y-%%m-01") as date) FROM articles WHERE publishedDate > %s',
+        [lastModifiedDate])
     maxDate = cur.fetchone()[0]
 
     quarterArray = []
@@ -102,127 +96,104 @@ def createQuarterArray(cur, lastmodified):
     return quarterArray
 
 
-def insertSQLStatements(cur, con, sqlStatements, whatAction):
-
-    for statement in sqlStatements:
-        print(statement[0])
-        print(statement[1])
-        cur.execute(statement[0], statement[1])
+def getLastModifiedDate(cur):
+    cur.execute('select max(updatedAt) from wordOccurence')
+    return cur.fetchone()[0].strftime('%Y-%m-%d %H:%M:%S')
 
 
-                if whatAction == "True":
-                    cur.execute('UPDATE lastmodified set lastModifiedTotalWordOccurence = %s', [datetime.now().strftime(
-                        '%Y-%m-%d %H:%M:%S')])  # update lastmodified
-                elif whatAction == "False":
-                    cur.execute('UPDATE lastmodified set lastModifiedWordOccurence = %s', [datetime.now().strftime(
-                        '%Y-%m-%d %H:%M:%S')])  # update lastmodified
-                elif whatAction == "ranking":
-                    cur.execute('UPDATE lastmodified set lastModifiedRanking = %s', [datetime.now().strftime(
-                        '%Y-%m-%d %H:%M:%S')])  # update lastmodified
+def prepareSQLStatements(countPerWordDict, charCountInThatYearAndQuarter, year, quarter):
+    sqlStatements = []
 
-            print("commiting statements")
-            con.commit()
-            return 0
-        except MySQLdb.Error as e:
-            print(f"Error while inserting sql statements from analyzeLuhze: {e}")
-            print("rollback everything")
-            # loescht nicht die neu angelegten tabellen, da die als ddl nicht von autocommit(false) betroffen sind
-            # kann zwar hier alle tabellen loeschen die in quarterArray vorkommen aber dann loesche ich auch potenzielle immer die mit dem alten aber noch aktuellen quarter
-            con.rollback()
-            cur.close()
-            print(sys.exc_info())
-            sys.exit(1)  # kann man eh stoppen, da constraints der db blockieren
+    for word in countPerWordDict.keys():
+        occurrenceRatio = occurrenceRatioMultiplier * countPerWordDict[word]/charCountInThatYearAndQuarter
+        sqlStatements.append('insert into wordOccurence values (%s, %s, %s, %s, %s, %s) on duplicate key update '
+                             'occurence=values(occurence), quarterWordCount=values(quarterWordCount), '
+                             'occurrenceRatio=values(occurrenceRatio)',
+                             [word, year, quarter, countPerWordDict[word], charCountInThatYearAndQuarter, occurrenceRatio])
 
+    return sqlStatements
+
+
+def calculateWordOccurrenceForWholeYearAndQuarter(cur, year, quarter):
+    cur.execute('SELECT d.document from documents d join articles a on a.documentId=d.id '
+                'where YEAR(a.publishedDate) = %s and QUARTER(a.publishedDate) = %s',
+                [year, quarter])
+    documentArray = cur.fetchall()
+
+    charCountInThatYearAndQuarter = 0
+    yearAndQuarterText = ''
+
+    for document in documentArray[0]:
+        yearAndQuarterText += document + ' '
+
+    results = calculateWordOccurrenceInThatText(yearAndQuarterText)
+
+    countPerWordDict = results[0]
+    charCountInThatYearAndQuarter = results[1]
+
+    return prepareSQLStatements(countPerWordDict, charCountInThatYearAndQuarter, year, quarter)
+
+
+def calculateWordOccurrenceInThatText(text):
+
+    countPerWordDict = {}
+    yearAndQuarterWordCount = 0
+
+    upperText = text.upper()
+    wordArray = upperText.split()
+
+    for w in wordArray:
+        w = w.strip()
+        if re.match(r'.{2,}$', w):
+            w = removeTrailingPunctuations(w)
+            w = removeLeadingPunctuations(w)
+            if w is not None and len(w) > 1:
+                if w in countPerWordDict:
+                    countPerWordDict[w] += 1
+                else:
+                    countPerWordDict[w] = 1
+                yearAndQuarterWordCount += 1
+
+    return [countPerWordDict, yearAndQuarterWordCount]
+
+
+def removeTrailingPunctuations(w):
+    unwantedPunctuations = ["-", ",", ":", ".", "!", "?", "\"", "“", ")"]
+
+    if w[-1] in unwantedPunctuations and len(w) > 2 and w != "STUDENT!":  # student! darf das Ausrufezeichen behalten
+        return removeTrailingPunctuations(w[:-1])
     else:
-        print("nothing to write to db")
-        return 0
+        return w
 
 
-def fetchLastModified(cur, total):
-    print("fetch lastmodified")
-    try:
-        # fetch lastmodiefied
-        if total:
-            cur.execute('SELECT lastmodifiedTotalWordOccurence from lastmodified')
-        else:
-            cur.execute('SELECT lastmodifiedWordOccurence from lastmodified')
-        lastmodified = cur.fetchone()  # letztes mal das analysiert wurde
-        return lastmodified
-    except MySQLdb.Error as e:
-        print(f"Error while fetching lastmodified: {e}")
-        print(sys.exc_info())
-        sys.exit(1)  # kann man eh stoppen, da constraints der db blockieren
+def removeLeadingPunctuations(w):
+    unwantedPunctuations = ["-", ",", ":", ".", "!", "?", "\"", "„", "("]
+
+    if w[0] in unwantedPunctuations and len(w) > 2:
+        return removeLeadingPunctuations(w[1:])
+    else:
+        return w
 
 
-def calculateWordOccurence(cur):
-    print("calculate word occurence for each quarter")
-    # berechnet zu jedem wort eine relative zahl die die absolute Anzahl der Erscheinen des Wortes dividiert durch eine bestimmte
-    # Zahl dartsellt (z.B. 100 000)
-    # ich nutze die lastmodified tabelle um nicht alle artikel nochmals zu analysieren zu müssen
+def calculateWordOccurrence(cur, lastModifiedDate):
+    # Four cases need to be addressed
+    # 1) The document is new (same updated and created date)
+    # 1.1) the document is published in a new yearAndQuarter
+    # 1.2) the yearAndQuarter already exists and has to be updated
+    # 2) the document was updated
+    # in this case it is necessary to calculate the whole yearAndQuarter for all words again
+    # for the sake of clean code, in every case the app will fetch all documents in that year and quarter and recalculate
+    # the occurrence numbers
 
-    lastmodified = fetchLastModified(cur, False)[0]
-    # zunächst erstellen der neuen tabellen für die neuen Quartale
-    quarterArray = createQuarterArray(cur, lastmodified)
-    sqlStatements = []  # createQuarterTables(cur, quarterArray)
+    sqlStatements = []
 
-    # fetch new articles from documents
-    cur.execute('SELECT document, YEAR(createdDate), QUARTER(createdDate) FROM documents WHERE addedDate > %s',
-                [lastmodified.strftime('%Y-%m-%d %H:%M:%S')])
-    newDocuments = cur.fetchall()
+    cur.execute('SELECT YEAR(a.publishedDate), QUARTER(a.publishedDate) FROM articles a join documents d '
+                'on a.documentId=d.id WHERE d.updetedAt > %s',
+                [lastModifiedDate])
+    yearAndQuartersWithUpdatedDocumentsArray = cur.fetchall()
 
-    # loop durch die neuen quarter und fasse dokumente aus den quarter zusammen
-    # immer auf der Grundlage dass es das eventuell ein überschneidendes Quarter gibt, quasi ein laufender Monat wo schon dinge drinstehen
-    # das ist immer maximal ein yearAndQuarter, das wissen wir anhand von lastmodified
-    print("new quarters:")
-    print(quarterArray)
-    for yearAndQuarter in quarterArray:
-
-        quarterSqlStatements = []
-
-        quarterText = ""
-        # find documentes with same quarter and year
-        documentInThatQuarterCount = 0
-        for document in newDocuments:
-            if yearAndQuarter == str(document[1]) + str(document[2]):
-                # fasse dokumente zusammen
-                quarterText += document[0]
-                documentInThatQuarterCount += 1
-        print("found " + str(documentInThatQuarterCount) + " documents in quarter " + str(yearAndQuarter))
-
-        # get last wordcount from table
-        cur.execute("SELECT MAX(quarterWordCount) FROM wordOccurenceOverTheQuarters WHERE yearAndQuarter = %s",
-                    [yearAndQuarter])
-        quarterWordCount = cur.fetchone()[0]  # anzahl aller wörter auf luhze.de in diesem quartal
-        if quarterWordCount is None:
-            print(
-                "entries with yearAndQuarter " + yearAndQuarter + " do not exist yet. Treat quarter wordcount as zero.")
-            quarterWordCount = 0
-        else:
-            quarterWordCount = int(quarterWordCount)
-
-        countPerWordDict = {}
-        upperText = quarterText.upper()
-        allWords = upperText.split()
-
-        for w in allWords:
-            w = w.strip()
-            if re.match(r'.{2,}$', w):
-                w = removeTrailingPunctuations(w)
-                w = removeLeadingPunctuations(w)
-                if w is not None and len(w) > 1:
-                    if w in countPerWordDict:
-                        countPerWordDict[w] += 1
-                    else:
-                        countPerWordDict[w] = 1
-                    quarterWordCount += 1
-
-        for w in countPerWordDict.keys():
-            quarterSqlStatements.append([
-                'INSERT INTO wordOccurenceOverTheQuarters VALUES (%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE occurencePerWords=(((occurence + VALUES(occurence))/VALUES(quarterWordCount))*100000),occurence=occurence + VALUES(occurence), quarterWordCount=VALUES(quarterWordCount)',
-                [w, yearAndQuarter, round(countPerWordDict[w] / quarterWordCount * 100000),
-                 countPerWordDict[w], quarterWordCount]])
-
-        sqlStatements.extend(quarterSqlStatements)
+    for yearAndQuarter in yearAndQuartersWithUpdatedDocumentsArray:
+        calculateWordOccurrenceForWholeYearAndQuarter(cur, yearAndQuarter[0], yearAndQuarter[1])
 
     return sqlStatements
 
@@ -259,52 +230,3 @@ def calculateTotalWordOccurence(cur, quarterArray):
              totalWordCount]])
 
     return sqlStatements
-
-
-def removeTrailingPunctuations(w):
-    unwantedPunctuations = ["-", ",", ":", ".", "!", "?", "\"", "“", ")"]
-
-    if w[-1] in unwantedPunctuations and len(w) > 2 and w != "STUDENT!":  # student! darf das Ausrufezeichen behalten
-        return removeTrailingPunctuations(w[:-1])
-    else:
-        return w
-
-
-def removeLeadingPunctuations(w):
-    unwantedPunctuations = ["-", ",", ":", ".", "!", "?", "\"", "„", "("]
-
-    if w[0] in unwantedPunctuations and len(w) > 2:
-        return removeLeadingPunctuations(w[1:])
-    else:
-        return w
-
-
-def writeToDB(cur, con):
-    try:
-        for file in fileArray:
-            print("insertOrUpdate", [file[1], "{" + str(file[0]) + "}"])
-            cur.callproc("insertOrUpdate", [file[1], str(file[0])])
-        # mit cursor.stored_results() results verarbeiten,falls gewünscht
-    except MySQLdb.Error as e:
-        print(f"Error inserting rows to MariaDB Platform: {e}")
-        print("rollback")
-        con.rollback()  # rolled nur den letzten Eintrag back
-        return 1
-    else:
-        print("commiting changes")
-        con.commit()
-        return 0
-
-
-def adjustFormatDate(entries):
-    arr = []
-    for e in entries:
-        arr.append({'date': e[0], 'count': e[1]})
-    return arr
-
-
-def adjustFormatName(entries):
-    arr = []
-    for e in entries:
-        arr.append({'name': e[0], 'count': e[1]})
-    return arr
