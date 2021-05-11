@@ -37,7 +37,7 @@ services:
   scraper:
     build: scraper/
     volumes:
-      - ./scraper:/usr/src/app
+      - ./scraper:/usr/src/scraper
     depends_on:
       - db
     environment:

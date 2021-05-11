@@ -1,48 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import json
-from datetime import datetime
-import MySQLdb
-import math
 import re
 import sys
 import os
-from scraper.databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
-minRessort = 14
-limitAuthors = 25
-fileArray = []
-
-# szenario: wenig aktive Person: ZeitZumLetztenArtikel=120*-0.5=-60, ArtikelAnzahl=10*5=50, CPD=150*1=150, insgesamt = 140
-# szenario: sehr aktive Person: ZeitZumLetztenArtikel=15*-0.5=-7, ArtikelAnzahl=35*5=175, CPD=400*1=400, insgesamt = 400
-
-rankingTimeSinceLastArticleWeight = 1.4
-rankingCharactersPerDayWeight = 1.4
-rankingArticlesCountWeight = 1.2
-intervall = 2
-
+from databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
 
 occurrenceRatioMultiplier = 100000
-
-def tslaFunction(value):
-    # function is using months not days so:
-    value = round(value / 30.5)
-    # to avoid math overflow when passing month thats to big
-    if value > 5:  # also letzter artikel älter als 5 monate
-        return round(-0.5 * value)  # linear loosing points over time
-    else:
-        result = round(-10 / (0.1 + 10 * math.exp(-1.3 * value)) + 100)
-        return round(result * rankingTimeSinceLastArticleWeight)
-
-
-def cpdFunction(value):
-    result = round(10 / (0.103 + 2.5 * math.exp(-0.02 * value)))
-    return round(result * rankingCharactersPerDayWeight)
-
-
-def acFunction(value):
-    result = round(10 / (0.1 + math.exp(-0.4 * value)) - 10)
-    return round(result * rankingArticlesCountWeight)
 
 
 def analyzeNewData():
@@ -55,21 +20,13 @@ def analyzeNewData():
 
     executeSQL(fillDbWithMissingYearsAndQuarters(cur, lastModifiedDate), con, cur)
 
-    # füllt die tabelle für die totalWordOccurence
-    insertSQLStatements(cur, con,
-                        calculateTotalWordOccurence(cur, createQuarterArray(cur, fetchLastModified(cur, "True")[0])),
-                        True)
-
-
     closeConnectionToDB(con, cur)
 
 
-def fillDbWithMissingYearsAndQuarters(cur, lastModifiedDate):
-# hier weitermachen, die methode soll ab jetzt einfach alle wörter in der db durchgehen und für jedes feststellen
-# dass für alle years and quarter ein eintrag existiert. Falls keiner da ist soll einer mit 0,0,0 insertet werden
-
-    cur.execute('SELECT cast(date_format(MIN(publishedDate),"%%Y-%%m-01") as date) FROM articles WHERE publishedDate > %s',
-                [lastModifiedDate])
+def createYearAndQuarterArray(cur, lastModifiedDate):
+    cur.execute(
+        'SELECT cast(date_format(MIN(publishedDate),"%%Y-%%m-01") as date) FROM articles WHERE publishedDate > %s',
+        [lastModifiedDate])
     minDate = cur.fetchone()[0]
 
     cur.execute(
@@ -88,12 +45,47 @@ def fillDbWithMissingYearsAndQuarters(cur, lastModifiedDate):
 
         for year in range(int(minYear), int(maxYear) + 1):  # +1 da maxYear exklusive Grenze
             for quarter in range(initQuarter, 5):  # 5 ist hier wieder exklusiv
-                quarterArray.append(str(year) + str(quarter))
+                quarterArray.append([year, quarter])
             initQuarter = 1  # setzt initquarter wieder auf 1, s.d. die for schleife jetzt von 1 anfängt
     else:
         print("no articles in new quarters")
 
     return quarterArray
+
+
+def getWords(cur, offset, limit):
+    cur.execute('select word from wordOccurence limit %s offset %s', [limit, offset])
+    return cur.fetchall
+
+
+def prepareSQLForMissingYearAndQuarters(cur, fetchedWords, yearAndQuarterArray):
+    sqlStatements = []
+
+    for yearAndQuarter in yearAndQuarterArray:
+        year = yearAndQuarter[0]
+        quarter = yearAndQuarter[1]
+        cur.execute('select max(quarterWordCount) from wordOccurrence where year = %s and quarter = %s',
+                    [year, quarter])
+        quarterWordCount = cur.fetchone()[0]
+
+        for word in fetchedWords[0]:
+            sqlStatements.append('insert ignore into wordOccurrence values (%s, %s, %s, 0, %s, %s, %s)', [word, year, quarter, quarterWordCount, None, None])
+
+    return sqlStatements
+
+
+def fillDbWithMissingYearsAndQuarters(cur, lastModifiedDate):
+    yearAndQuarterArray = createYearAndQuarterArray(cur, lastModifiedDate)
+
+    fetchedRows = []
+    offset = 0
+    sqlStatements = []
+
+    while len(fetchedRows) > 0:
+        fetchedRows = getWords(cur, offset, 5000)
+        sqlStatements.extend(prepareSQLForMissingYearAndQuarters(cur, fetchedRows, yearAndQuarterArray))
+
+    return sqlStatements
 
 
 def getLastModifiedDate(cur):
@@ -106,10 +98,10 @@ def prepareSQLStatements(countPerWordDict, charCountInThatYearAndQuarter, year, 
 
     for word in countPerWordDict.keys():
         occurrenceRatio = occurrenceRatioMultiplier * countPerWordDict[word]/charCountInThatYearAndQuarter
-        sqlStatements.append('insert into wordOccurence values (%s, %s, %s, %s, %s, %s) on duplicate key update '
+        sqlStatements.append('insert into wordOccurence values (%s, %s, %s, %s, %s, %s, %s, %s) on duplicate key update '
                              'occurence=values(occurence), quarterWordCount=values(quarterWordCount), '
                              'occurrenceRatio=values(occurrenceRatio)',
-                             [word, year, quarter, countPerWordDict[word], charCountInThatYearAndQuarter, occurrenceRatio])
+                             [word, year, quarter, countPerWordDict[word], charCountInThatYearAndQuarter, occurrenceRatio, None, None])
 
     return sqlStatements
 

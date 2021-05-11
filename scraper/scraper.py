@@ -1,30 +1,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from datetime import datetime
-from scraper.analyzeLuhze import analyzeNewData
-from scraper.scrapingFunctions import scrapeRessort, scrapeAuthor, scrapeTitle, scrapeDate, scrapeWordcountAndText, \
-    readInSite, getLinksToSingleArticlesFromOverviewPages
-from scraper.databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
+import sys
 import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+import pydevd_pycharm
+from analyzeLuhze import analyzeNewData
+from scrapingFunctions import scrapeRessort, scrapeAuthor, scrapeTitle, scrapeDate, scrapeWordcountAndText, \
+    readInSite, getLinksToSingleArticlesFromOverviewPages
+from databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
 
 luhzeArticleOverviewPageUrl = 'https://www.luhze.de/page/'
-numberOfOverviewPagesToScrapeAgain = os.environ['NUMBERS_OF_OVERVIEW_PAGES_TO_SCRAPE_AGAIN']
+numberOfOverviewPagesToScrapeAgain = int(os.environ['NUMBERS_OF_OVERVIEW_PAGES_TO_SCRAPE_AGAIN'])
 
-
+# ??? Hier: Idk warum aber irgendwie wird nicht deletet (cascade) s.d. dann bei den documents ein dupplicate key error entsteht
 def prepareSQLStatements(link, title, authorArray, ressortArray, wordcount, document, date):
 
+    preparedSQLStatements = []
     # there are cases where a ressort, author etc. may be removed after a while so its most safe to delete all affected rows first
-    preparedSQLStatements = ['DELETE FROM articles WHERE link=%s', [link]]
+    preparedSQLStatements.append(['DELETE FROM articles WHERE link=%s', [link]])
 
     preparedSQLStatements.append(['INSERT INTO documents VALUES(%s,%s,%s,%s,%s)',
-                                  [None, document, wordcount, date, datetime.now().strftime('%Y-%m-%d %H:%M:%S')]])
+                                  [None, document, wordcount, None, None]])
 
     for author in authorArray:
-        preparedSQLStatements.append(['INSERT IGNORE INTO authors VALUES(%s,%s,%s)', [None, author]])
+
+        preparedSQLStatements.append(['INSERT IGNORE INTO authors VALUES(%s,%s,%s,%s)', [None, author, None, None]])
         for ressort in ressortArray:
             preparedSQLStatements.append([
-                'INSERT INTO articles VALUES(%s,%s,%s,(SELECT id FROM authors WHERE name=%s),%s,%s, (SELECT id FROM documents WHERE document=%s))',
-                [None, link, title, author, ressort, date, document]])
+                'INSERT INTO articles VALUES(%s,%s,%s,(SELECT id FROM authors WHERE name=%s),%s,%s,(SELECT id FROM documents WHERE document=%s),%s,%s)',
+                [None, link, title, author, ressort, date, document, None, None]])
 
     return preparedSQLStatements
 
@@ -40,7 +45,7 @@ def scrapeAllInformation(linkToArticle):
     wordcount = textWordcountArray[0]
     document = textWordcountArray[1]
 
-    return {'titel': title,
+    return {'title': title,
             'authorArray': authorArray,
             'ressortArray': ressortArray,
             'date': date,
@@ -49,6 +54,8 @@ def scrapeAllInformation(linkToArticle):
 
 
 def main():
+    pydevd_pycharm.settrace('192.168.1.56', port=33487, stdoutToServer=True, stderrToServer=True)
+
     con = connectToDB()
     cur = con.cursor()
 

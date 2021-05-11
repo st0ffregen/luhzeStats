@@ -60,4 +60,4 @@ GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.documents TO 'scraper'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.articles TO 'scraper'@'%';
 GRANT INSERT, UPDATE, SELECT ON luhze.wordOccurrence TO 'scraper'@'%';
 CREATE USER IF NOT EXISTS 'root123' IDENTIFIED BY 'root123'; # remove for production
-GRANT ALL PRIVILEGES ON luhze.* TO 'root'@'%'; # remove for production
+GRANT ALL PRIVILEGES ON luhze.* TO 'root123'@'%'; # remove for production

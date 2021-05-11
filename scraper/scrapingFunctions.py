@@ -10,7 +10,7 @@ textToBeIgnoredArray = [
 
 
 def scrapeRessort(text):
-    footer = text.find('iv', {'class': 'articleFooter'})
+    footer = text.find('div', {'class': 'articleFooter'})
     ressorts = footer.find_all('a')
     ressortArray = []
     for ressort in ressorts:
@@ -59,7 +59,7 @@ def scrapeDate(text):
         month = '03'
     elif monthString == 'April':
         month = '04'
-    elif monthString == 'ai':
+    elif monthString == 'Mai':
         month = '05'
     elif monthString == 'Juni':
         month = '06'
@@ -127,7 +127,7 @@ def getLinksToSingleArticlesFromOverviewPages(numberOfOverviewPagesToScrapeAgain
 
     linksToArticleArray = []
 
-    for i in range(1, numberOfOverviewPagesToScrapeAgain + 1):
+    for i in range(115, numberOfOverviewPagesToScrapeAgain + 1):
         parsedPage = readInSite(luhzeArticleOverviewPageUrl + str(i))
         articlePreviews = parsedPage.findAll('article')
 
