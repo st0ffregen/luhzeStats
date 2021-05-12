@@ -1,7 +1,7 @@
 FROM python:3.7
-COPY . /usr/src/app
-RUN apt-get update
-RUN apt-get install -y python3-pip
+COPY . /usr/src/api
 RUN pip install -U Flask
 RUN pip install mysqlclient
-CMD python3.7 /usr/src/app/api.py
+RUN pip install -r /usr/src/api/requirements.txt
+RUN pip install pydevd-pycharm~=211.7142.13
+CMD python /usr/src/api/run.py

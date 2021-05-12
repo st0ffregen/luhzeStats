@@ -1,6 +1,6 @@
 async function fetchFileAPI(route,useDataFunction) {
 	try {
-		await fetch("http://localhost/json/" + route)
+		await fetch("http://localhost/api/" + route)
 		.then(res => {
 			if(res.ok) {
 				return res.json();

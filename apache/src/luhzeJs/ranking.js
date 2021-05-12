@@ -121,33 +121,6 @@ function rankingFunction(backInTime) {
 
 
 
-
-
-function tslaFunction(value) {
-
-    if(value > 100 * Math.log(5)) { //also letzter artikel älter als ca. 6 monate (in 100ln(5) schneiden sich die funktionen)
-        //var result = 20 - (30*(value-100*Math.log(5)))/(200-100*Math.log(5));
-        return (-Math.sqrt(2))/(100) * value * rankingTimeSinceLastArticleWeight;
-    } else {
-		var result = 100 * Math.exp(-0.01* value);
-		return result * rankingTimeSinceLastArticleWeight;
-	}
-}
-
-function cpdFunction(value) {
-
-	var result = -100*(Math.exp(-0.01 * value)-1);
-	return result * rankingCharactersPerDayWeight;
-}
-
-
-function acFunction(value) {
-	var result = -100*(Math.exp(-0.1 * value)-1);
-	return result * rankingArticlesCountWeight;
-}
-
-
-
 function showRanking() {
 
 	var mathDivArray = document.getElementsByClassName("mathDiv");

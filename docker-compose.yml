@@ -19,14 +19,14 @@ services:
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
     ports:
-      - "8889:3306"
+      - "3306:3306"
     
   api:
     build: api/
     ports:
-      - "5001:5001"
+      - "5000:5000"
     volumes:
-      - ./api:/usr/src/app
+      - ./api:/usr/src/api
     depends_on:
       - db    
     environment:
@@ -37,7 +37,7 @@ services:
   scraper:
     build: scraper/
     volumes:
-      - ./scraper:/usr/src/app
+      - ./scraper:/usr/src/scraper
     depends_on:
       - db
     environment:
