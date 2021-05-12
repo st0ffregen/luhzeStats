@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
 
 occurrenceRatioMultiplier = 100000
-unwantedPunctuations = ['-', ',', ':', '.', '!', '?', '\"', '“', '„', ')', '(', '”', '“']
+unwantedPunctuations = ['-', ', ':', '.', '!', '?', '\"', '“', '„', ')', '(', '”', '“']
 
 
 def analyzeNewData():
@@ -87,7 +87,6 @@ def prepareSQLForMissingYearAndQuarters(cur, fetchedWords, yearAndQuarterArray):
 def fillDbWithMissingYearsAndQuarters(cur, lastModifiedDate):
     yearAndQuarterArray = createYearAndQuarterArray(cur, lastModifiedDate)
 
-    fetchedRows = []
     offset = 0
     sqlStatements = []
 
@@ -120,16 +119,15 @@ def prepareSQLStatements(countPerWordDict, charCountInThatYearAndQuarter, year, 
 
 
 def calculateWordOccurrenceForWholeYearAndQuarter(cur, year, quarter):
-    cur.execute('SELECT d.document from documents d join articles a on a.documentId=d.id '
+    cur.execute('SELECT distinct(d.document) from documents d join articles a on a.documentId=d.id '
                 'where YEAR(a.publishedDate) = %s and QUARTER(a.publishedDate) = %s',
                 [year, quarter])
     documentArray = cur.fetchall()
 
-    charCountInThatYearAndQuarter = 0
     yearAndQuarterText = ''
 
-    for document in documentArray[0]:
-        yearAndQuarterText += document + ' '
+    for document in documentArray:
+        yearAndQuarterText += document[0] + ' '
 
     results = calculateWordOccurrenceInThatText(yearAndQuarterText)
 
@@ -191,7 +189,7 @@ def calculateWordOccurrence(cur, lastModifiedDate):
     sqlStatements = []
 
     cur.execute('SELECT YEAR(a.publishedDate) as year, QUARTER(a.publishedDate) as quarter FROM articles a join documents d '
-                'on a.documentId=d.id WHERE d.updatedAt > %s order by year, quarter',
+                'on a.documentId=d.id WHERE d.updatedAt > %s group by year, quarter',
                 [lastModifiedDate])
     yearAndQuartersWithUpdatedDocumentsArray = cur.fetchall()
 

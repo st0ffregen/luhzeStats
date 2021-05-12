@@ -2,10 +2,15 @@ from bs4 import BeautifulSoup
 from urllib.request import urlopen
 
 textToBeIgnoredArray = [
-    'Hochschuljournalismus wie dieser ist teuer. Dementsprechend schwierig ist es, eine unabhängige, ehrenamtlich '
-    'betriebene Zeitung am Leben zu halten. Wir brauchen also eure Unterstützung: Schon für den Preis eines veganen '
-    'Gerichts in der Mensa könnt ihr unabhängigen, jungen Journalismus für Studierende, Hochschulangehörige und alle '
-    'anderen Leipziger*innen auf Steady unterstützen. '
+    'Hochschuljournalismus wie dieser ist teuer. Dementsprechend schwierig ist es, eine unabhängige, '
+    'ehrenamtlich betriebene Zeitung am Leben zu halten. Wir brauchen also eure Unterstützung: Schon für '
+    'den Preis eines veganen Gerichts in der Mensa könnt ihr unabhängigen, jungen Journalismus für Studierende, '
+    'Hochschulangehörige und alle anderen Leipziger*innen auf Steady unterstützen.',
+    'Hochschuljournalismus wie dieser ist teuer. Dementsprechend schwierig ist es, eine unabhängige, '
+    'ehrenamtlich betriebene Zeitung am Leben zu halten. Wir brauchen also eure Unterstützung: Schon für den Preis '
+    'eines veganen Gerichts in der Mensa könnt ihr unabhängigen, jungen Journalismus für Studierende, '
+    'Hochschulangehörige und alle anderen Leipziger*innen auf Steady unterstützen. Wir freuen uns über jeden Euro, '
+    'der dazu beiträgt, luhze erscheinen zu lassen.'
 ]
 
 
@@ -80,41 +85,83 @@ def scrapeDate(text):
     return date
 
 
-def scrapeWordcountAndText(text, title):
-    article = text.find('article', {'id': 'mainArticle'})
+def fillFooterArray(text):
     footer = text.find('div', {'class': 'articleFooter'})
+    paragraphsInFooter = footer.find_all('p')
+    paragraphsInFooterTextArray = []
+    for p in paragraphsInFooter:
+        paragraphsInFooterTextArray.append(p.get_text().strip())
+
+    return paragraphsInFooterTextArray
+
+
+def scrapeTextAndWordcountFromOldArticle(text, paragraphsInFooterTextArray):
     wordcount = 0
     articleText = ''
-    if article is None:  # very old article
-        allParagraphs = text.find('div', {'class': 'field-content'}).find_all('p')
-        paragraphsInFooter = footer.find_all('p')
-        for p in allParagraphs:
-            if p.get_text() in textToBeIgnoredArray:
-                continue
-            if p not in paragraphsInFooter:
-                wordcount += len(p.get_text())
-                articleText += p.get_text() + ' '
-    elif article.find_all('div', {'class': 'field-content'}) is not None:  # old article but not so old
-        allParagraphs = article.find_all('p')
-        paragraphsInFooter = footer.find_all('p')
-        for p in allParagraphs:
-            if p.get_text() in textToBeIgnoredArray:
-                continue
-            if p.get_text() is not None and p.get('id') is None and p not in paragraphsInFooter:
-                wordcount += len(p.get_text())
-                articleText += p.get_text() + ' '
-    else:  # newest kind of article
-        allParagraphs = article.find_all('p')
-        paragraphsInFooter = footer.find_all('p')
-        for p in allParagraphs:
-            if p.get_text() in textToBeIgnoredArray:
-                continue
-            if p.get_text() is not None and p.get('id') is None and \
-                    'contentWrapper' in p.find_parent('div')['class'] and p not in paragraphsInFooter:
-                wordcount += len(p.get_text())
-                articleText += p.get_text() + ' '
+    allParagraphs = text.find('div', {'class': 'field-content'}).find_all('p')
+    for p in allParagraphs:
+        if len(p.find_all('p')) > 0:  # seems like a bs4 bug
+            continue
+        paragraphText = p.get_text().strip()
+        if paragraphText in textToBeIgnoredArray:
+            continue
+        if paragraphText not in paragraphsInFooterTextArray:
+            wordcount += len(paragraphText)
+            articleText += paragraphText + ' '
 
-    # add title to document
+    return [wordcount, articleText]
+
+
+def scrapeTextAndWordcountFromNewerArticle(article, paragraphsInFooterTextArray):
+    wordcount = 0
+    articleText = ''
+    allParagraphs = article.find_all('p')
+    for p in allParagraphs:
+        if len(p.find_all('p')) > 0:  # seems like a bs4 bug
+            continue
+        paragraphText = p.get_text().strip()
+        if paragraphText in textToBeIgnoredArray:
+            continue
+        if paragraphText is not None and p.get('id') is None and paragraphText not in paragraphsInFooterTextArray:
+            wordcount += len(paragraphText)
+            articleText += paragraphText + ' '
+
+    return [wordcount, articleText]
+
+
+def scrapeTextAndWordcountFromNewestArticle(article, paragraphsInFooterTextArray):
+    wordcount = 0
+    articleText = ''
+    allParagraphs = article.find_all('p')
+    for p in allParagraphs:
+        if len(p.find_all('p')) > 0:  # seems like a bs4 bug
+            continue
+        paragraphText = p.get_text().strip()
+        if paragraphText in textToBeIgnoredArray:
+            continue
+        if paragraphText is not None and p.get('id') is None and \
+                'contentWrapper' in p.find_parent('div')['class'] and paragraphText not in paragraphsInFooterTextArray:
+            wordcount += len(paragraphText)
+            articleText += paragraphText + ' '
+
+    return [wordcount, articleText]
+
+
+def scrapeWordcountAndText(text, title):
+    article = text.find('article', {'id': 'mainArticle'})
+    paragraphsInFooterTextArray = fillFooterArray(text)
+
+    if article is None:  # very old article
+        textAndWordcount = scrapeTextAndWordcountFromOldArticle(text, paragraphsInFooterTextArray)
+
+    elif article.find_all('div', {'class': 'field-content'}) is not None:  # old article but not so old
+        textAndWordcount = scrapeTextAndWordcountFromNewerArticle(article, paragraphsInFooterTextArray)
+
+    else:  # newest kind of article
+        textAndWordcount = scrapeTextAndWordcountFromNewestArticle(article, paragraphsInFooterTextArray)
+
+    wordcount = textAndWordcount[0]
+    articleText = textAndWordcount[1]
     articleText = title + ' ' + articleText
     return [wordcount, articleText]
 

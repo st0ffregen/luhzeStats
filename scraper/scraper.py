@@ -56,7 +56,7 @@ def scrapeAllInformation(linkToArticle):
 
 
 def main():
-    pydevd_pycharm.settrace('192.168.1.56', port=40349, stdoutToServer=True, stderrToServer=True)
+    pydevd_pycharm.settrace('192.168.1.56', port=46575, stdoutToServer=True, stderrToServer=True)
 
     con = connectToDB()
     cur = con.cursor()

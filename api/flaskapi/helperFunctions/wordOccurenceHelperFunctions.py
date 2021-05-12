@@ -8,6 +8,7 @@ def sumOccurrences(occurrenceDict):
 
     return totalOccurrence
 
+
 def getOccurrences(word, wordArray):
 
     if word == '' or wordArray is None:
