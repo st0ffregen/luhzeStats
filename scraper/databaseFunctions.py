@@ -21,7 +21,5 @@ def closeConnectionToDB(con, cur):
 
 def executeSQL(sqlArray, con, cur):
     for statement in sqlArray:
-        a = statement[0]
-        b = statement[1]
-        cur.execute(a, b)
+        cur.execute(statement[0], statement[1])
     con.commit()

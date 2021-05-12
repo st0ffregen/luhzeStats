@@ -56,6 +56,7 @@ CREATE TABLE wordOccurrence (
 GRANT SELECT ON luhze.authors TO 'api'@'%';#nicht sicher wie sicher hier diese wildcard ist
 GRANT SELECT ON luhze.wordOccurrence TO 'api'@'%';
 GRANT SELECT ON luhze.articles TO 'api'@'%';
+GRANT SELECT ON luhze.documents TO 'api'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.authors TO 'scraper'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.documents TO 'scraper'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.articles TO 'scraper'@'%';

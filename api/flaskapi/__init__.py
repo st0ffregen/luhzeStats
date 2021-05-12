@@ -3,6 +3,8 @@ import logging
 from logging import Formatter, FileHandler
 import os
 
+
+
 app = Flask(__name__)
 
 if os.environ['APP_ENVIRONMENT'] == 'development':

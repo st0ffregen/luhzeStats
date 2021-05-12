@@ -8,41 +8,42 @@ import math
 
 rankingTimeSinceLastArticleWeight = 1.4
 rankingCharactersPerDayWeight = 1.4
-rankingArticlesCountWeight = 1.2
+rankingArticlesCountWeight = 1
 
 
-def tslaFunction(value):
+def tslaFunction(daysSinceLastArticle):
     # function is using months not days so:
-    value = round(value / 30.5)
+    monthsSinceLastArticle = daysSinceLastArticle / 30.5
     # to avoid math overflow when passing month thats to big
-    if value > 5:  # also letzter artikel älter als 5 monate
-        return round(-0.5 * value)  # linear loosing points over time
+    if monthsSinceLastArticle > 6:  # also letzter artikel älter als 5 monate
+        result = (-1.4 / 100) * monthsSinceLastArticle  # linear loosing points over time
     else:
-        result = round(-10 / (0.1 + 10 * math.exp(-1.3 * value)) + 100)
-        return round(result * rankingTimeSinceLastArticleWeight)
+        result = 100 * math.exp(-0.01 * daysSinceLastArticle)
+
+    return result * rankingTimeSinceLastArticleWeight
 
 
-def cpdFunction(value):
-    result = round(10 / (0.103 + 2.5 * math.exp(-0.02 * value)))
-    return round(result * rankingCharactersPerDayWeight)
+def cpdFunction(charactersPerDay):
+    result = -100 * (math.exp(-0.01 * charactersPerDay) - 1)
+    return result * rankingCharactersPerDayWeight
 
 
-def acFunction(value):
-    result = round(10 / (0.1 + math.exp(-0.4 * value)) - 10)
-    return round(result * rankingArticlesCountWeight)
+def acFunction(articleCount):
+    result = -100 * (math.exp(-0.1 * articleCount) - 1)
+    return result * rankingArticlesCountWeight
 
 
 def getDistinctAuthorIdAndName():
-    g.g.cur.execute(
+    g.cur.execute(
         'SELECT distinct(ar.authorId), au.name  from articles ar join authors au on ar.authorId=au.id')
-    return g.g.cur.fetchall()
+    return g.cur.fetchall()
 
 
 def getWrittenCharacters(authorId, daysBackInTime):
-    g.g.cur.execute(
-        'SELECT sum(charcount) from (select distinct(link), d.charcount as charcount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s DAY)) as sub',
+    g.cur.execute(
+        'SELECT sum(charcount) from (select distinct(link), d.charCount as charCount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and publishedDate < DATE_ADD(CURDATE(), INTERVAL - %s DAY)) as sub',
         [str(authorId), str(daysBackInTime)])
-    charsPerDayResult = g.g.cur.fetchone()[0]
+    charsPerDayResult = g.cur.fetchone()[0]
     if charsPerDayResult == "NULL" or charsPerDayResult is None:  # den autor gabs damals noch nicht
         return None
 
@@ -50,28 +51,27 @@ def getWrittenCharacters(authorId, daysBackInTime):
 
 
 def getDaysSinceFirstArticle(authorId, daysBackInTime):
-    g.g.cur.execute(
-        'SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s DAY),MIN(created))+1 from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s DAY)',
+    g.cur.execute(
+        'SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s DAY),MIN(publishedDate))+1 from articles where authorId=%s and publishedDate < DATE_ADD(CURDATE(), INTERVAL - %s DAY)',
         [str(daysBackInTime), str(authorId), str(daysBackInTime)])
-    return g.g.cur.fetchone()[0]
+    return g.cur.fetchone()[0]
 
 
 def getDaysSinceLastArticle(authorId, daysBackInTime):
     g.cur.execute(
-        'SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s DAY),MAX(created))+1 from articles where authorId=%s and created < DATE_ADD(CURDATE(), INTERVAL - %s DAY)',
+        'SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s DAY),MAX(publishedDate))+1 from articles where authorId=%s and publishedDate < DATE_ADD(CURDATE(), INTERVAL - %s DAY)',
         [str(daysBackInTime), str(authorId), str(daysBackInTime)])
     return g.cur.fetchone()[0]
 
 
 def getArticleCount(authorId, daysBackInTime):
     g.cur.execute(
-        'SELECT count(distinct link) FROM articles where authorId = %s and created < DATE_ADD(CURDATE(), INTERVAL - %s DAY)',
+        'SELECT count(distinct link) FROM articles where authorId = %s and publishedDate < DATE_ADD(CURDATE(), INTERVAL - %s DAY)',
         [str(authorId), str(daysBackInTime)])
     return g.cur.fetchone()[0]
 
 
 def calculateValues(authorId, authorName, daysBackInTime):
-
     writtenCharacters = getWrittenCharacters(authorId, daysBackInTime)
 
     if writtenCharacters is None:
@@ -99,32 +99,49 @@ def calculateValues(authorId, authorName, daysBackInTime):
         writtenCharactersPerDay = 0
 
     try:
-        writtenCharactersPerDayTwoMonthsBefore = round(writtenCharactersTwoMonthsBefore / daysSinceFirstArticle)
+        writtenCharactersPerDayTwoMonthsBefore = round(
+            writtenCharactersTwoMonthsBefore / daysSinceFirstArticleTwoMonthsBefore)
     except ZeroDivisionError:
         writtenCharactersPerDayTwoMonthsBefore = 0
 
+    rankingTsla = tslaFunction(daysSinceLastArticle)
+    rankingCpd = cpdFunction(writtenCharactersPerDay)
+    rankingAc = acFunction(articleCount)
+
+    rankingScoreNow = round(rankingTsla + rankingCpd + rankingAc)
+
+    rankingTslaTwoMonthsBefore = tslaFunction(daysSinceLastArticleTwoMonthsBefore)
+    rankingCpdTwoMonthsBefore = cpdFunction(writtenCharactersPerDayTwoMonthsBefore)
+    rankingAcTwoMonthsBefore = acFunction(articleCountTwoMonthsBefore)
+
+    rankingScoreTwoMonhtsBefore = round(
+        rankingTslaTwoMonthsBefore + rankingCpdTwoMonthsBefore + rankingAcTwoMonthsBefore)
+
+    rankingScoreDiff = rankingScoreNow - rankingScoreTwoMonhtsBefore
+
     return {
         'name': authorName,
-        'writtenCharactersPerDay': writtenCharactersPerDay,
-        'daysSinceFirstArticle': daysSinceFirstArticle,
-        'daysSinceLastArticle': daysSinceLastArticle,
-        'articleCount': articleCount,
-        'writtenCharactersPerDayTwoMonthsBefore': writtenCharactersPerDayTwoMonthsBefore,
-        'daysSinceFirstArticleTwoMonthsBefore': daysSinceFirstArticleTwoMonthsBefore,
-        'daysSinceLastArticleTwoMonthsBefore': daysSinceLastArticleTwoMonthsBefore,
-        'articleCountTwoMonthsBefore': articleCountTwoMonthsBefore,
-        'daysBackInTime': daysBackInTime,
-        'rankingTsla': tslaFunction(daysSinceLastArticle),
-        'rankingCpd': cpdFunction(writtenCharactersPerDay),
-        'rankingAc': acFunction(articleCount),
-        'rankingTslaTwoMonthsBefore': tslaFunction(daysSinceLastArticleTwoMonthsBefore),
-        'rankingCpdTwoMonthsBefore': cpdFunction(writtenCharactersPerDayTwoMonthsBefore),
-        'rankingAcTwoMonthsBefore': acFunction(articleCountTwoMonthsBefore)
+        # 'writtenCharactersPerDay': writtenCharactersPerDay,
+        # 'daysSinceFirstArticle': daysSinceFirstArticle,
+        # 'daysSinceLastArticle': daysSinceLastArticle,
+        # 'articleCount': articleCount,
+        # 'writtenCharactersPerDayTwoMonthsBefore': writtenCharactersPerDayTwoMonthsBefore,
+        # 'daysSinceFirstArticleTwoMonthsBefore': daysSinceFirstArticleTwoMonthsBefore,
+        # 'daysSinceLastArticleTwoMonthsBefore': daysSinceLastArticleTwoMonthsBefore,
+        # 'articleCountTwoMonthsBefore': articleCountTwoMonthsBefore,
+        # 'rankingTsla': rankingTsla,
+        # 'rankingCpd': rankingCpd,
+        # 'rankingAc': rankingAc,
+        # 'rankingTslaTwoMonthsBefore': rankingTslaTwoMonthsBefore,
+        # 'rankingCpdTwoMonthsBefore': rankingCpdTwoMonthsBefore,
+        # 'rankingAcTwoMonthsBefore': rankingAcTwoMonthsBefore,
+        # 'daysBackInTime': daysBackInTime,
+        'rankingScore': rankingScoreNow,
+        'rankingScoreDiff': rankingScoreDiff
     }
 
 
 def calculateRankingForAllAuthors(daysBackInTime):
-
     responseDict = []
 
     distinctAuthorIdAndNameArray = getDistinctAuthorIdAndName()
@@ -137,7 +154,4 @@ def calculateRankingForAllAuthors(daysBackInTime):
 
         responseDict.append(singleAuthorValues)
 
-    return responseDict
-
-
-
+    return sorted(responseDict, key=lambda x: x['rankingScore'])[::-1]

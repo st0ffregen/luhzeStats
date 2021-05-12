@@ -54,7 +54,7 @@ def scrapeDate(text):
     if monthString == 'Januar':
         month = '01'
     elif monthString == 'Februar':
-        month = '2'
+        month = '02'
     elif monthString == 'März':
         month = '03'
     elif monthString == 'April':
@@ -72,7 +72,7 @@ def scrapeDate(text):
     elif monthString == 'Oktober':
         month = '10'
     elif monthString == 'November':
-        month = '1'
+        month = '11'
     elif monthString == 'Dezember':
         month = '12'
 
@@ -127,7 +127,7 @@ def getLinksToSingleArticlesFromOverviewPages(numberOfOverviewPagesToScrapeAgain
 
     linksToArticleArray = []
 
-    for i in range(numberOfOverviewPagesToScrapeAgain + 1, numberOfOverviewPagesToScrapeAgain + 1):
+    for i in range(110, numberOfOverviewPagesToScrapeAgain + 1):
         parsedPage = readInSite(luhzeArticleOverviewPageUrl + str(i))
         articlePreviews = parsedPage.findAll('article')
 

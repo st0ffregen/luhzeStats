@@ -3,11 +3,13 @@
 import re
 import sys
 import os
+from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
 
 occurrenceRatioMultiplier = 100000
+unwantedPunctuations = ['-', ',', ':', '.', '!', '?', '\"', '“', '„', ')', '(', '”', '“']
 
 
 def analyzeNewData():
@@ -161,7 +163,6 @@ def calculateWordOccurrenceInThatText(text):
 
 
 def removeTrailingPunctuations(w):
-    unwantedPunctuations = ["-", ",", ":", ".", "!", "?", "\"", "“", ")"]
 
     if w[-1] in unwantedPunctuations and len(w) > 2 and w != "STUDENT!":  # student! darf das Ausrufezeichen behalten
         return removeTrailingPunctuations(w[:-1])
@@ -170,7 +171,6 @@ def removeTrailingPunctuations(w):
 
 
 def removeLeadingPunctuations(w):
-    unwantedPunctuations = ["-", ",", ":", ".", "!", "?", "\"", "„", "("]
 
     if w[0] in unwantedPunctuations and len(w) > 2:
         return removeLeadingPunctuations(w[1:])

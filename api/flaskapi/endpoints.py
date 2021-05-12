@@ -1,19 +1,16 @@
-import os
-import sys
-from flask import Flask
 from flask import jsonify
 from flask import Response
 from flask import request
 from flask import g
-import MySQLdb
 import json
 from flaskapi import app
 from flaskapi.helperFunctions.rankingHelperFunctions import calculateRankingForAllAuthors, calculateValues
-from flaskapi.helperFunctions.wordOccurenceHelperFunctions import getOccurrences, getTotalOccurrences
+from flaskapi.helperFunctions.wordOccurenceHelperFunctions import getOccurrences, getTotalOccurrences, sumOccurrences
 
+import pydevd_pycharm
 
 minCountOfArticlesAuthorsNeedToHaveToBeDisplayed = 10
-minCountOfArticlesRessortsNeedToHaveToBeDisplayed = 10
+minCountOfArticlesRessortsNeedToHaveToBeDisplayed = 5
 
 
 @app.route('/api/date', methods=['GET'])
@@ -32,14 +29,14 @@ def minAuthor():
 
 @app.route('/api/oldestArticle', methods=['GET'])
 def oldestArticle():
-    g.cur.execute('SELECT MIN(created) FROM articles')
+    g.cur.execute('SELECT MIN(publishedDate) FROM articles')
     entries = g.cur.fetchall()
     return Response(json.dumps({'oldestArticle': entries[0][0]}, default=str), mimetype='application/json')
 
 
 @app.route('/api/newestArticle', methods=['GET'])
 def newestArticle():
-    g.cur.execute('SELECT MAX(created) FROM articles')
+    g.cur.execute('SELECT MAX(publishedDate) FROM articles')
     entries = g.cur.fetchall()
     return Response(json.dumps({'newestArticle': entries[0][0]}, default=str), mimetype='application/json')
 
@@ -50,12 +47,12 @@ def activeMembers():
     authorIdArray = g.cur.fetchall()
     responseDict = []
     for authorId in authorIdArray:
-        g.cur.execute('SELECT created FROM articles WHERE authorId =%s GROUP BY link', [authorId[0]])
+        g.cur.execute('SELECT publishedDate FROM articles WHERE authorId =%s GROUP BY link', [authorId[0]])
         fetchedDateArray = g.cur.fetchall()
         dateArray = []
         for d in fetchedDateArray:
             dateArray.append(d[0].strftime('%Y-%m-%d %H:%M:%S'))
-        responseDict.append({'ame': authorId[0], 'articles': dateArray})
+        responseDict.append({'name': authorId[0], 'articles': dateArray})
     return Response(json.dumps(responseDict), mimetype='application/json')
 
 
@@ -71,11 +68,10 @@ def ressortTopList():
 @app.route('/api/ressortArticlesTimeline', methods=['GET'])
 def ressortArticlesTimeline():
     # respone: [{ressort: hopo, articles: [{date: some month, 5},{date: some month, 4}]}]
-
     g.cur.execute(
-        'SELECT ressort, cast(date_format(created,\'%Y-%%m-01\') as date),count(distinct link) as countPerMonth from articles'
+        'SELECT ressort, cast(date_format(publishedDate,\'%%Y-%%m-01\') as date),count(distinct link) as countPerMonth from articles'
         ' where ressort in (select ressort from articles group by ressort having count(distinct link) >= %s) '
-        'group by ressort, year(created), month(created)',
+        'group by ressort, year(publishedDate), month(publishedDate)',
         [str(minCountOfArticlesRessortsNeedToHaveToBeDisplayed)])
     fetchedRessortDateCountPerMonthArray = g.cur.fetchall()
     responseDict = []
@@ -83,10 +79,10 @@ def ressortArticlesTimeline():
     monthArray = []
     for e in fetchedRessortDateCountPerMonthArray:
         if ressort == e[0]:
-            monthArray.append({'date': e[1], 'count': e[2]})
+            monthArray.append({'date': e[1].strftime('%Y-%m-%d %H:%M:%S'), 'count': e[2]})
         else:
             responseDict.append({'ressort': ressort, 'countPerMonth': monthArray})
-            monthArray = [{'date': e[1], 'ount': e[2]}]
+            monthArray = [{'date': e[1].strftime('%Y-%m-%d %H:%M:%S'), 'count': e[2]}]
             ressort = e[0]
 
         if e == fetchedRessortDateCountPerMonthArray[len(fetchedRessortDateCountPerMonthArray) - 1]:  # if it is last element
@@ -99,10 +95,10 @@ def ressortArticlesTimeline():
 def topAuthorsPerRessort():
     # response: [{ressort: hopo, authors: [{name: theresa, count:5},{name: someone, count:2}]}]
     g.cur.execute(
-        'SELECT ressort, ar.authorId, au.firstName, au.lastName, count(link) as count '
+        'SELECT ressort, ar.authorId, au.name, count(link) as count '
         'from articles ar join authors au on ar.authorId=au.id where ressort in'
         ' (select ressort from articles group by ressort having count(distinct link) >= %s) '
-        'group by ressort, authorId having count >= 5 order by 1 asc,5 desc',
+        'group by ressort, authorId having count >= 5 order by 1 asc,4 desc',
         [str(minCountOfArticlesRessortsNeedToHaveToBeDisplayed)])
     entries = g.cur.fetchall()
     responseDict = []
@@ -110,12 +106,10 @@ def topAuthorsPerRessort():
     authorArray = []
     for e in entries:
         if ressort == e[0]:
-            name = (e[2] + ' ' + e[3]).strip()
-            authorArray.append({'name': name, 'count': e[4]})
+            authorArray.append({'name': e[2], 'count': e[3]})
         else:
             responseDict.append({'ressort': ressort, 'authors': authorArray[:3]})
-            name = (e[2] + ' ' + e[3]).strip()
-            authorArray = [{'name': name, 'count': e[4]}]
+            authorArray = [{'name': e[2], 'count': e[3]}]
             ressort = e[0]
 
         if e == entries[len(entries) - 1]:  # if it is last element
@@ -127,7 +121,7 @@ def topAuthorsPerRessort():
 @app.route('/api/authorTimeline', methods=['GET'])
 def authorTimeline():
     g.cur.execute(
-        'SELECT ar.authorId, au.name, MIN(created), MAX(created) FROM articles ar join authors au on ar.authorId=au.id GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY count(distinct link) DESC',
+        'SELECT ar.authorId, au.name, MIN(publishedDate), MAX(publishedDate) FROM articles ar join authors au on ar.authorId=au.id GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY count(distinct link) DESC',
         [str(minCountOfArticlesAuthorsNeedToHaveToBeDisplayed)])
     entries = g.cur.fetchall()
     responseDict = []
@@ -140,8 +134,8 @@ def authorTimeline():
 @app.route('/api/articlesTimeline', methods=['GET'])
 def articlesTimeline():
     g.cur.execute(
-        'select cast(date_format(created,\'Y-%m-01\') as date),count(distinct link) as countPerMonth from articles'
-        ' group by year(created),month(created) order by 1 asc')
+        'select cast(date_format(publishedDate,\'%Y-%m-01\') as date),count(distinct link) as countPerMonth from articles'
+        ' group by year(publishedDate),month(publishedDate) order by 1 asc')
     responseDict = g.cur.fetchall()
 
     return Response(json.dumps(adjustFormatDate(responseDict)[::-1]), mimetype='application/json')
@@ -150,7 +144,7 @@ def articlesTimeline():
 @app.route('/api/mostArticlesPerTime', methods=['GET'])
 def mostArticlesPerTime():
     g.cur.execute(
-        'SELECT ar.authorId, au.name, ROUND(((DATEDIFF(MAX(created),MIN(created)))/count(distinct link)),1) as diff '
+        'SELECT ar.authorId, au.name, ROUND(((DATEDIFF(MAX(publishedDate),MIN(publishedDate)))/count(distinct link)),1) as diff '
         'FROM articles ar join authors au on ar.authorId=au.id GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY diff',
         [str(minCountOfArticlesAuthorsNeedToHaveToBeDisplayed)])
     responseDict = g.cur.fetchall()
@@ -161,8 +155,8 @@ def mostArticlesPerTime():
 @app.route('/api/authorAverage', methods=['GET'])
 def authorAverage():
     g.cur.execute(
-        'SELECT ar.authorId, au.name, round(avg(charcount)) as count'
-        ' from (select distinct(link), d.charcount as charcount, authorId from articles art join documents d on art.documentId=d.id '
+        'SELECT ar.authorId, au.name, round(avg(charCount)) as count '
+        'from (select distinct(link), d.charCount as charCount, authorId from articles art join documents d on art.documentId=d.id '
         'where authorId in (select authorId from articles group by authorId having count(distinct link) >=%s)) as ar '
         'join authors au on ar.authorId=au.id group by authorId order by count desc',
         [str(minCountOfArticlesAuthorsNeedToHaveToBeDisplayed)])
@@ -174,14 +168,14 @@ def authorAverage():
 @app.route('/api/averageCharactersPerDay', methods=['GET'])
 def averageCharactersPerDay():
     g.cur.execute(
-        'SELECT ar.authorId, au.name, sum(charcount) as count from '
-        '(select distinct(link), d.charcount as charcount, authorId from articles art join documents d on art.documentId=d.id '
+        'SELECT ar.authorId, au.name, sum(charCount) as count from '
+        '(select distinct(link), d.charCount as charCount, authorId from articles art join documents d on art.documentId=d.id '
         'where authorId in (select authorId from articles group by authorId having count(distinct link) >= %s )) as ar '
         'join authors as au on ar.authorId=au.id group by authorId order by count desc', [str(minCountOfArticlesAuthorsNeedToHaveToBeDisplayed)])
     entries = g.cur.fetchall()
     responseDict = []
     for e in entries:
-        g.cur.execute('SELECT DATEDIFF(MAX(created),MIN(created))+1 as average from articles where authorId=%s',[str(e[0])])
+        g.cur.execute('SELECT DATEDIFF(MAX(publishedDate),MIN(publishedDate)) as average from articles where authorId=%s', [str(e[0])])
         res = g.cur.fetchone()
         responseDict.append({'name':  e[1], 'count': round(e[2] / res[0])})
 
@@ -191,7 +185,7 @@ def averageCharactersPerDay():
 @app.route('/api/ressortAverage', methods=['GET'])
 def ressortAverage():
     g.cur.execute(
-        'SELECT ressort, round(avg(charcount)) as count from (select distinct(link), d.charcount as charcount,'
+        'SELECT ressort, round(avg(charcount)) as count from (select distinct(link), d.charCount as charCount,'
         ' ressort from articles ar join documents as d on ar.documentId=d.id where ressort in'
         ' (select ressort from articles group by ressort having count(distinct link) >=%s)) as sub '
         'group by ressort order by count desc', [str(minCountOfArticlesRessortsNeedToHaveToBeDisplayed)])
@@ -203,7 +197,7 @@ def ressortAverage():
 @app.route('/api/authorTopList', methods=['GET'])
 def authorTopList():
     g.cur.execute(
-        'SELECT ar.authorId, au.name, count(distinct link) FROM articles ar join authors au on ar.authorId=au.id GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY 4 DESC', [str(minAuthor)])
+        'SELECT ar.authorId, au.name, count(distinct link) FROM articles ar join authors au on ar.authorId=au.id GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY 3 DESC', [str(minAuthor)])
     responseDict = g.cur.fetchall()
 
     return Response(json.dumps(adjustFormatNameStartOnSecondIndex(responseDict)), mimetype='application/json')
@@ -212,11 +206,11 @@ def authorTopList():
 @app.route('/api/ressortTimeline', methods=['GET'])
 def ressortTimeline():
     g.cur.execute(
-        'SELECT ressort, MIN(created), MAX(created) FROM articles GROUP BY ressort ORDER BY count(distinct link) DESC')
+        'SELECT ressort, MIN(publishedDate), MAX(publishedDate) FROM articles GROUP BY ressort ORDER BY count(distinct link) DESC')
     entries = g.cur.fetchall()
     responseDict = []
     for e in entries:
-        responseDict.append({'name': e[0], 'min': e[1], 'max': e[2]})
+        responseDict.append({'name': e[0], 'min': e[1].strftime('%Y-%m-%d %H:%M:%S'), 'max': e[2].strftime('%Y-%m-%d %H:%M:%S')})
 
     return Response(json.dumps(responseDict), mimetype='application/json')
 
@@ -225,7 +219,7 @@ def ressortTimeline():
 def ranking():
     daysBackInTime = request.args.get('daysBackInTime', type=int)
     if daysBackInTime is None:
-        return jsonify('no integer daysBackInTime parameter given for ranking endpoint')
+        return jsonify('error: no integer daysBackInTime parameter given for ranking endpoint')
 
     return Response(json.dumps(calculateRankingForAllAuthors(daysBackInTime)), mimetype='application/json')
 
@@ -243,57 +237,53 @@ def singleRanking():
     return calculateValues(authorId, name, daysBackInTime)
 
 
-@app.route('/api/minAndMaxYearAndQuarter', methods=['GET'])
+@app.route('/api/firstYearAndQuarter', methods=['GET'])
 def minYearAndQuarter():
-    g.cur.execute('SELECT MIN(yearAndQuarter), MAX(yearAndQuarter) from wordOccurrenceOverTheQuarters')
-    res = g.cur.fetchone()
-    return Response(json.dumps({'minYearAndQuarter': res[0], 'maxYearAndQuarter': res[1]}), mimetype='application/json')
+    g.cur.execute('SELECT year, quarter from wordOccurrence order by year asc, quarter asc limit 1')
+    lastYearAndQuarter = g.cur.fetchone()
+    return Response(json.dumps({'firstYear': lastYearAndQuarter[0], 'firstQuarter': lastYearAndQuarter[1]}), mimetype='application/json')
 
 
-@app.route('/api/maxYearAndQuarter', methods=['GET'])
+@app.route('/api/lastYearAndQuarter', methods=['GET'])
 def maxYearAndQuarter():
-    g.cur.execute('SELECT MAX(yearAndQuarter) from wordoccurrenceOverTheQuarters')
-    return Response(json.dumps({'maxYearAndQuarter': g.cur.fetchone()[0]}), mimetype='application/json')
+    g.cur.execute('SELECT year, quarter from wordOccurrence order by year desc, quarter desc limit 1')
+    lastYearAndQuarter = g.cur.fetchone()
+    return Response(json.dumps({'lastYear': lastYearAndQuarter[0], 'lastQuarter': lastYearAndQuarter[1]}), mimetype='application/json')
 
 
 @app.route('/api/wordOccurrence', methods=['GET'])
 def wordOccurrence():
-
     word = request.args.get('word', type=str)
-    if word is  None:
+    if word is None:
         return jsonify('no string word parameter given for wordOccurrence endpoint')
 
     word = word.upper()
-    responseDict = []
+    splitWordArray = word.split('+++')
 
+    responseDict = getOccurrences(word, splitWordArray)
 
-    for word in word.split('+++'):
-        occurrences = getOccurrences(word, responseDict)
-        if occurrences is None:
-            continue
+    if responseDict is None or len(responseDict) == 0:
+        return jsonify('Error. The word does not exist.')
 
-        responseDict.append(occurrences)
-
-    if len(responseDict) == 0:
-        return jsonify('Error. The word ' + word + ' does not exist.')
-
-    return Response(json.dumps(sorted(responseDict, key=lambda x: x['yearAndQuarter'])), mimetype='application/json')
+    return Response(json.dumps(responseDict), mimetype='application/json')
 
 
 @app.route('/api/autocomplete', methods=['GET'])
-def totalWordOccurrence():
-
+def autocomplete():
+    pydevd_pycharm.settrace('192.168.1.56', port=42259, stdoutToServer=True, stderrToServer=True)
     word = request.args.get('word', type=str)
     if word is None:
         return jsonify('no string word parameter given for totalWordOccurrence endpoint')
 
     word = word.upper()
-    responseDict = []
+    splitWordArray = word.split('+++')
 
-    if '+++' in word:
-        for word in word.split('+++'):
-            responseDict.append(getTotalOccurrences(word))
+    occurrences = getOccurrences(word, splitWordArray)
 
+    responseDict = sumOccurrences(occurrences)
+
+    if responseDict is None:
+        return jsonify('error. The word does not exist.')
 
     return Response(json.dumps(responseDict),  mimetype='application/json')
 
@@ -301,7 +291,7 @@ def totalWordOccurrence():
 def adjustFormatDate(entries):
     arr = []
     for e in entries:
-        arr.append({'date': e[0], 'count': str(e[1])})
+        arr.append({'date': e[0].strftime('%Y-%m-%d %H:%M:%S'), 'count': str(e[1])})
     return arr
 
 
