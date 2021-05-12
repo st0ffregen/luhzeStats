@@ -11,13 +11,21 @@ services:
       - api
 
   db:
-    build: ./mariadb/
+    build:
+      context: ./mariadb/
+      args:
+        APP_ENVIRONMENT: ${APP_ENVIRONMENT}
+        MYSQL_API_USER: ${MYSQL_API_USER}
+        MYSQL_API_PASSWORD: ${MYSQL_API_PASSWORD}
+        MYSQL_SCRAPING_USER: ${MYSQL_SCRAPING_USER}
+        MYSQL_SCRAPING_PASSWORD: ${MYSQL_SCRAPING_PASSWORD}
     restart: always
     volumes:
       - ./mariadb/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
       - ./mariadb/data/:/var/lib/mysql
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
+
     ports:
       - "3306:3306"
     

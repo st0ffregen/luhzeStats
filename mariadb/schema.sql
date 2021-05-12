@@ -1,7 +1,3 @@
-CREATE USER IF NOT EXISTS 'api' IDENTIFIED BY 'testApi';
-CREATE USER IF NOT EXISTS 'scraper' IDENTIFIED BY 'testScraper';
-
-
 CREATE DATABASE IF NOT EXISTS luhze CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE luhze;
 
@@ -50,16 +46,3 @@ CREATE TABLE wordOccurrence (
     PRIMARY KEY (word, year, quarter)
 );
 
-
-#grant privileges
-
-GRANT SELECT ON luhze.authors TO 'api'@'%';#nicht sicher wie sicher hier diese wildcard ist
-GRANT SELECT ON luhze.wordOccurrence TO 'api'@'%';
-GRANT SELECT ON luhze.articles TO 'api'@'%';
-GRANT SELECT ON luhze.documents TO 'api'@'%';
-GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.authors TO 'scraper'@'%';
-GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.documents TO 'scraper'@'%';
-GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.articles TO 'scraper'@'%';
-GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.wordOccurrence TO 'scraper'@'%';
-CREATE USER IF NOT EXISTS 'root123' IDENTIFIED BY 'root123'; # remove for production
-GRANT ALL PRIVILEGES ON luhze.* TO 'root123'@'%'; # remove for production
