@@ -127,7 +127,7 @@ def getLinksToSingleArticlesFromOverviewPages(numberOfOverviewPagesToScrapeAgain
 
     linksToArticleArray = []
 
-    for i in range(115, numberOfOverviewPagesToScrapeAgain + 1):
+    for i in range(numberOfOverviewPagesToScrapeAgain + 1, numberOfOverviewPagesToScrapeAgain + 1):
         parsedPage = readInSite(luhzeArticleOverviewPageUrl + str(i))
         articlePreviews = parsedPage.findAll('article')
 

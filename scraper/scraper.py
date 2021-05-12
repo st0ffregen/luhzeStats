@@ -13,11 +13,13 @@ from databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
 luhzeArticleOverviewPageUrl = 'https://www.luhze.de/page/'
 numberOfOverviewPagesToScrapeAgain = int(os.environ['NUMBERS_OF_OVERVIEW_PAGES_TO_SCRAPE_AGAIN'])
 
-# ??? Hier: Idk warum aber irgendwie wird nicht deletet (cascade) s.d. dann bei den documents ein dupplicate key error entsteht
+
 def prepareSQLStatements(link, title, authorArray, ressortArray, wordcount, document, date):
 
     preparedSQLStatements = []
     # there are cases where a ressort, author etc. may be removed after a while so its most safe to delete all affected rows first
+    preparedSQLStatements.append(['DELETE FROM documents WHERE document=%s', [document]])
+
     preparedSQLStatements.append(['DELETE FROM articles WHERE link=%s', [link]])
 
     preparedSQLStatements.append(['INSERT INTO documents VALUES(%s,%s,%s,%s,%s)',
@@ -54,7 +56,7 @@ def scrapeAllInformation(linkToArticle):
 
 
 def main():
-    pydevd_pycharm.settrace('192.168.1.56', port=33487, stdoutToServer=True, stderrToServer=True)
+    pydevd_pycharm.settrace('192.168.1.56', port=40349, stdoutToServer=True, stderrToServer=True)
 
     con = connectToDB()
     cur = con.cursor()

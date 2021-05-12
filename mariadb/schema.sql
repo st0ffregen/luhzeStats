@@ -21,6 +21,7 @@ CREATE TABLE documents (
 	createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updatedAt TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	UNIQUE(document)
+
 );
 
 CREATE TABLE articles (
@@ -29,11 +30,11 @@ CREATE TABLE articles (
 	title VARCHAR(255) NOT NULL,
 	authorId INT NOT NULL,
 	ressort VARCHAR(64) NOT NULL,
-	publishDate DATETIME NOT NULL,
+	publishedDate DATETIME NOT NULL,
 	documentId INT NOT NULL,
 	createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updatedAt TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	FOREIGN KEY (authorId) REFERENCES authors(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+	FOREIGN KEY (authorId) REFERENCES authors(id) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY (documentId) REFERENCES documents(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
@@ -43,7 +44,7 @@ CREATE TABLE wordOccurrence (
 	quarter INT NOT NULL,
 	occurrence INT NOT NULL,
 	quarterWordCount INT NOT NULL,
-    occurrenceRatio INT NOT NULL, # occurrence/100000 Wörter
+    occurrenceRatio INT NOT NULL, # occurrence/100000 words
 	createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updatedAt TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (word, year, quarter)
@@ -58,6 +59,6 @@ GRANT SELECT ON luhze.articles TO 'api'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.authors TO 'scraper'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.documents TO 'scraper'@'%';
 GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.articles TO 'scraper'@'%';
-GRANT INSERT, UPDATE, SELECT ON luhze.wordOccurrence TO 'scraper'@'%';
+GRANT SELECT, DELETE, INSERT, UPDATE ON luhze.wordOccurrence TO 'scraper'@'%';
 CREATE USER IF NOT EXISTS 'root123' IDENTIFIED BY 'root123'; # remove for production
 GRANT ALL PRIVILEGES ON luhze.* TO 'root123'@'%'; # remove for production

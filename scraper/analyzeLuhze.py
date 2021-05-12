@@ -16,9 +16,14 @@ def analyzeNewData():
 
     lastModifiedDate = getLastModifiedDate(cur)
 
+    if lastModifiedDate is None:
+        lastModifiedDate = '0001-01-01 00:00:01'
+    else:
+        lastModifiedDate = lastModifiedDate.strftime('%Y-%m-%d %H:%M:%S')
+
     executeSQL(calculateWordOccurrence(cur, lastModifiedDate), con, cur)
 
-    executeSQL(fillDbWithMissingYearsAndQuarters(cur, lastModifiedDate), con, cur)
+    executeSQL(fillDbWithMissingYearsAndQuarters(cur, '0001-01-01 00:00:01'), con, cur)
 
     closeConnectionToDB(con, cur)
 
@@ -54,8 +59,8 @@ def createYearAndQuarterArray(cur, lastModifiedDate):
 
 
 def getWords(cur, offset, limit):
-    cur.execute('select word from wordOccurence limit %s offset %s', [limit, offset])
-    return cur.fetchall
+    cur.execute('select distinct(word) from wordOccurrence limit %s offset %s', [limit, offset])
+    return cur.fetchall()
 
 
 def prepareSQLForMissingYearAndQuarters(cur, fetchedWords, yearAndQuarterArray):
@@ -68,8 +73,11 @@ def prepareSQLForMissingYearAndQuarters(cur, fetchedWords, yearAndQuarterArray):
                     [year, quarter])
         quarterWordCount = cur.fetchone()[0]
 
-        for word in fetchedWords[0]:
-            sqlStatements.append('insert ignore into wordOccurrence values (%s, %s, %s, 0, %s, %s, %s)', [word, year, quarter, quarterWordCount, None, None])
+        if quarterWordCount is None:
+            quarterWordCount = 0
+
+        for word in fetchedWords:
+            sqlStatements.append(['insert ignore into wordOccurrence values (%s, %s, %s, 0, %s, 0, %s, %s)', [word, year, quarter, quarterWordCount, None, None]])
 
     return sqlStatements
 
@@ -81,16 +89,19 @@ def fillDbWithMissingYearsAndQuarters(cur, lastModifiedDate):
     offset = 0
     sqlStatements = []
 
-    while len(fetchedRows) > 0:
+    while True:
         fetchedRows = getWords(cur, offset, 5000)
+        if len(fetchedRows) == 0:
+            break
         sqlStatements.extend(prepareSQLForMissingYearAndQuarters(cur, fetchedRows, yearAndQuarterArray))
+        offset += 5000
 
     return sqlStatements
 
 
 def getLastModifiedDate(cur):
-    cur.execute('select max(updatedAt) from wordOccurence')
-    return cur.fetchone()[0].strftime('%Y-%m-%d %H:%M:%S')
+    cur.execute('select max(updatedAt) from wordOccurrence')
+    return cur.fetchone()[0]
 
 
 def prepareSQLStatements(countPerWordDict, charCountInThatYearAndQuarter, year, quarter):
@@ -98,10 +109,10 @@ def prepareSQLStatements(countPerWordDict, charCountInThatYearAndQuarter, year, 
 
     for word in countPerWordDict.keys():
         occurrenceRatio = occurrenceRatioMultiplier * countPerWordDict[word]/charCountInThatYearAndQuarter
-        sqlStatements.append('insert into wordOccurence values (%s, %s, %s, %s, %s, %s, %s, %s) on duplicate key update '
-                             'occurence=values(occurence), quarterWordCount=values(quarterWordCount), '
+        sqlStatements.append(['insert into wordOccurrence values (%s, %s, %s, %s, %s, %s, %s, %s) on duplicate key update '
+                             'occurrence=values(occurrence), quarterWordCount=values(quarterWordCount), '
                              'occurrenceRatio=values(occurrenceRatio)',
-                             [word, year, quarter, countPerWordDict[word], charCountInThatYearAndQuarter, occurrenceRatio, None, None])
+                             [word, year, quarter, countPerWordDict[word], charCountInThatYearAndQuarter, occurrenceRatio, None, None]])
 
     return sqlStatements
 
@@ -179,46 +190,12 @@ def calculateWordOccurrence(cur, lastModifiedDate):
 
     sqlStatements = []
 
-    cur.execute('SELECT YEAR(a.publishedDate), QUARTER(a.publishedDate) FROM articles a join documents d '
-                'on a.documentId=d.id WHERE d.updetedAt > %s',
+    cur.execute('SELECT YEAR(a.publishedDate) as year, QUARTER(a.publishedDate) as quarter FROM articles a join documents d '
+                'on a.documentId=d.id WHERE d.updatedAt > %s order by year, quarter',
                 [lastModifiedDate])
     yearAndQuartersWithUpdatedDocumentsArray = cur.fetchall()
 
     for yearAndQuarter in yearAndQuartersWithUpdatedDocumentsArray:
-        calculateWordOccurrenceForWholeYearAndQuarter(cur, yearAndQuarter[0], yearAndQuarter[1])
-
-    return sqlStatements
-
-
-def calculateTotalWordOccurence(cur, quarterArray):
-    print("Calculate total word occurence")
-    countPerWordDict = {}
-    sqlStatements = []
-    totalWordCount = 0
-    print(quarterArray)
-    for yearAndQuarter in quarterArray:
-
-        cur.execute(
-            'SELECT word, occurence, quarterWordCount FROM wordOccurenceOverTheQuarters WHERE yearAndQuarter = %s',
-            [yearAndQuarter])
-
-        allEntriesFromThatTable = cur.fetchall()
-        # maybe there is no word with that yearAndQuarter
-        if allEntriesFromThatTable is None or len(allEntriesFromThatTable) == 0:
-            continue
-        totalWordCount += allEntriesFromThatTable[0][2]
-        for word in allEntriesFromThatTable:
-            if word[0] in countPerWordDict:
-                countPerWordDict[word[0]] += word[1]
-            else:
-                countPerWordDict[word[0]] = word[1]
-
-    for word in countPerWordDict.keys():
-        if word == "der":
-            print(countPerWordDict[word])
-        sqlStatements.append([
-            'INSERT INTO totalWordOccurence VALUES (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE occurencePerWords=(((occurence + VALUES(occurence))/VALUES(totalWordCount))*100000),occurence=occurence + VALUES(occurence), totalWordCount=VALUES(totalWordCount)',
-            [word, round(countPerWordDict[word] / totalWordCount * 100000), countPerWordDict[word],
-             totalWordCount]])
+        sqlStatements.extend(calculateWordOccurrenceForWholeYearAndQuarter(cur, yearAndQuarter[0], yearAndQuarter[1]))
 
     return sqlStatements

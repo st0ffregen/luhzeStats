@@ -15,8 +15,8 @@ def connectToDB():
 
 
 def closeConnectionToDB(con, cur):
-    con.close()
     cur.close()
+    con.close()
 
 
 def executeSQL(sqlArray, con, cur):

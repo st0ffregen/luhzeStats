@@ -17,8 +17,8 @@ def connectToDB():
 
 
 def closeConnectionToDB():
-    g.con.close()
     g.cur.close()
+    g.con.close()
 
 
 @app.before_request
