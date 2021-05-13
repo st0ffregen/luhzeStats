@@ -6,8 +6,8 @@ def connectToDB():
     con = MySQLdb.connect(
         host=os.environ['DB_CONTAINER_NAME'],
         db=os.environ['MYSQL_DB'],
-        user=os.environ['MYSQL_SCRAPING_USER'],
-        passwd=os.environ['MYSQL_SCRAPING_PASSWORD']
+        user='root',
+        passwd=os.environ['MYSQL_ROOT_PASSWORD']
     )
     con.set_character_set('utf8mb4')
     con.autocommit(False)

@@ -46,3 +46,8 @@ CREATE TABLE wordOccurrence (
     PRIMARY KEY (word, year, quarter)
 );
 
+
+GRANT SELECT ON luhze.authors TO 'api'@'%';
+GRANT SELECT ON luhze.wordOccurrence TO 'api'@'%';
+GRANT SELECT ON luhze.articles TO 'api'@'%';
+GRANT SELECT ON luhze.documents TO 'api'@'%';
