@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
 
 occurrenceRatioMultiplier = 100000
-unwantedPunctuations = ['-', ', ':', '.', '!', '?', '\"', '“', '„', ')', '(', '”', '“']
+unwantedPunctuations = ['-', ',', ':', '.', '!', '?', '\"', '“', '„', ')', '(', '”', '“']
 
 
 def analyzeNewData():

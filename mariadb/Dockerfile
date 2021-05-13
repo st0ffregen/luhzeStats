@@ -1,10 +1,13 @@
 FROM mariadb:10.5
-#RUN apt-get update
-#RUN apt-get install -y sed
-#COPY ./schema.sql /docker-entrypoint-initdb.d/schema.sql
-#RUN sed -i 's/${MYSQL_USER_API}/'"${MYSQL_USER_API}"'/g' /docker-entrypoint-initdb.d/schema.sql
-#RUN sed -i 's/${MYSQL_USER_GATHERER}/'"${MYSQL_USER_GATHERER}"'/g' /docker-entrypoint-initdb.d/schema.sql
-#RUN sed -i 's/${MYSQL_PASSWORD_API}/'"${MYSQL_PASSWORD_API}"'/g' /docker-entrypoint-initdb.d/schema.sql
-#RUN sed -i 's/${MYSQL_PASSWORD_GATHERER}/'"${MYSQL_PASSWORD_GATHERER}"'/g' /docker-entrypoint-initdb.d/schema.sql
-#RUN cat /docker-entrypoint-initdb.d/schema.sql
-#COPY ./data /var/lib/mysql
+#ARG MYSQL_USER
+#ARG MYSQL_PASSWORD
+#ARG MYSQL_ROOT_PASSWORD
+#RUN echo ${MYSQL_API_USER}
+#RUN echo ${MYSQL_API_PASSWORD}
+#RUN echo ${MYSQL_ROOT_PASSWORD}
+
+COPY schema.sql /docker-entrypoint-initdb.d/schema.sql
+
+#RUN echo "CREATE USER IF NOT EXISTS 'api' IDENTIFIED BY 'testApi';" | cat - /docker-entrypoint-initdb.d/schema.sql > temp && mv temp /docker-entrypoint-initdb.d/schema.sql
+#RUN echo "CREATE USER IF NOT EXISTS 'scraper' IDENTIFIED BY 'testScraper';" | cat - /docker-entrypoint-initdb.d/schema.sql > temp && mv temp /docker-entrypoint-initdb.d/schema.sql
+
