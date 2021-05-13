@@ -1,7 +1,7 @@
 FROM python:3.7
+ARG APP_ENVIRONMENT
 COPY . /usr/src/api
-RUN pip install -U Flask
-RUN pip install mysqlclient
+RUN python -m pip install --upgrade pip
 RUN pip install -r /usr/src/api/requirements.txt
-RUN pip install pydevd-pycharm~=211.7142.13
-CMD python /usr/src/api/run.py
+WORKDIR /usr/src/api/
+CMD if [ ${APP_ENVIRONMENT} = "development" ] ; then python run.py ; else python -c 'print("running in production")' ; gunicorn -w 4 -b 127.0.0.1:5000 run:app ; fi
