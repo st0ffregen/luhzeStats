@@ -4,3 +4,5 @@ resetAll.sh
 .idea/*
 .env
 mariadb/data/
+webserver/logs/
+api/logs/
