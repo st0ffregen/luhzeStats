@@ -4,8 +4,6 @@ COPY ./src /usr/share/nginx/html
 COPY ./nginx.conf.production /etc/nginx/nginx.conf.production
 COPY ./nginx.conf.development /etc/nginx/nginx.conf.development
 WORKDIR /etc/nginx/
-RUN nproc
-RUN ulimit -n
 RUN if [ "$APP_ENVIRONMENT" = "development" ] ; \
  then \
      echo 'nginx running in development mode' ; \

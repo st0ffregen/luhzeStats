@@ -1,0 +1,4 @@
+pydevd-pycharm~=211.7142.13
+mysqlclient==2.0.3
+beautifulsoup4==4.9.3
+soupsieve==2.2.1

@@ -3,9 +3,9 @@ import logging
 from logging import Formatter, FileHandler
 import os
 
-
-
 app = Flask(__name__)
+
+app.config['SECRET_KEY'] = os.urandom(16)
 
 if os.environ['APP_ENVIRONMENT'] == 'development':
     app.config['DEBUG'] = True
@@ -15,8 +15,8 @@ else:
     app.config['FLASK_ENV'] = 'production'
 
 
-if not app.debug:
-    file_handler = FileHandler('error.log')
+if not app.debug and False:
+    file_handler = FileHandler('logs/error.log')
     file_handler.setFormatter(
         Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
     )
