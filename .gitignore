@@ -6,3 +6,4 @@ resetAll.sh
 mariadb/data/
 scraper/logs/
 api/logs/
+webserver/logs/

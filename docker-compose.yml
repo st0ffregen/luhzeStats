@@ -1,11 +1,16 @@
 version: '3'
 services:
-  web:
-    image: httpd:latest
+  webserver:
+    build:
+      context: ./webserver/
+      args:
+        APP_ENVIRONMENT: ${APP_ENVIRONMENT}
     ports:
-      - "8000:80"
+      - "80:80"
     volumes:
-      - ./apache/src:/usr/local/apache2/htdocs/
+      - ./webserver/src:/usr/share/nginx/html:ro
+      - ./webserver/logs:/var/log/nginx
+      #- ./webserver/nginx.conf.production:/etc/nginx/nginx.conf.production:ro
     depends_on:
       - db
       - api
@@ -47,17 +52,4 @@ services:
     env_file:
       - ./.env
 
-  nginxgateway:
-    build: ./nginx/
-    ports:
-      - "80:80"
-      #- "443:443"
-    #volumes:
-     # - ./nginx:/etc/nginx/conf.d
-    restart: always
-    depends_on:
-      - db
-      - api
-      - web
-  #certbot:
-  #  image: certbot/certbot
+
