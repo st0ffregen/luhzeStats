@@ -9,7 +9,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
 
 occurrenceRatioMultiplier = 100000
-unwantedPunctuations = ['-', ',', ':', '.', '!', '?', '\"', '“', '„', ')', '(', '”', '“']
+unwantedPunctuations = ['´', '‚', '‘', '-', '“', '„', '*', '#', ',', ':', '.', '.', '!', '?', '\"', '“', '„', ')', '(', '”', '“', '[', ']', '–', '„']
+wantedPunctuatedWords = ['STUDENT!']
 
 
 def analyzeNewData():
@@ -49,9 +50,15 @@ def createYearAndQuarterArray(cur, lastModifiedDate):
 
         initQuarter = (((int(
             minDate.strftime('%Y-%m-%d %H:%M:%S').split("-")[1]) - 1) // 3) + 1)  # gib quarter von 1 bis 4
+        maxQuarter = (((int(
+            maxDate.strftime('%Y-%m-%d %H:%M:%S').split("-")[1]) - 1) // 3) + 1)
+
 
         for year in range(int(minYear), int(maxYear) + 1):  # +1 da maxYear exklusive Grenze
-            for quarter in range(initQuarter, 5):  # 5 ist hier wieder exklusiv
+            quarterLimit = 4
+            if year == int(maxYear):
+                quarterLimit = maxQuarter
+            for quarter in range(initQuarter, quarterLimit + 1):  # +1 ist hier wieder exklusiv
                 quarterArray.append([year, quarter])
             initQuarter = 1  # setzt initquarter wieder auf 1, s.d. die for schleife jetzt von 1 anfängt
     else:
@@ -128,11 +135,7 @@ def calculateWordOccurrenceForWholeYearAndQuarter(cur, year, quarter):
 
     for document in documentArray:
         yearAndQuarterText += document[0] + ' '
-
-    results = calculateWordOccurrenceInThatText(yearAndQuarterText)
-
-    countPerWordDict = results[0]
-    charCountInThatYearAndQuarter = results[1]
+    countPerWordDict, charCountInThatYearAndQuarter = calculateWordOccurrenceInThatText(yearAndQuarterText)
 
     return prepareSQLStatements(countPerWordDict, charCountInThatYearAndQuarter, year, quarter)
 
@@ -147,9 +150,9 @@ def calculateWordOccurrenceInThatText(text):
 
     for w in wordArray:
         w = w.strip()
+        w = removeTrailingPunctuations(w)
+        w = removeLeadingPunctuations(w)
         if re.match(r'.{2,}$', w):
-            w = removeTrailingPunctuations(w)
-            w = removeLeadingPunctuations(w)
             if w is not None and len(w) > 1:
                 if w in countPerWordDict:
                     countPerWordDict[w] += 1
@@ -157,12 +160,12 @@ def calculateWordOccurrenceInThatText(text):
                     countPerWordDict[w] = 1
                 yearAndQuarterWordCount += 1
 
-    return [countPerWordDict, yearAndQuarterWordCount]
+    return countPerWordDict, yearAndQuarterWordCount
 
 
 def removeTrailingPunctuations(w):
 
-    if w[-1] in unwantedPunctuations and len(w) > 2 and w != "STUDENT!":  # student! darf das Ausrufezeichen behalten
+    if len(w) > 0 and w[-1] in unwantedPunctuations and w not in wantedPunctuatedWords:
         return removeTrailingPunctuations(w[:-1])
     else:
         return w
@@ -170,7 +173,7 @@ def removeTrailingPunctuations(w):
 
 def removeLeadingPunctuations(w):
 
-    if w[0] in unwantedPunctuations and len(w) > 2:
+    if len(w) > 0 and w[0] in unwantedPunctuations and w not in wantedPunctuatedWords:
         return removeLeadingPunctuations(w[1:])
     else:
         return w
@@ -178,7 +181,7 @@ def removeLeadingPunctuations(w):
 
 def calculateWordOccurrence(cur, lastModifiedDate):
     # Four cases need to be addressed
-    # 1) The document is new (same updated and created date)
+    # 1) The document is new to the documents table (same updated and created date)
     # 1.1) the document is published in a new yearAndQuarter
     # 1.2) the yearAndQuarter already exists and has to be updated
     # 2) the document was updated
