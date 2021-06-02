@@ -5,7 +5,7 @@ from flask import g
 import json
 from flaskapi import app
 from flaskapi.helperFunctions.rankingHelperFunctions import calculateRankingForAllAuthors, calculateValues
-from flaskapi.helperFunctions.wordOccurenceHelperFunctions import getOccurrences, getTotalOccurrences, sumOccurrences
+from flaskapi.helperFunctions.wordOccurenceHelperFunctions import getOccurrences, getTotalOccurrences
 
 import pydevd_pycharm
 
@@ -197,7 +197,7 @@ def ressortAverage():
 @app.route('/api/authorTopList', methods=['GET'])
 def authorTopList():
     g.cur.execute(
-        'SELECT ar.authorId, au.name, count(distinct link) FROM articles ar join authors au on ar.authorId=au.id GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY 3 DESC', [str(minAuthor)])
+        'SELECT ar.authorId, au.name, count(distinct link) as count FROM articles ar join authors au on ar.authorId=au.id GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY 3 DESC', [str(minCountOfArticlesAuthorsNeedToHaveToBeDisplayed)])
     responseDict = g.cur.fetchall()
 
     return Response(json.dumps(adjustFormatNameStartOnSecondIndex(responseDict)), mimetype='application/json')
@@ -254,13 +254,10 @@ def maxYearAndQuarter():
 @app.route('/api/wordOccurrence', methods=['GET'])
 def wordOccurrence():
     word = request.args.get('word', type=str)
-    if word is None:
+    if word is None or word == '':
         return jsonify('no string word parameter given for wordOccurrence endpoint')
 
-    word = word.upper()
-    splitWordArray = word.split('+++')
-
-    responseDict = getOccurrences(word, splitWordArray)
+    responseDict = getOccurrences(word)
 
     if responseDict is None or len(responseDict) == 0:
         return jsonify('Error. The word does not exist.')
@@ -270,22 +267,13 @@ def wordOccurrence():
 
 @app.route('/api/autocomplete', methods=['GET'])
 def autocomplete():
-    pydevd_pycharm.settrace('192.168.1.56', port=42259, stdoutToServer=True, stderrToServer=True)
     word = request.args.get('word', type=str)
-    if word is None:
+    if word is None or word == '':
         return jsonify('no string word parameter given for totalWordOccurrence endpoint')
 
-    word = word.upper()
-    splitWordArray = word.split('+++')
+    occurrences = getTotalOccurrences(word)
 
-    occurrences = getOccurrences(word, splitWordArray)
-
-    responseDict = sumOccurrences(occurrences)
-
-    if responseDict is None:
-        return jsonify('error. The word does not exist.')
-
-    return Response(json.dumps(responseDict),  mimetype='application/json')
+    return Response(json.dumps(occurrences),  mimetype='application/json')
 
 
 def adjustFormatDate(entries):

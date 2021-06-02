@@ -20,55 +20,14 @@ async function fetchFileAPI(route,useDataFunction) {
 
 }
 
-async function fetchParameterAPI(route, parameter, parameterValue, useDataFunction) {
 
 
-	try {
-		await fetch("http://localhost/json/" + route + "?" + parameter + "=" + encodeURIComponent(parameterValue))
-		.then(res => {
-			if(res.ok) {
-				return res.json();
-			} else {
-				return Promise.reject(res.status);
-			}
-		}).then(data => useDataFunction(data)
-
-		).catch(err => {
-			console.log('Error: ', err);
-		});
-
-	} catch(e) {
-		console.error(e.message);
-	}
-
-	return 1;
-
+async function fetchApi(route, parameter = '', parameterValue = '') {
+	const response = await fetch('http://localhost/api/' + route + '?' + parameter + '=' + parameterValue);
+	return await response.json();
 }
 
-async function fetchTwoParameterAPI(route, firstParameter, secondParameter, firstValue, secondValue, useDataFunction) {
 
-
-	try {
-		await fetch("http://localhost/json/" + route + "?" + firstParameter + "=" + encodeURIComponent(firstValue) + "&" + secondParameter + "=" + encodeURIComponent(secondValue))
-		.then(res => {
-			if(res.ok) {
-				return res.json();
-			} else {
-				return Promise.reject(res.status);
-			}
-		}).then(data => useDataFunction(data)
-
-		).catch(err => {
-			console.log('Error: ', err);
-		});
-
-	} catch(e) {
-		console.error(e.message);
-	}
-
-	return 1;
-
-}
 
 
 //fetchChartsSite();
