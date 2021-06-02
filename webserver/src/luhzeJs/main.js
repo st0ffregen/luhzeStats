@@ -16,7 +16,6 @@ window.onload = async function () {
     initWordOccurrenceAutocomplete(wordOccurrenceInput);
     await initWordOccurrenceChart(wordOccurrenceChart, sampleData[index]);
 
-
-    //fetchChartsSite();
+    generateGraphs();
 }
 

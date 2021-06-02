@@ -27,6 +27,11 @@ def minAuthor():
     return Response(json.dumps({'minAuthor': minCountOfArticlesAuthorsNeedToHaveToBeDisplayed}), mimetype='application/json')
 
 
+@app.route('/api/minRessort', methods=['GET'])
+def minRessort():
+    return Response(json.dumps({'minRessort': minCountOfArticlesRessortsNeedToHaveToBeDisplayed}), mimetype='application/json')
+
+
 @app.route('/api/oldestArticle', methods=['GET'])
 def oldestArticle():
     g.cur.execute('SELECT MIN(publishedDate) FROM articles')

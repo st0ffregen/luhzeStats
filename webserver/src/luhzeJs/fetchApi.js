@@ -1,46 +1,29 @@
-async function fetchFileAPI(route,useDataFunction) {
-	try {
-		await fetch("http://localhost/api/" + route)
-		.then(res => {
-			if(res.ok) {
-				return res.json();
-			} else {
-				return Promise.reject(res.status);
-			}
-		}).then(data => useDataFunction(data)
-		).catch(err => {
-			console.log('Error: ', err);
-		});
-
-	} catch(e) {
-		console.error(e.message);
-	}
-
-	return 1;
-
-}
-
-
-
 async function fetchApi(route, parameter = '', parameterValue = '') {
 	const response = await fetch('http://localhost/api/' + route + '?' + parameter + '=' + parameterValue);
 	return await response.json();
 }
 
+async function displayMinAuthor() {
+	let data = await fetchApi('minAuthor');
+	document.getElementById("authorP").innerHTML = "Nur Autor*innen mit mehr als " + data['minAuthor'] + " Artikeln miteinbezogen";
+}
 
+async function displayMinRessort() {
+	let data = await fetchApi('minRessort');
+	document.getElementById("ressortP").innerHTML = "Nur Ressorts mit mehr als " + data['minRessort'] + " Artikeln miteinbezogen";
+}
 
+async function displayDate() {
+	let data = await fetchApi('date');
+	document.getElementById("dateP").innerHTML="Zuletzt aktualisiert: " + data['date'];
+}
 
-//fetchChartsSite();
+function generateGraphs() {
+	displayMinAuthor();
+	displayMinRessort();
+	displayDate();
+}
 
-function fetchChartsSite() { 
-
-fetchFileAPI("minAuthor",(data) => {
-	document.getElementById("authorP").innerHTML="Nur Autor*innen mit mehr als " + data['minAuthor'] + " miteinbezogen";
-});
-
-fetchFileAPI("date",(data) => {
-	document.getElementById("dateP").innerHTML="Zuletzt aktualisiert " + data['date'] + "<span><a href=\"javascript:rankingFunction(0)\"> > Zum Ranking</a></span>";
-});
 
 
 fetchFileAPI("articlesTimeline",(data) => {
@@ -131,4 +114,3 @@ fetchFileAPI("ressortAverage",(data) => {
 	barChart('ressortAverageChart',data,'bar','Durchschnittliche Anzahl an Zeichen pro Ressort pro Artikel',true);
 });
 
-}

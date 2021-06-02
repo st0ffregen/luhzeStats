@@ -49,7 +49,6 @@ function setColorFree(colorToSetFree) {
 }
 
 async function addDataToWordOccurrenceChart(word) {
-    console.log(window.luhzeChart.data.datasets.length);
     if (window.luhzeChart.data.datasets.length < maxWordsToBeDisplayed) {
 
         let data = await fetchWordOccurrenceData([word]);
@@ -167,7 +166,7 @@ async function initWordOccurrenceChart(chart, initWordArray) {
 
     let data = await fetchWordOccurrenceData(initWordArray);
     let datasets = convertData(data);
-    console.log(datasets);
+
     let luhzeChartConfig = {
         data: {
             datasets: datasets
