@@ -3,19 +3,17 @@
 import re
 import sys
 import os
-from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
 
 occurrenceRatioMultiplier = 100000
-unwantedPunctuations = ['´', '‚', '‘', '-', '“', '„', '*', '#', ',', ':', '.', '.', '!', '?', '\"', '“', '„', ')', '(', '”', '“', '[', ']', '–', '„']
+unwantedPunctuations = ['´', '‚', '‘', '-', '“', '„', '*', '#', ',', ':', '.', '.', '!', '?', '\"', '“', '„', ')', '(', '”', '“', '[', ']', '–', '„', '„', '…', '’', '»', '\u200b']
 wantedPunctuatedWords = ['STUDENT!']
 
 
 def analyzeNewData():
-    con = connectToDB()
-    cur = con.cursor()
+    con, cur = connectToDB()
 
     lastModifiedDate = getLastModifiedDate(cur)
 
@@ -25,7 +23,6 @@ def analyzeNewData():
         lastModifiedDate = lastModifiedDate.strftime('%Y-%m-%d %H:%M:%S')
 
     executeSQL(calculateWordOccurrence(cur, lastModifiedDate), con, cur)
-
     executeSQL(fillDbWithMissingYearsAndQuarters(cur, '0001-01-01 00:00:01'), con, cur)
 
     closeConnectionToDB(con, cur)
