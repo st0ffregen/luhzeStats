@@ -2,6 +2,8 @@ from flask import jsonify
 from flask import Response
 from flask import request
 from flask import g
+import datetime
+from datetime import date
 import json
 from flaskapi import app
 from flaskapi.helperFunctions.rankingHelperFunctions import calculateRankingForAllAuthors, calculateValues
@@ -72,25 +74,24 @@ def ressortTopList():
 @app.route('/api/ressortArticlesTimeline', methods=['GET'])
 def ressortArticlesTimeline():
     # respone: [{ressort: hopo, articles: [{date: some month, 5},{date: some month, 4}]}]
-    g.cur.execute(
-        'SELECT ressort, cast(date_format(publishedDate,\'%%Y-%%m-01\') as date),count(distinct link) as countPerMonth from articles'
-        ' where ressort in (select ressort from articles group by ressort having count(distinct link) >= %s) '
-        'group by ressort, year(publishedDate), month(publishedDate)',
-        [str(minCountOfArticlesRessortsNeedToHaveToBeDisplayed)])
-    fetchedRessortDateCountPerMonthArray = g.cur.fetchall()
+    yearAndMonthArray = createYearAndMonthArray()
     responseDict = []
-    ressort = fetchedRessortDateCountPerMonthArray[0][0]  # set ressort to first in fetched list
-    monthArray = []
-    for e in fetchedRessortDateCountPerMonthArray:
-        if ressort == e[0]:
-            monthArray.append({'date': e[1].strftime('%Y-%m-%d %H:%M:%S'), 'count': e[2]})
-        else:
-            responseDict.append({'ressort': ressort, 'countPerMonth': monthArray})
-            monthArray = [{'date': e[1].strftime('%Y-%m-%d %H:%M:%S'), 'count': e[2]}]
-            ressort = e[0]
+    g.cur.execute('SELECT ressort FROM articles GROUP BY ressort HAVING count(distinct link) > %s', [minCountOfArticlesRessortsNeedToHaveToBeDisplayed])
+    allRessorts = g.cur.fetchall()
 
-        if e == fetchedRessortDateCountPerMonthArray[len(fetchedRessortDateCountPerMonthArray) - 1]:  # if it is last element
-            responseDict.append({'ressort': ressort, 'countPerMonth': monthArray})
+    for ressort in allRessorts:
+        ressortDict = []
+        for yearAndMonth in yearAndMonthArray:
+            year, month = yearAndMonth
+            g.cur.execute(
+                'select cast(date_format(publishedDate,\'%%Y-%%m-01\') as date), count(distinct link) from articles where YEAR(publishedDate) = %s and MONTH(publishedDate) = %s and ressort = %s',
+                [year, month, ressort[0]])
+            entry = g.cur.fetchone()
+            if entry[0] is None:
+                entry = (datetime.date(year, month, 1), 0)
+            ressortDict.append(entry)
+
+        responseDict.append({'ressort': ressort[0], 'articles': adjustFormatDate(ressortDict)})
 
     return Response(json.dumps(responseDict), mimetype='application/json')
 
@@ -144,7 +145,10 @@ def articlesTimeline():
         g.cur.execute(
             'select cast(date_format(publishedDate,\'%%Y-%%m-01\') as date), count(distinct link) from articles where YEAR(publishedDate) = %s and MONTH(publishedDate) = %s',
             [year, month])
-        responseDict.append(g.cur.fetchone())
+        entry = g.cur.fetchone()
+        if entry[0] is None:
+            entry = (datetime.date(year, month, 1), 0)
+        responseDict.append(entry)
 
     return Response(json.dumps(adjustFormatDate(responseDict)), mimetype='application/json')
 

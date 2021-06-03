@@ -22,7 +22,7 @@ function googleTimeline(container, dataArrayAttr) {
 			dataTable.addRows([["", dataArray[i]['name'], new Date(dataArray[i]['min']), new Date(dataArray[i]['max'])]]);
 
 		}
-		console.log(dataTable);
+
 		let options = {
 			timeline: { 
 				showRowLabels: false 
