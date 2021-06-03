@@ -1,5 +1,12 @@
 async function fetchApi(route, parameter = '', parameterValue = '') {
-	const response = await fetch('http://localhost/api/' + route + '?' + parameter + '=' + parameterValue);
+	let response;
+
+	if (parameter === '' && parameterValue === '') {
+		response = await fetch('http://localhost/api/' + route);
+	} else {
+		response = await fetch('http://localhost/api/' + route + '?' + parameter + '=' + parameterValue);
+	}
+
 	return await response.json();
 }
 
@@ -18,18 +25,38 @@ async function displayDate() {
 	document.getElementById("dateP").innerHTML="Zuletzt aktualisiert: " + data['date'];
 }
 
+async function displayArticlesTimeline() {
+	let fetchedData = await fetchApi('articlesTimeline');
+	let articlesTimelineChart = document.getElementById('articlesTimelineChart');
+	let chartData = convertFinancialData(fetchedData, 'Anzahl der veröffentlichten Artikel');
+	financialChart(articlesTimelineChart, chartData, 'MMM yyyy');
+}
+
+async function displayArticlesTimelineDerivative() {
+	let fetchedData = await fetchApi('articlesTimeline');
+	let articlesTimelineDerivativeChart = document.getElementById('articlesTimelineDerivativeChart');
+	let chartData = convertFinancialDataDerivative(fetchedData, 'Anzahl der veröffentlichten Artikel pro Monat');
+	financialChart(articlesTimelineDerivativeChart, chartData, 'MMM yyyy');
+}
+
+async function displayActiveMembers() {
+	let fetchedData = await fetchApi('activeMembers');
+	let activeMembersChart = document.getElementById('activeMembersChart');
+	let chartData = convertFinancialDataDerivative(fetchedData, 'Anzahl der aktiven Autor*innen pro Monat');
+	financialChart(activeMembersChart, chartData, 'q yyyy');
+}
+
 function generateGraphs() {
 	displayMinAuthor();
 	displayMinRessort();
 	displayDate();
+	displayArticlesTimeline();
+	displayArticlesTimelineDerivative();
+	displayActiveMembers();
+
 }
 
 
-
-fetchFileAPI("articlesTimeline",(data) => {
-	financialChart('articlesTimelineChart',articlesTimelineFinancial(data),'month');
-	financialChart('articlesTimelineDerivativeChart',articlesTimelineFinancialDerivation(data),'month');
-});
 
 fetchFileAPI("authorTimeline",(data) => {
 	googleTimeline('authorTimelineChart',data);

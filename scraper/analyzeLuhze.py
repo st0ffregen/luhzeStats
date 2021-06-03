@@ -73,8 +73,7 @@ def prepareSQLForMissingYearAndQuarters(cur, fetchedWords, yearAndQuarterArray):
     sqlStatements = []
 
     for yearAndQuarter in yearAndQuarterArray:
-        year = yearAndQuarter[0]
-        quarter = yearAndQuarter[1]
+        year, quarter = yearAndQuarter
         cur.execute('select max(quarterWordCount) from wordOccurrence where year = %s and quarter = %s',
                     [year, quarter])
         quarterWordCount = cur.fetchone()[0]

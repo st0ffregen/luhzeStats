@@ -1,5 +1,6 @@
 Chart.defaults.global.defaultFontColor = '#555';
 var DateTime = luxon.DateTime;
+
 function customTooltip(data) {
 
 	return customTooltips = function(tooltip) {
@@ -133,65 +134,49 @@ function customTooltip(data) {
 		};
 }
 
-function articlesTimelineFinancial(data) {
+function convertFinancialDataDerivative(data, label) {
 
-	var totalArticleCount = 0;
-	var dateArray = monthArray(new Date(data[data.length-1]['date']+"T00:00:00Z"),new Date(data[0]['date']+"T00:00:00Z"));
-	
-	var returnArray = [];
-	for(var i=0;i<dateArray.length;i++) { //get a month
-		for(var k=0;k<data.length;k++) { //get a date, check if in the month, then increase month count by one
-			currentDate = new Date(data[k]['date']+"T00:00:00Z");
-			if(currentDate.getMonth() === dateArray[i][1] && currentDate.getFullYear() === dateArray[i][0]) {
-				totalArticleCount += data[k]['count'];
-			}
-		}
-		var month = (dateArray[i][1]+1).toString();
-		if(month.length < 2) month = "0" + month;
+	let dataset = [];
 
-		returnArray[i] = {t:DateTime.fromISO(dateArray[i][0].toString()+"-"+month+"-01").valueOf(),y:totalArticleCount};
-
+	for (const date of data) {
+		dataset.push({t:DateTime.fromISO(date['date'].split(' ')[0]).valueOf(), y: date['count']});
 	}
 
-	return [{label: 'Anzahl der veröffentlichten Artikel',
-	borderColor: '#ff6384',
-	data: returnArray,
-	type: 'line',
-	pointRadius: 0,
-	fill: false,
-	lineTension: 0,
-	borderWidth: 2}];
-
+	return [
+		{
+			label: label,
+			borderColor: '#ff6384',
+			data: dataset,
+			type: 'line',
+			pointRadius: 0,
+			fill: false,
+			lineTension: 0,
+			borderWidth: 2
+		}
+	];
 }
 
-function articlesTimelineFinancialDerivation(data) {
-	var dateArray = monthArray(new Date(data[data.length-1]['date']+"T00:00:00Z"),new Date(data[0]['date']+"T00:00:00Z"));
-	
-	var returnArray = [];
-	for(var i=0;i<dateArray.length;i++) { //get a month
-		for(var k=0;k<data.length;k++) { //get a date, check if in the month, then increase month count by one
-			currentDate = new Date(data[k]['date']+"T00:00:00Z");
-			if(currentDate.getMonth() === dateArray[i][1] && currentDate.getFullYear() === dateArray[i][0]) {
-				dateArray[i][2] += data[k]['count']
-			}
-		}
+function convertFinancialData(data, label) {
+	let dataset = [];
+	let summedUpCount = 0;
 
-		var month = (dateArray[i][1]+1).toString();
-		if(month.length < 2) month = "0" + month;
-
-		returnArray[i] = {t:DateTime.fromISO(dateArray[i][0].toString()+"-"+month+"-01").valueOf(),y:dateArray[i][2]};
-
+	for (const date of data) {
+		summedUpCount += parseInt(date['count']);
+		dataset.push({t:DateTime.fromISO(date['date'].split(' ')[0]).valueOf(), y: summedUpCount});
 	}
 
-	return [{label: 'Anzahl der veröffentlichten Artikeln pro Monat',
-	borderColor: '#ff6384',
-	data: returnArray,
-	type: 'line',
-	pointRadius: 0,
-	fill: false,
-	lineTension: 0,
-	borderWidth: 2}];
-
+	return [
+		{
+			label: label,
+			borderColor: '#ff6384',
+			data: dataset,
+			type: 'line',
+			pointRadius: 0,
+			fill: false,
+			lineTension: 0,
+			borderWidth: 2
+		}
+	];
 }
 
 function ressortArticlesTimelineFinancial(data,colorArray,hiddenArray, oldestArticle, newestArticle) {
@@ -278,51 +263,12 @@ function ressortArticlesTimelineFinancialDerivation(data,colorArray,hiddenArray,
 	return datasetArray;
 }
 
-function activeMembersFinancial(data, oldestArticle, newestArticle) {
 
-	var dateArray = quarterArray(new Date(oldestArticle['oldestArticle']),new Date(newestArticle['newestArticle']));
-	var returnArray = [];
-	
-	for(var i=0;i<dateArray.length;i++) { //gives me an quarter
-		//loop through the empty date array (only dates in it by now) find the active authors with another for loop
-		for(var k=0;k<data.length;k++) { //gives me an author
-			for(var l=0;l<data[k]['articles'].length;l++) { //gives me the article array for the k author
+function financialChart(chartElement, data, tooltipFormat) {
 
-				currentDate = new Date(data[k]['articles'][l]);
-				currentQuarter = Math.floor(currentDate.getMonth()/3);
-				if(currentQuarter === dateArray[i][1] && currentDate.getFullYear() === dateArray[i][0]) {
-					dateArray[i][2]++;
-					break;
-					//breaks the article for loop, because we only need one article per quarter to prove that the author was active in that quarter
-				}
-			}
-		}
-		//after finding all articles and adding them up to articlesCount, we can change the dateArray entry to what we want for the chartjs
-		var month = ((dateArray[i][1]*3)+1).toString();
-		if(month.length < 2) month = "0" + month;
-		returnArray[i] = {t:DateTime.fromISO(dateArray[i][0].toString()+"-"+month+"-01").valueOf(),y:dateArray[i][2]};//calculating the first month in each quarter
-	}
-
-	return [{label: 'Aktive Autor*innen pro Quartal',
-	borderColor: '#02a0e4',
-	data: returnArray,
-	type: 'line',
-	pointRadius: 0,
-	fill: false,
-	lineTension: 0,
-	borderWidth: 2}];
-
-}
-
-
-
-
-
-function financialChart(chart, dataFunc, quarterOrMonth) {
-
-    var configForFinancialCharts = {
+    let configForFinancialCharts = {
 		data: {
-			datasets: dataFunc
+			datasets: data
 		},
 		options: {
 			animation: {
@@ -334,7 +280,7 @@ function financialChart(chart, dataFunc, quarterOrMonth) {
 					distribution: 'linear',
 					offset: true,
 					time: {
-                        'tooltipFormat': 'q yyyy'
+                        'tooltipFormat': tooltipFormat
 					},
 					ticks: {
 						major: {
@@ -350,9 +296,9 @@ function financialChart(chart, dataFunc, quarterOrMonth) {
 					},
 					afterBuildTicks: function(scale, ticks) {
 					    if(ticks != null) {
-                            var majorUnit = scale._majorUnit;
-                            var firstTick = ticks[0];
-                            var i, ilen, val, tick, currMajor, lastMajor;
+                            let majorUnit = scale._majorUnit;
+                            let firstTick = ticks[0];
+                            let i, ilen, val, tick, currMajor, lastMajor;
 
                             val = DateTime.fromISO(ticks[0].value);
                             if ((majorUnit === 'minute' && val.second === 0)
@@ -400,15 +346,5 @@ function financialChart(chart, dataFunc, quarterOrMonth) {
 		}
 	};
 
-	var ctx = document.getElementById(chart).getContext('2d');
-
-
-	if(quarterOrMonth == 'month') {
-		configForFinancialCharts.options.scales.xAxes[0].time['tooltipFormat'] = "MMM yyyy"
-	} else if(quarterOrMonth == 'quarter') {
-		configForFinancialCharts.options.scales.xAxes[0].time['tooltipFormat'] = "q yyyy"
-	}
-
-	var chart = new Chart(ctx, configForFinancialCharts);
-		
+	new Chart(chartElement.getContext('2d'), configForFinancialCharts);
 }

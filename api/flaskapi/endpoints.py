@@ -6,7 +6,7 @@ import json
 from flaskapi import app
 from flaskapi.helperFunctions.rankingHelperFunctions import calculateRankingForAllAuthors, calculateValues
 from flaskapi.helperFunctions.wordOccurenceHelperFunctions import getOccurrences, getTotalOccurrences
-
+from flaskapi.helperFunctions.helperFunctions import createYearAndMonthArray, createYearAndQuarterArray
 import pydevd_pycharm
 
 minCountOfArticlesAuthorsNeedToHaveToBeDisplayed = 10
@@ -48,17 +48,16 @@ def newestArticle():
 
 @app.route('/api/activeMembers', methods=['GET'])
 def activeMembers():
-    g.cur.execute('SELECT authorId FROM articles GROUP BY authorId')
-    authorIdArray = g.cur.fetchall()
+    yearAndQuarterArray = createYearAndQuarterArray()
     responseDict = []
-    for authorId in authorIdArray:
-        g.cur.execute('SELECT publishedDate FROM articles WHERE authorId =%s GROUP BY link', [authorId[0]])
-        fetchedDateArray = g.cur.fetchall()
-        dateArray = []
-        for d in fetchedDateArray:
-            dateArray.append(d[0].strftime('%Y-%m-%d %H:%M:%S'))
-        responseDict.append({'name': authorId[0], 'articles': dateArray})
-    return Response(json.dumps(responseDict), mimetype='application/json')
+    for yearAndQuarter in yearAndQuarterArray:
+        year, quarter = yearAndQuarter
+        g.cur.execute(
+            'select cast(date_format(publishedDate,\'%%Y-%%m-01\') as date), count(distinct authorId) from articles where YEAR(publishedDate) = %s and QUARTER(publishedDate) = %s',
+            [year, quarter])
+        responseDict.append(g.cur.fetchone())
+
+    return Response(json.dumps(adjustFormatDate(responseDict)), mimetype='application/json')
 
 
 @app.route('/api/ressortTopList', methods=['GET'])
@@ -138,12 +137,16 @@ def authorTimeline():
 
 @app.route('/api/articlesTimeline', methods=['GET'])
 def articlesTimeline():
-    g.cur.execute(
-        'select cast(date_format(publishedDate,\'%Y-%m-01\') as date),count(distinct link) as countPerMonth from articles'
-        ' group by year(publishedDate),month(publishedDate) order by 1 asc')
-    responseDict = g.cur.fetchall()
+    yearAndMonthArray = createYearAndMonthArray()
+    responseDict = []
+    for yearAndMonth in yearAndMonthArray:
+        year, month = yearAndMonth
+        g.cur.execute(
+            'select cast(date_format(publishedDate,\'%%Y-%%m-01\') as date), count(distinct link) from articles where YEAR(publishedDate) = %s and MONTH(publishedDate) = %s',
+            [year, month])
+        responseDict.append(g.cur.fetchone())
 
-    return Response(json.dumps(adjustFormatDate(responseDict)[::-1]), mimetype='application/json')
+    return Response(json.dumps(adjustFormatDate(responseDict)), mimetype='application/json')
 
 
 @app.route('/api/mostArticlesPerTime', methods=['GET'])
