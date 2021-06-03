@@ -9,7 +9,7 @@ from flaskapi.helperFunctions.wordOccurenceHelperFunctions import getOccurrences
 from flaskapi.helperFunctions.helperFunctions import createYearAndMonthArray, createYearAndQuarterArray
 import pydevd_pycharm
 
-minCountOfArticlesAuthorsNeedToHaveToBeDisplayed = 10
+minCountOfArticlesAuthorsNeedToHaveToBeDisplayed = 12
 minCountOfArticlesRessortsNeedToHaveToBeDisplayed = 5
 
 
@@ -214,7 +214,8 @@ def authorTopList():
 @app.route('/api/ressortTimeline', methods=['GET'])
 def ressortTimeline():
     g.cur.execute(
-        'SELECT ressort, MIN(publishedDate), MAX(publishedDate) FROM articles GROUP BY ressort ORDER BY count(distinct link) DESC')
+        'SELECT ressort, MIN(publishedDate), MAX(publishedDate) FROM articles GROUP BY ressort HAVING count(distinct link) >= %s ORDER BY count(distinct link) DESC',
+        [minCountOfArticlesRessortsNeedToHaveToBeDisplayed])
     entries = g.cur.fetchall()
     responseDict = []
     for e in entries:

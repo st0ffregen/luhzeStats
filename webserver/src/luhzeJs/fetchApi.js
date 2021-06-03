@@ -46,10 +46,40 @@ async function displayActiveMembers() {
 	financialChart(activeMembersChart, chartData, 'q yyyy');
 }
 
-async function displayGoogleChart() {
+async function displayGoogleAuthorTimelineChart() {
 	let fetchedData = await fetchApi('authorTimeline');
 	let authorTimelineChart = document.getElementById('authorTimelineChart');
 	googleTimeline(authorTimelineChart, fetchedData);
+}
+
+async function displayAuthorTopListChart() {
+	let fetchedData = await fetchApi('authorTopList');
+	let authorTopListChart = document.getElementById('authorTopListChart');
+	barChart(authorTopListChart, fetchedData, 'bar', 'Anzahl der Artikel pro Autor*in',true);
+}
+
+async function displayAuthorAverageChart() {
+	let fetchedData = await fetchApi('authorAverage');
+	let authorAverageChart = document.getElementById('authorAverageChart');
+	barChart(authorAverageChart, fetchedData, 'bar', 'Durchschnittliche Anzahl von Zeichen pro Autor*in',true);
+}
+
+async function displayMostArticlesPerTimeChart() {
+	let fetchedData = await fetchApi('mostArticlesPerTime');
+	let mostArticlesPerTimeChart = document.getElementById('mostArticlesPerTimeChart');
+	barChart(mostArticlesPerTimeChart, fetchedData, 'bar', 'Zeitspanne zwischen zwei Artikeln in Tagen',true);
+}
+
+async function displayAverageCharactersPerDayChart() {
+	let fetchedData = await fetchApi('averageCharactersPerDay');
+	let averageCharactersPerDayChart = document.getElementById('averageCharactersPerDayChart');
+	barChart(averageCharactersPerDayChart, fetchedData, 'bar', 'Durchschnittliche Anzahl von geschriebenen Zeichen pro Tag',true);
+}
+
+async function displayGoogleRessortTimelineChart() {
+	let fetchedData = await fetchApi('ressortTimeline');
+	let ressortTimelineChart = document.getElementById('ressortTimelineChart');
+	googleTimeline(ressortTimelineChart, fetchedData);
 }
 
 function generateGraphs() {
@@ -59,31 +89,15 @@ function generateGraphs() {
 	displayArticlesTimeline();
 	displayArticlesTimelineDerivative();
 	displayActiveMembers();
-	displayGoogleChart();
+	displayGoogleAuthorTimelineChart();
+	displayAuthorTopListChart();
+	displayAuthorAverageChart();
+	displayMostArticlesPerTimeChart();
+	displayAverageCharactersPerDayChart();
+	displayGoogleRessortTimelineChart();
+
 }
 
-
-
-
-fetchFileAPI("authorTopList",(data) => {
-	barChart('authorTopListChart',data, 'bar', 'Anzahl der Artikel pro Autor*in',true);
-});
-
-fetchFileAPI("authorAverage",(data) => {
-	barChart('authorAverageChart',data, 'bar', 'Durchschnittliche Anzahl von Zeichen pro Autor*in',true);
-});
-
-fetchFileAPI("mostArticlesPerTime", (data) => {
-	barChart('mostArticlesPerTimeChart',data, 'bar', 'Zeitspanne zwischen zwei Artikeln in Tagen',true);
-});
-
-fetchFileAPI("averageCharactersPerDay",(data) => {
-	barChart('averageCharactersPerDayChart',data,'bar','Durchschnittliche Anzahl von geschriebenen Zeichen pro Tag',true);
-});
-
-fetchFileAPI("ressortTimeline",(data) => {
-	googleTimeline('ressortTimelineChart', data);
-}); 
 
 fetchFileAPI("topAuthorsPerRessort", (data) => {
 	var func = customTooltip(data);

@@ -1,18 +1,19 @@
 Chart.defaults.global.defaultFontColor = '#555';
 
-function barChart(id, data, type,label, tooltipBoolean, customTooltip) {
+function barChart(chartElement, data, type, label, tooltipBoolean, customTooltip) {
 
-	var colorArray = [];
-	var nameArray = [];
-	var valueArray = [];
-	for(var i=0;i<data.length;i++) {
+	let colorArray = [];
+	let nameArray = [];
+	let valueArray = [];
+
+	for(let i=0;i<data.length;i++) {
 		nameArray.push(data[i]['name']);
 		valueArray.push(data[i]['count']);
 		colorArray.push(getSingleRandomColor(alpha));
 	}
 
-	var getChart = document.getElementById(id).getContext('2d');
-	var chart = new Chart(getChart, {
+
+	new Chart(chartElement, {
 		type: type,
 		data: {
 			labels: nameArray,
@@ -52,7 +53,7 @@ function barChart(id, data, type,label, tooltipBoolean, customTooltip) {
 		  		}
 		  	}
 		}
-	});
-
+	}
+	);
 }
 
