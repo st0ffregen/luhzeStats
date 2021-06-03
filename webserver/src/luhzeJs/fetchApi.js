@@ -46,6 +46,12 @@ async function displayActiveMembers() {
 	financialChart(activeMembersChart, chartData, 'q yyyy');
 }
 
+async function displayGoogleChart() {
+	let fetchedData = await fetchApi('authorTimeline');
+	let authorTimelineChart = document.getElementById('authorTimelineChart');
+	googleTimeline(authorTimelineChart, fetchedData);
+}
+
 function generateGraphs() {
 	displayMinAuthor();
 	displayMinRessort();
@@ -53,24 +59,11 @@ function generateGraphs() {
 	displayArticlesTimeline();
 	displayArticlesTimelineDerivative();
 	displayActiveMembers();
-
+	displayGoogleChart();
 }
 
 
 
-fetchFileAPI("authorTimeline",(data) => {
-	googleTimeline('authorTimelineChart',data);
-}); 
-
-fetchFileAPI("oldestArticle", (data) => {
-	var oldestArticle = data;
-	fetchFileAPI("newestArticle",(data) => {
-		var newestArticle = data;
-		fetchFileAPI("activeMembers",(data) => {
-			financialChart('activeMembersChart',activeMembersFinancial(data,oldestArticle,newestArticle),'quarter');
-		});
-	});
-});
 
 fetchFileAPI("authorTopList",(data) => {
 	barChart('authorTopListChart',data, 'bar', 'Anzahl der Artikel pro Autor*in',true);
