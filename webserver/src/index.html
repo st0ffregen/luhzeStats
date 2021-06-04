@@ -1,25 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Spaß mit Daten</title>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-	<meta name="robots" content="noindex,nofollow">
+    <title>Spaß mit Daten</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="robots" content="noindex,nofollow">
 
-	<link rel="stylesheet" type="text/css" href="css/canvas.css">
-	<link rel="stylesheet" type="text/css" href="css/index.css">
-	<link rel="stylesheet" type="text/css" href="css/ranking.css">
-	<link rel="stylesheet" type="text/css" href="css/autocomplete.css">
+    <link rel="stylesheet" type="text/css" href="css/canvas.css">
+    <link rel="stylesheet" type="text/css" href="css/index.css">
+    <link rel="stylesheet" type="text/css" href="css/loader.css">
+    <link rel="stylesheet" type="text/css" href="css/ranking.css">
+    <link rel="stylesheet" type="text/css" href="css/autocomplete.css">
 
 </head>
 <body>
 
 <div class="containter">
+    <div class="col-sm-2" id="loader">
+        <div id="bars2">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
 
-	<div class="ranking">
-		<p class="header" >
-			<a href="javascript:hideRanking()" class="takeMeBack">< Zu den Grafiken</a>
-			<span class="go-back-in-time-span">
+    <div class="ranking">
+        <p class="header">
+            <a href="javascript:hideRanking()" class="takeMeBack">< Zu den Grafiken</a>
+            <span class="go-back-in-time-span">
 				Daten vom <span id="go-back-in-time-date-ranking">X</span>.
 				Gehe zurück:
 				<a href="javascript:rankingFunction('back', 'day')">ein Tag</a>,
@@ -32,49 +42,52 @@
 					<a href="javascript:rankingFunction('forth', 'year')">ein Jahr</a>.
 			</span>
 			</span>
-		</p>
-		<div class="rankingSection"></div>
+        </p>
+        <div class="rankingSection"></div>
 
-		<div class="upArrowButtonDiv">
-			<a href="javascript:topFunction()" class="upArrowButton" title="Spring zum Seitenanfang"><img src="images/arrowUp.png"></a>
-		</div>
+        <div class="upArrowButtonDiv">
+            <a href="javascript:topFunction()" class="upArrowButton" title="Spring zum Seitenanfang"><img
+                    src="images/arrowUp.png"></a>
+        </div>
 
-		<div class="footer">
-			<a href="https://stoffregen.io/privacy.html">Datenschutz</a> | <a href="https://stoffregen.io/about.html">Impressum</a>
-		</div>
-	</div>
+        <div class="footer">
+            <a href="https://stoffregen.io/privacy.html">Datenschutz</a> | <a href="https://stoffregen.io/about.html">Impressum</a>
+        </div>
+    </div>
 
-	<div class="graphContent">
+    <div class="graphContent">
 
-		<div class="socialmedia">
-			<ul class="socialmedialist">
-				<li><a href="https://github.com/st0ffregen/luhzeStats" title="Schau dir den Code auf GitHub an"><img src="images/github.png"></a></li>
-				<li><a href="https://twitter.com/st0ffregen" title="Folge mir auf Twitter"><img src="images/twitter.png"></a></li>
-			</ul>
-		</div>
+        <div class="socialmedia">
+            <ul class="socialmedialist">
+                <li><a href="https://github.com/st0ffregen/luhzeStats" title="Schau dir den Code auf GitHub an"><img
+                        src="images/github.png"></a></li>
+                <li><a href="https://twitter.com/st0ffregen" title="Folge mir auf Twitter"><img
+                        src="images/twitter.png"></a></li>
+            </ul>
+        </div>
 
-		<h1>Spaß mit Daten</h1>
+        <h1>Spaß mit Daten</h1>
 
-		<p id="authorP">Nur Autor*innen mit mehr als X Artikeln miteinbezogen</p>
-		<p id="ressortP">Nur Ressorts mit mehr als Y Artikeln miteinbezogen</p>
-		<p id="dateP">Zuletzt aktualisiert:</p>
-		<p><a href="javascript:showRanking()" class="takeMeForth">> Zum Ranking</a></p>
+        <p id="authorP">Nur Autor*innen mit mehr als X Artikeln miteinbezogen</p>
+        <p id="ressortP">Nur Ressorts mit mehr als Y Artikeln miteinbezogen</p>
+        <p id="dateP">Zuletzt aktualisiert:</p>
+        <p><a href="javascript:showRanking()" class="takeMeForth">> Zum Ranking</a></p>
 
 
+        <h1 class="luhzeSprichtHeader">Darüber spricht luhze.de</h1>
+        <div id="luhzeSpricht">
+            <div id="luhzeSprichtInput">
+                <form id="luhzeSprichtForm" autocomplete="off" action="">
+                    <div class="autocomplete" style="width:100%;">
+                        <input id="wordOccurrenceInput" type="text" name="word" placeholder="Gib einen Begriff ein">
+                    </div>
+                </form>
+                <canvas id="wordOccurrenceChart"></canvas>
+                <br>
+            </div>
+        </div>
 
-		<h1 class="luhzeSprichtHeader">Darüber spricht luhze.de</h1>
-		<div id="luhzeSpricht">
-			<div id="luhzeSprichtInput">
-				<form id="luhzeSprichtForm" autocomplete="off" action="">
-					<div class="autocomplete" style="width:100%;">
-						<input id="wordOccurrenceInput" type="text" name="word" placeholder="Gib einen Begriff ein">
-					</div>
-				</form>
-				<canvas id="wordOccurrenceChart"></canvas><br>
-			</div>
-		</div>
-
-		<p class="header go-back-in-time-graph-content" >
+        <p class="header go-back-in-time-graph-content">
 			<span class="go-back-in-time-span">
 				Daten vom <span id="go-back-in-time-date-graph-content">X</span>.
 				Gehe zurück:
@@ -88,46 +101,61 @@
 					<a href="javascript:displayGraphContent('forth', 'year')">ein Jahr</a>.
 			</span>
 			</span>
-		</p>
+        </p>
 
-		<canvas id="articlesTimelineChart"></canvas><br>
-		<canvas id="articlesTimelineDerivativeChart"></canvas><br>
+        <canvas id="articlesTimelineChart"></canvas>
+        <br>
+        <canvas id="articlesTimelineDerivativeChart"></canvas>
+        <br>
 
-		<h2>Autor*innen</h2>
-		<p class="chartjs">Autor*innen Timeline</p>
-		<div id="authorTimelineChart" class="googleChartAuthor"></div><br>
-		<canvas id="activeMembersChart"></canvas><br>
-		<canvas id="authorTopListChart"></canvas><br>
-		<canvas id="authorAverageChart"></canvas><br>
-		<canvas id="mostArticlesPerTimeChart"></canvas><br>
-		<canvas id="averageCharactersPerDayChart"></canvas><br>
-
-
-		<h2>Ressorts</h2>
-		<p class="chartjs">Ressorts Timeline</p>
-		<div class="googleChartRessort" id="ressortTimelineChart"></div><br>
-		<canvas id="ressortTopListChart"></canvas><br>
-		<p class="chartjs">Anzahl von Artikel pro Ressort (Klicke auf ein Ressort zum anzeigen/ausblenden)</p>
-		<canvas id="ressortArticlesTimelineChart"></canvas><br>
-		<p class="chartjs">Anzahl von Artikel pro Ressort pro Quartal (Klicke auf ein Ressort zum anzeigen/ausblenden)</p>
-		<canvas id="ressortArticlesTimelineDerivativeChart"></canvas><br>
-		<div id="chartjs-tooltip"></div>
-		<canvas id="ressortAverageChart"></canvas><br>
+        <h2>Autor*innen</h2>
+        <p class="chartjs">Autor*innen Timeline</p>
+        <div id="authorTimelineChart" class="googleChartAuthor"></div>
+        <br>
+        <canvas id="activeMembersChart"></canvas>
+        <br>
+        <canvas id="authorTopListChart"></canvas>
+        <br>
+        <canvas id="authorAverageChart"></canvas>
+        <br>
+        <canvas id="mostArticlesPerTimeChart"></canvas>
+        <br>
+        <canvas id="averageCharactersPerDayChart"></canvas>
+        <br>
 
 
-		<div class="upArrowButtonDiv">
-			<a href="javascript:topFunction()" class="upArrowButton" title="Springe zum Seitenanfang"><img src="images/arrowUp.png"></a>
-		</div>
+        <h2>Ressorts</h2>
+        <p class="chartjs">Ressorts Timeline</p>
+        <div class="googleChartRessort" id="ressortTimelineChart"></div>
+        <br>
+        <canvas id="ressortTopListChart"></canvas>
+        <br>
+        <p class="chartjs">Anzahl von Artikel pro Ressort (Klicke auf ein Ressort zum anzeigen/ausblenden)</p>
+        <canvas id="ressortArticlesTimelineChart"></canvas>
+        <br>
+        <p class="chartjs">Anzahl von Artikel pro Ressort pro Quartal (Klicke auf ein Ressort zum
+            anzeigen/ausblenden)</p>
+        <canvas id="ressortArticlesTimelineDerivativeChart"></canvas>
+        <br>
+        <div id="chartjs-tooltip"></div>
+        <canvas id="ressortAverageChart"></canvas>
+        <br>
 
-		<div class="footer">
-			<a href="https://stoffregen.io/privacy.html">Datenschutz</a> | <a href="https://stoffregen.io/about.html">Impressum</a>
-		</div>
-	</div>
+
+        <div class="upArrowButtonDiv">
+            <a href="javascript:topFunction()" class="upArrowButton" title="Springe zum Seitenanfang"><img
+                    src="images/arrowUp.png"></a>
+        </div>
+
+        <div class="footer">
+            <a href="https://stoffregen.io/privacy.html">Datenschutz</a> | <a href="https://stoffregen.io/about.html">Impressum</a>
+        </div>
+    </div>
 </div>
 
 
-
-<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 <script type="text/javascript" src="js/ranking/ranking.js"></script>
 <script type="text/javascript" src="js/external/Chart.js"></script>
@@ -135,7 +163,6 @@
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/luxon@1.19.3"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@0.2.0"></script>
-
 
 
 <script type="text/javascript" src="js/helperFunctions/helperFunctions.js"></script>

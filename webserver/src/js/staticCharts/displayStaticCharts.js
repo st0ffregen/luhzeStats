@@ -189,6 +189,7 @@ async function displayRessortAverageChart(date) {
 
 function generateGraphs(date) {
 
+    showLoader();
     destroyAllExistingCharts();
 
     displayMinAuthor();
@@ -204,9 +205,12 @@ function generateGraphs(date) {
     displayAverageCharactersPerDayChart(date);
     displayGoogleRessortTimelineChart(date);
     displayTopAuthorsPerRessortChart(date);
-    displayRessortArticlesTimelineCharts(date);
+    displayRessortArticlesTimelineCharts(date).then(r => removeLoader()); // not the most beautiful way
     displayRessortAverageChart(date);
+
+
 }
+
 
 function displayGraphContent(direction, step) {
     currentGraphContentDate = calculateDateToGetDataFor(direction, step, currentGraphContentDate);

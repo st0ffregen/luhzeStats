@@ -1,7 +1,7 @@
 let currentRankingDate = new Date();
 
 async function rankingFunction(direction, step = null) {
-
+    showLoader();
     currentRankingDate = calculateDateToGetDataFor(direction, step, currentRankingDate);
     prepareSiteForRanking();
 
@@ -11,6 +11,7 @@ async function rankingFunction(direction, step = null) {
     let newRankingInnerHTML = processRankingData(fetchedData);
     writeChangesToDom(newRankingInnerHTML);
     writeDateToDomElement('go-back-in-time-date-ranking', currentRankingDate);
+    removeLoader();
 }
 
 
@@ -102,6 +103,7 @@ function processRankingData(fetchedData) {
 
 
 function showRanking() {
+
     document.getElementsByClassName("graphContent")[0].style.display = "none";
     rankingFunction('today');
 }

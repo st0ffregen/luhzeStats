@@ -79,3 +79,11 @@ function calculateDateToGetDataFor(direction, step, date) {
 function writeDateToDomElement(elementId, date) {
     document.getElementById(elementId).innerHTML = date.toLocaleDateString();
 }
+
+function removeLoader() {
+    document.getElementById('loader').style.display = 'none';
+}
+
+function showLoader() {
+    document.getElementById('loader').style.display = 'block';
+}
