@@ -1,12 +1,63 @@
-async function rankingFunction(daysBackInTime) {
+let currentDate = new Date();
 
+async function rankingFunction(direction, step = null) {
+
+    let date = calculateDateToGetDataFor(direction, step);
+    console.log(date);
     prepareSiteForRanking();
 
-    const response = await fetch('http://localhost/api/ranking?daysBackInTime=' + daysBackInTime.toString());
+
+    const response = await fetch('http://localhost/api/ranking?dateBackInTime=' + date.toString().slice(0, -5)); //slices .400Z
     const fetchedData = await response.json();
 
     let newRankingInnerHTML = processRankingData(fetchedData);
     writeChangesToDom(newRankingInnerHTML);
+    writeDateToDomElement();
+}
+
+function calculateDateToGetDataFor(direction, step) {
+    switch (direction) {
+        case 'today':
+            currentDate = new Date();
+            break;
+
+        case 'back':
+            switch (step) {
+                case 'day':
+                    currentDate.setDate(currentDate.getDate() - 1);
+                    break;
+                case 'month':
+                    currentDate.setMonth(currentDate.getMonth() - 1);
+                    break;
+                case 'year':
+                    currentDate.setFullYear(currentDate.getFullYear() - 1);
+                    break;
+            }
+            break;
+        case 'forth':
+            switch (step) {
+                case 'day':
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    break;
+                case 'month':
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                    break;
+                case 'year':
+                    currentDate.setFullYear(currentDate.getFullYear() + 1);
+                    break;
+            }
+            break;
+    }
+
+    if (currentDate > new Date()) {
+        currentDate = new Date();
+    }
+
+    return currentDate.toISOString();
+}
+
+function writeDateToDomElement() {
+    document.getElementById('go-back-in-time-date').innerHTML = currentDate.toLocaleDateString();
 }
 
 

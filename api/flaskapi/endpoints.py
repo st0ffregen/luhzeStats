@@ -3,7 +3,6 @@ from flask import Response
 from flask import request
 from flask import g
 import datetime
-from datetime import date
 import json
 from flaskapi import app
 from flaskapi.helperFunctions.rankingHelperFunctions import calculateRankingForAllAuthors, calculateValues
@@ -230,24 +229,24 @@ def ressortTimeline():
 
 @app.route('/api/ranking', methods=['GET'])
 def ranking():
-    daysBackInTime = request.args.get('daysBackInTime', type=int)
-    if daysBackInTime is None:
-        return jsonify('error: no integer daysBackInTime parameter given for ranking endpoint')
+    dateBackInTime = request.args.get('dateBackInTime', type=str)
+    if dateBackInTime is None:
+        return jsonify('error: no dateBackInTime parameter given for ranking endpoint')
 
-    return Response(json.dumps(calculateRankingForAllAuthors(daysBackInTime)), mimetype='application/json')
+    return Response(json.dumps(calculateRankingForAllAuthors(datetime.datetime.strptime(dateBackInTime, '%Y-%m-%dT%H:%M:%S'))), mimetype='application/json')
 
 
 @app.route('/api/singleRanking', methods=['GET'])
 def singleRanking():
-    daysBackInTime = request.args.get('daysBackInTime', type=int)
+    dateBackInTime = request.args.get('dateBackInTime', type=str)
     name = request.args.get('name', type=str)
-    if daysBackInTime is None or name is None:
-        return jsonify('no daysBackInTime or name parameter given for singleRanking endpoint')
+    if dateBackInTime is None or name is None:
+        return jsonify('no dateBackInTime or name parameter given for singleRanking endpoint')
 
     g.cur.execute('SELECT distinct(ar.authorId), au.name  from articles ar join authors au on ar.authorId=au.id where au.name = %s', [name])
     authorId = g.cur.fetchone()[0]
 
-    return calculateValues(authorId, name, daysBackInTime)
+    return calculateValues(authorId, name, datetime.datetime.strptime(dateBackInTime, '%Y-%m-%dT%H:%M:%S'))
 
 
 @app.route('/api/firstYearAndQuarter', methods=['GET'])

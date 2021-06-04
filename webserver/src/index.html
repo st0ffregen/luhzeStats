@@ -19,7 +19,19 @@
 	<div class="ranking">
 		<p class="header" >
 			<a href="javascript:hideRanking()" class="takeMeBack">< Zu den Grafiken</a>
-			<span>Gehe zurück in der Zeit: <a href="javascript:rankingFunction(0)">Jetzt</a> <a href="javascript:rankingFunction(1)">Ein Monat</a> <a href="javascript:rankingFunction(2)">Ein Jahr</a> <a href="javascript:rankingFunction(3)">Zwei Jahre</a> <a href="javascript:rankingFunction(4)">Fünf Jahre</a></span>
+			<span class="go-back-in-time-span">
+				Daten vom <span id="go-back-in-time-date">X</span>.
+				Gehe zurück:
+				<a href="javascript:rankingFunction('back', 'day')">ein Tag</a>,
+				<a href="javascript:rankingFunction('back', 'month')">ein Monat</a>,
+				<a href="javascript:rankingFunction('back', 'year')">ein Jahr</a>.
+				<span class="go-forth-in-time-span">Gehe vor:
+					<a href="javascript:rankingFunction('today')">heute</a>,
+					<a href="javascript:rankingFunction('forth', 'day')">ein Tag</a>,
+					<a href="javascript:rankingFunction('forth', 'month')">ein Monat</a>,
+					<a href="javascript:rankingFunction('forth', 'year')">ein Jahr</a>.
+			</span>
+			</span>
 		</p>
 		<div class="rankingSection"></div>
 

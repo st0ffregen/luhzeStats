@@ -10,7 +10,8 @@ async function displayMinRessort() {
 
 async function displayDate() {
     let data = await fetchApi('date');
-    document.getElementById("dateP").innerHTML = "Zuletzt aktualisiert: " + data['date'];
+    let date = new Date(data['date']);
+    document.getElementById("dateP").innerHTML = "Zuletzt aktualisiert: " + date.toLocaleString();
 }
 
 async function displayArticlesTimeline() {
