@@ -30,7 +30,7 @@ async function displayArticlesTimelineDerivative() {
 async function displayActiveMembers() {
     let fetchedData = await fetchApi('activeMembers');
     let activeMembersChart = document.getElementById('activeMembersChart');
-    let chartData = convertFinancialDataDerivative(fetchedData, 'Anzahl der aktiven Autor*innen pro Monat');
+    let chartData = convertFinancialDataDerivative(fetchedData, 'Anzahl der aktiven Autor*innen pro Quartal');
     financialChart(activeMembersChart, chartData, 'q yyyy');
 }
 
