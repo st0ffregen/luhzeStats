@@ -1,78 +1,125 @@
+let currentGraphContentDate = new Date();
+const allCharts = [];
+
+
 async function displayMinAuthor() {
     let data = await fetchApi('minAuthor');
+
+    if (data.length === 0) return;
+
     document.getElementById("authorP").innerHTML = "Nur Autor*innen mit mehr als " + data['minAuthor'] + " Artikeln miteinbezogen";
 }
 
 async function displayMinRessort() {
     let data = await fetchApi('minRessort');
+
+    if (data.length === 0) return;
+
     document.getElementById("ressortP").innerHTML = "Nur Ressorts mit mehr als " + data['minRessort'] + " Artikeln miteinbezogen";
 }
 
 async function displayDate() {
     let data = await fetchApi('date');
-    document.getElementById("dateP").innerHTML = "Zuletzt aktualisiert: " + data['date'];
+
+    if (data.length === 0) return;
+
+    let date = new Date(data['date']);
+    document.getElementById("dateP").innerHTML = "Zuletzt aktualisiert: " + date.toLocaleString();
 }
 
-async function displayArticlesTimeline() {
-    let fetchedData = await fetchApi('articlesTimeline');
+async function displayArticlesTimeline(date) {
+    let fetchedData = await fetchApi('articlesTimeline', 'dateBackInTime', date);
+
+    if (fetchedData.includes('error')) return;
+
     let articlesTimelineChart = document.getElementById('articlesTimelineChart');
     let chartData = convertFinancialData(fetchedData, 'Anzahl der veröffentlichten Artikel');
     financialChart(articlesTimelineChart, chartData, 'MMM yyyy');
 }
 
-async function displayArticlesTimelineDerivative() {
-    let fetchedData = await fetchApi('articlesTimeline');
+async function displayArticlesTimelineDerivative(date) {
+    let fetchedData = await fetchApi('articlesTimeline', 'dateBackInTime', date);
+
+    if (fetchedData.includes('error')) return;
+
     let articlesTimelineDerivativeChart = document.getElementById('articlesTimelineDerivativeChart');
     let chartData = convertFinancialDataDerivative(fetchedData, 'Anzahl der veröffentlichten Artikel pro Monat');
     financialChart(articlesTimelineDerivativeChart, chartData, 'MMM yyyy');
 }
 
-async function displayActiveMembers() {
-    let fetchedData = await fetchApi('activeMembers');
+async function displayActiveMembers(date) {
+    let fetchedData = await fetchApi('activeMembers', 'dateBackInTime', date);
+
+    if (fetchedData.includes('error')) return;
+
     let activeMembersChart = document.getElementById('activeMembersChart');
-    let chartData = convertFinancialDataDerivative(fetchedData, 'Anzahl der aktiven Autor*innen pro Monat');
+    let chartData = convertFinancialDataDerivative(fetchedData, 'Anzahl der aktiven Autor*innen pro Quartal');
     financialChart(activeMembersChart, chartData, 'q yyyy');
 }
 
-async function displayGoogleAuthorTimelineChart() {
-    let fetchedData = await fetchApi('authorTimeline');
+async function displayGoogleAuthorTimelineChart(date) {
+    let fetchedData = await fetchApi('authorTimeline', 'dateBackInTime', date);
+
+    if (fetchedData.includes('error')) return;
+
     let authorTimelineChart = document.getElementById('authorTimelineChart');
     googleTimeline(authorTimelineChart, fetchedData);
 }
 
-async function displayAuthorTopListChart() {
-    let fetchedData = await fetchApi('authorTopList');
+async function displayAuthorTopListChart(date) {
+    let fetchedData = await fetchApi('authorTopList', 'dateBackInTime', date);
+
+    if (fetchedData.includes('error')) return;
+
     let authorTopListChart = document.getElementById('authorTopListChart');
     barChart(authorTopListChart, fetchedData, 'bar', 'Anzahl der Artikel pro Autor*in', true);
 }
 
-async function displayAuthorAverageChart() {
-    let fetchedData = await fetchApi('authorAverage');
+async function displayAuthorAverageChart(date) {
+    let fetchedData = await fetchApi('authorAverage', 'dateBackInTime', date);
+
+    if (fetchedData.includes('error')) return;
+
     let authorAverageChart = document.getElementById('authorAverageChart');
     barChart(authorAverageChart, fetchedData, 'bar', 'Durchschnittliche Anzahl von Zeichen pro Autor*in', true);
 }
 
-async function displayMostArticlesPerTimeChart() {
-    let fetchedData = await fetchApi('mostArticlesPerTime');
+async function displayMostArticlesPerTimeChart(date) {
+    let fetchedData = await fetchApi('mostArticlesPerTime', 'dateBackInTime', date);
+
+    if (fetchedData.includes('error')) return;
+
     let mostArticlesPerTimeChart = document.getElementById('mostArticlesPerTimeChart');
     barChart(mostArticlesPerTimeChart, fetchedData, 'bar', 'Zeitspanne zwischen zwei Artikeln in Tagen', true);
 }
 
-async function displayAverageCharactersPerDayChart() {
-    let fetchedData = await fetchApi('averageCharactersPerDay');
+async function displayAverageCharactersPerDayChart(date) {
+    let fetchedData = await fetchApi('averageCharactersPerDay', 'dateBackInTime', date);
+
+    if (fetchedData.includes('error')) return;
+
     let averageCharactersPerDayChart = document.getElementById('averageCharactersPerDayChart');
     barChart(averageCharactersPerDayChart, fetchedData, 'bar', 'Durchschnittliche Anzahl von geschriebenen Zeichen pro Tag', true);
 }
 
-async function displayGoogleRessortTimelineChart() {
-    let fetchedData = await fetchApi('ressortTimeline');
+async function displayGoogleRessortTimelineChart(date) {
+    let fetchedData = await fetchApi('ressortTimeline', 'dateBackInTime', date);
+
+    if (fetchedData.includes('error')) return;
+
     let ressortTimelineChart = document.getElementById('ressortTimelineChart');
     googleTimeline(ressortTimelineChart, fetchedData);
 }
 
-async function displayTopAuthorsPerRessortChart() {
-    let fetchedDataTopAuthorsPerRessort = await fetchApi('topAuthorsPerRessort');
-    let fetchedDataRessortTopList = await fetchApi('ressortTopList');
+async function displayTopAuthorsPerRessortChart(date) {
+    let fetchedDataTopAuthorsPerRessort = await fetchApi('topAuthorsPerRessort', 'dateBackInTime', date);
+
+    if (fetchedDataTopAuthorsPerRessort.length === 0) return;
+
+    let fetchedDataRessortTopList = await fetchApi('ressortTopList', 'dateBackInTime', date);
+
+    if (fetchedDataRessortTopList.length === 0) return;
+
     let ressortTopListChart = document.getElementById('ressortTopListChart');
     let tooltipFunctionToDisplayTopAuthors = customTooltip(fetchedDataTopAuthorsPerRessort);
     barChart(ressortTopListChart, fetchedDataRessortTopList, 'bar', 'Anzahl der Artikel pro Ressort', false, tooltipFunctionToDisplayTopAuthors);
@@ -112,9 +159,12 @@ function displayRessortArticlesTimelineChart(colorArray, fetchedData, firstResso
     financialChart(ressortArticlesTimelineChart, datasets, 'MMM yyyy');
 }
 
-async function displayRessortArticlesTimelineCharts() {
+async function displayRessortArticlesTimelineCharts(date) {
 
-    let fetchedData = await fetchApi('ressortArticlesTimeline');
+    let fetchedData = await fetchApi('ressortArticlesTimeline', 'dateBackInTime', date);
+
+    if (fetchedData.includes('error')) return;
+
     let colorArray = getRandomHexColorArray(fetchedData.length);
 
     let firstRessortToBeDisplayed = Math.floor(Math.random() * fetchedData.length);
@@ -128,26 +178,50 @@ async function displayRessortArticlesTimelineCharts() {
     displayRessortArticlesTimelineDerivativeChart(colorArray, fetchedData, firstRessortToBeDisplayed, secondRessortToBeDisplayed);
 }
 
-async function displayRessortAverageChart() {
-    let fetchedData = await fetchApi('ressortAverage');
+async function displayRessortAverageChart(date) {
+    let fetchedData = await fetchApi('ressortAverage', 'dateBackInTime', date);
+
+    if (fetchedData.includes('error')) return;
+
     let ressortAverageChart = document.getElementById('ressortAverageChart');
     barChart(ressortAverageChart, fetchedData, 'bar', 'Durchschnittliche Anzahl an Zeichen pro Ressort pro Artikel', true);
 }
 
-function generateGraphs() {
+function generateGraphs(date) {
+
+    destroyAllExistingCharts();
+
     displayMinAuthor();
     displayMinRessort();
     displayDate();
-    displayArticlesTimeline();
-    displayArticlesTimelineDerivative();
-    displayActiveMembers();
-    displayGoogleAuthorTimelineChart();
-    displayAuthorTopListChart();
-    displayAuthorAverageChart();
-    displayMostArticlesPerTimeChart();
-    displayAverageCharactersPerDayChart();
-    displayGoogleRessortTimelineChart();
-    displayTopAuthorsPerRessortChart();
-    displayRessortArticlesTimelineCharts();
-    displayRessortAverageChart();
+    displayArticlesTimeline(date);
+    displayArticlesTimelineDerivative(date);
+    displayActiveMembers(date);
+    displayGoogleAuthorTimelineChart(date);
+    displayAuthorTopListChart(date);
+    displayAuthorAverageChart(date);
+    displayMostArticlesPerTimeChart(date);
+    displayAverageCharactersPerDayChart(date);
+    displayGoogleRessortTimelineChart(date);
+    displayTopAuthorsPerRessortChart(date);
+    displayRessortArticlesTimelineCharts(date);
+    displayRessortAverageChart(date);
+}
+
+function displayGraphContent(direction, step) {
+    currentGraphContentDate = calculateDateToGetDataFor(direction, step, currentGraphContentDate);
+    writeDateToDomElement('go-back-in-time-date-graph-content', currentGraphContentDate);
+    generateGraphs(currentGraphContentDate.toISOString().slice(0, -5));
+}
+
+function destroyAllExistingCharts() {
+    for (const chart of allCharts) {
+        chart.destroy();
+    }
+}
+
+
+window.onresize = function() { //traffic aufwending
+	displayGoogleAuthorTimelineChart();
+	displayGoogleRessortTimelineChart();
 }

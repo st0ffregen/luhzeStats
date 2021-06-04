@@ -6,7 +6,7 @@ window.onload = async function () {
         ['LUHZE', 'STUDENT!'],
         [['FRAU', 'FRAUEN', 'DAME', 'DAMEN'], ['MANN', 'MÄNNER', 'HERR', 'HERREN']],
         ['STUDENTEN', ['STUDIERENDE', 'STUDIERENDEN']],
-        ['KRISE', 'PANDEMIE', ['KLIMA', 'KLIMAWANDEL', 'KLIMAKRISE']]
+        ['KRISE', ['CORONA', 'PANDEMIE', 'CORONA-PANDEMIE'], ['KLIMA', 'KLIMAWANDEL', 'KLIMAKRISE']]
     ];
     let index = Math.floor(Math.random() * sampleData.length);
 
@@ -16,6 +16,6 @@ window.onload = async function () {
     initWordOccurrenceAutocomplete(wordOccurrenceInput);
     await initWordOccurrenceChart(wordOccurrenceChart, sampleData[index]);
 
-    generateGraphs();
+    displayGraphContent('today');
 }
 

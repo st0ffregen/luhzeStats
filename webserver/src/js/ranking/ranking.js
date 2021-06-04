@@ -1,13 +1,19 @@
-async function rankingFunction(daysBackInTime) {
+let currentRankingDate = new Date();
 
+async function rankingFunction(direction, step = null) {
+
+    currentRankingDate = calculateDateToGetDataFor(direction, step, currentRankingDate);
     prepareSiteForRanking();
 
-    const response = await fetch('http://localhost/api/ranking?daysBackInTime=' + daysBackInTime.toString());
+    const response = await fetch('http://localhost/api/ranking?dateBackInTime=' + currentRankingDate.toISOString().slice(0, -5)); //slices .400Z
     const fetchedData = await response.json();
 
     let newRankingInnerHTML = processRankingData(fetchedData);
     writeChangesToDom(newRankingInnerHTML);
+    writeDateToDomElement('go-back-in-time-date-ranking', currentRankingDate);
 }
+
+
 
 
 function prepareSiteForRanking() {
@@ -97,12 +103,11 @@ function processRankingData(fetchedData) {
 
 function showRanking() {
     document.getElementsByClassName("graphContent")[0].style.display = "none";
-    rankingFunction(0);
+    rankingFunction('today');
 }
 
 
 function hideRanking() {
     document.getElementsByClassName("ranking")[0].style.display = "none";
     document.getElementsByClassName("graphContent")[0].style.display = "block";
-    fetchChartsSite();
 }

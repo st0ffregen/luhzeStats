@@ -1,5 +1,7 @@
 from flask import g
 import math
+from datetime import timedelta
+import pydevd_pycharm
 
 # szenario: wenig aktive Person: ZeitZumLetztenArtikel=120*-0.5=-60, ArtikelAnzahl=10*5=50, CPD=150*1=150, insgesamt = 140
 # szenario: sehr aktive Person: ZeitZumLetztenArtikel=15*-0.5=-7, ArtikelAnzahl=35*5=175, CPD=400*1=400, insgesamt = 400
@@ -37,49 +39,52 @@ def getDistinctAuthorIdAndName():
     return g.cur.fetchall()
 
 
-def getWrittenCharacters(authorId, daysBackInTime):
+def getWrittenCharacters(authorId, dateBackInTime):
     g.cur.execute(
-        'SELECT sum(charcount) from (select distinct(link), d.charCount as charCount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and publishedDate < DATE_ADD(CURDATE(), INTERVAL - %s DAY)) as sub',
-        [str(authorId), str(daysBackInTime)])
-    charsPerDayResult = g.cur.fetchone()[0]
-    if charsPerDayResult == "NULL" or charsPerDayResult is None:  # den autor gabs damals noch nicht
+        'SELECT sum(charcount) from (select distinct(link), d.charCount as charCount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and publishedDate <= %s) as sub',
+        [str(authorId), str(dateBackInTime)])
+    writtenCharacters = g.cur.fetchone()[0]
+    if writtenCharacters == "NULL" or writtenCharacters is None:  # den autor gabs damals noch nicht
         return None
 
-    return charsPerDayResult
+    return writtenCharacters
 
 
-def getDaysSinceFirstArticle(authorId, daysBackInTime):
+def getDaysSinceFirstArticle(authorId, dateBackInTime):
     g.cur.execute(
-        'SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s DAY),MIN(publishedDate))+1 from articles where authorId=%s and publishedDate < DATE_ADD(CURDATE(), INTERVAL - %s DAY)',
-        [str(daysBackInTime), str(authorId), str(daysBackInTime)])
+        'SELECT DATEDIFF(%s, MIN(publishedDate))+1 from articles where authorId=%s and publishedDate <= %s',
+        [str(dateBackInTime), str(authorId), str(dateBackInTime)])
     return g.cur.fetchone()[0]
 
 
-def getDaysSinceLastArticle(authorId, daysBackInTime):
+def getDaysSinceLastArticle(authorId, dateBackInTime):
     g.cur.execute(
-        'SELECT DATEDIFF(DATE_ADD(CURDATE(), INTERVAL - %s DAY),MAX(publishedDate))+1 from articles where authorId=%s and publishedDate < DATE_ADD(CURDATE(), INTERVAL - %s DAY)',
-        [str(daysBackInTime), str(authorId), str(daysBackInTime)])
+        'SELECT DATEDIFF(%s, MAX(publishedDate))+1 from articles where authorId=%s and publishedDate <= %s',
+        [str(dateBackInTime), str(authorId), str(dateBackInTime)])
     return g.cur.fetchone()[0]
 
 
-def getArticleCount(authorId, daysBackInTime):
+def getArticleCount(authorId, dateBackInTime):
     g.cur.execute(
-        'SELECT count(distinct link) FROM articles where authorId = %s and publishedDate < DATE_ADD(CURDATE(), INTERVAL - %s DAY)',
-        [str(authorId), str(daysBackInTime)])
+        'SELECT count(distinct link) FROM articles where authorId = %s and publishedDate <= %s',
+        [str(authorId), str(dateBackInTime)])
     return g.cur.fetchone()[0]
 
 
-def calculateValues(authorId, authorName, daysBackInTime):
-    writtenCharacters = getWrittenCharacters(authorId, daysBackInTime)
+def calculateValues(authorId, authorName, dateBackInTime):
+    #ip = '192.168.1.56'
+    #port = 41135
+    #pydevd_pycharm.settrace(ip, port=port, stdoutToServer=True, stderrToServer=True)
+    writtenCharacters = getWrittenCharacters(authorId, dateBackInTime)
 
     if writtenCharacters is None:
         return None
 
-    daysSinceFirstArticle = getDaysSinceFirstArticle(authorId, daysBackInTime)
-    daysSinceLastArticle = getDaysSinceLastArticle(authorId, daysBackInTime)
-    articleCount = getArticleCount(authorId, daysBackInTime)
+    daysSinceFirstArticle = getDaysSinceFirstArticle(authorId, dateBackInTime)
+    daysSinceLastArticle = getDaysSinceLastArticle(authorId, dateBackInTime)
+    articleCount = getArticleCount(authorId, dateBackInTime)
 
-    writtenCharactersTwoMonthsBefore = getWrittenCharacters(authorId, daysBackInTime + 60)
+    writtenCharactersTwoMonthsBefore = getWrittenCharacters(authorId, dateBackInTime - timedelta(60))
 
     if writtenCharactersTwoMonthsBefore is None:
         writtenCharactersTwoMonthsBefore = 0
@@ -87,9 +92,9 @@ def calculateValues(authorId, authorName, daysBackInTime):
         daysSinceLastArticleTwoMonthsBefore = 0
         articleCountTwoMonthsBefore = 0
     else:
-        daysSinceFirstArticleTwoMonthsBefore = getDaysSinceFirstArticle(authorId, daysBackInTime + 60)
-        daysSinceLastArticleTwoMonthsBefore = getDaysSinceLastArticle(authorId, daysBackInTime + 60)
-        articleCountTwoMonthsBefore = getArticleCount(authorId, daysBackInTime + 60)
+        daysSinceFirstArticleTwoMonthsBefore = getDaysSinceFirstArticle(authorId, dateBackInTime - timedelta(60))
+        daysSinceLastArticleTwoMonthsBefore = getDaysSinceLastArticle(authorId, dateBackInTime - timedelta(60))
+        articleCountTwoMonthsBefore = getArticleCount(authorId, dateBackInTime - timedelta(60))
 
     try:
         writtenCharactersPerDay = round(writtenCharacters / daysSinceFirstArticle)
@@ -133,19 +138,19 @@ def calculateValues(authorId, authorName, daysBackInTime):
         # 'rankingTslaTwoMonthsBefore': rankingTslaTwoMonthsBefore,
         # 'rankingCpdTwoMonthsBefore': rankingCpdTwoMonthsBefore,
         # 'rankingAcTwoMonthsBefore': rankingAcTwoMonthsBefore,
-        # 'daysBackInTime': daysBackInTime,
+        #'dateBackInTime': dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'),
         'rankingScore': rankingScoreNow,
         'rankingScoreDiff': rankingScoreDiff
     }
 
 
-def calculateRankingForAllAuthors(daysBackInTime):
+def calculateRankingForAllAuthors(dateBackInTime):
     responseDict = []
 
     distinctAuthorIdAndNameArray = getDistinctAuthorIdAndName()
 
     for author in distinctAuthorIdAndNameArray:
-        singleAuthorValues = calculateValues(author[0], author[1], daysBackInTime)
+        singleAuthorValues = calculateValues(author[0], author[1], dateBackInTime)
 
         if singleAuthorValues is None:
             continue
