@@ -58,7 +58,7 @@ def scrapeAllInformation(linkToArticle):
 
 def connectToDebugger():
     ip = os.environ['DEBUGGING_IP']
-    port = 36045#int(os.environ['DEBUGGING_PORT'])
+    port = int(os.environ['DEBUGGING_PORT'])
     pydevd_pycharm.settrace(ip, port=port, stdoutToServer=True, stderrToServer=True)
 
 

@@ -1,6 +1,7 @@
 Chart.defaults.global.defaultFontColor = '#555';
 var DateTime = luxon.DateTime;
 
+
 function customTooltip(data) {
     return function(tooltip) {
         let displayData = [];
@@ -161,75 +162,6 @@ function convertFinancialData(data, label, color = '#ff6384', hidden = 0) {
     ];
 }
 
-function ressortArticlesTimelineFinancial(data, colorArray, hiddenArray, oldestArticle, newestArticle) {
-
-    let datasetArray = [];
-    for (let k = 0; k < data.length; k++) {// get a ressort
-
-
-
-        datasetArray.push({
-            label: data[k]['ressort'],
-            borderColor: colorArray[k],
-            data: returnArray,
-            type: 'line',
-            pointRadius: 0,
-            fill: false,
-            lineTension: 0,
-            borderWidth: 2,
-            hidden: hiddenArray[k],
-        });
-    }
-    return datasetArray;
-}
-
-
-function ressortArticlesTimelineFinancialDerivation(data, colorArray, hiddenArray, oldestArticle, newestArticle) {
-
-    let datasetArray = [];
-
-    for (let k = 0; k < data.length; k++) { //gives me a ressort
-
-        let returnArray = [];
-        //use a init date to determine if next date is in same quarter or not
-        let dateArray = quarterArray(new Date(oldestArticle['oldestArticle']), new Date(newestArticle['newestArticle']));
-        for (let i = 0; i < dateArray.length; i++) {
-            //loop through the empty date array (only dates in it by now) find the articles with another for loop
-            articlesCount = 0;
-            for (let l = 0; l < data[k]['countPerMonth'].length; l++) {
-
-                currentDate = new Date(data[k]['countPerMonth'][l]['date'] + "T00:00:00Z");
-                currentQuarter = Math.floor(currentDate.getMonth() / 3);
-                if (currentQuarter === dateArray[i][1] && currentDate.getFullYear() === dateArray[i][0]) {
-                    articlesCount += data[k]['countPerMonth'][l]['count']
-                }
-            }
-            //after finding all articles and adding them up to articlesCount, we can change the dateArray entry to what we want for the chartjs
-
-            let month = ((dateArray[i][1] * 3) + 1).toString();
-            if (month.length < 2) month = "0" + month;
-            returnArray[i] = {
-                t: DateTime.fromISO(dateArray[i][0].toString() + "-" + month + "-01").valueOf(),
-                y: articlesCount
-            };//calculating the first month in each quarter
-        }
-
-        datasetArray.push({
-            label: data[k]['ressort'],
-            borderColor: colorArray[k],
-            data: returnArray,
-            type: 'line',
-            pointRadius: 0,
-            fill: false,
-            lineTension: 0,
-            borderWidth: 2,
-            hidden: hiddenArray[k],
-        });
-    }
-    return datasetArray;
-}
-
-
 function financialChart(chartElement, data, tooltipFormat) {
 
     let configForFinancialCharts = {
@@ -310,7 +242,7 @@ function financialChart(chartElement, data, tooltipFormat) {
 
         }
     };
-    console.log(chartElement.getContext('2d'));
-    console.log(configForFinancialCharts);
-    new Chart(chartElement.getContext('2d'), configForFinancialCharts);
+
+    const newGraph = new Chart(chartElement.getContext('2d'), configForFinancialCharts);
+    allCharts.push(newGraph);
 }

@@ -12,8 +12,7 @@ function barChart(chartElement, data, type, label, tooltipBoolean, customTooltip
 		colorArray.push(getSingleRandomColor(alpha));
 	}
 
-
-	new Chart(chartElement, {
+	let barChartConfig = {
 		type: type,
 		data: {
 			labels: nameArray,
@@ -53,7 +52,9 @@ function barChart(chartElement, data, type, label, tooltipBoolean, customTooltip
 		  		}
 		  	}
 		}
-	}
-	);
+	};
+
+	const newGraph = new Chart(chartElement.getContext('2d'), barChartConfig);
+    allCharts.push(newGraph);
 }
 

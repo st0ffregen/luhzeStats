@@ -1,64 +1,19 @@
-let currentDate = new Date();
+let currentRankingDate = new Date();
 
 async function rankingFunction(direction, step = null) {
 
-    let date = calculateDateToGetDataFor(direction, step);
-    console.log(date);
+    currentRankingDate = calculateDateToGetDataFor(direction, step, currentRankingDate);
     prepareSiteForRanking();
 
-
-    const response = await fetch('http://localhost/api/ranking?dateBackInTime=' + date.toString().slice(0, -5)); //slices .400Z
+    const response = await fetch('http://localhost/api/ranking?dateBackInTime=' + currentRankingDate.toISOString().slice(0, -5)); //slices .400Z
     const fetchedData = await response.json();
 
     let newRankingInnerHTML = processRankingData(fetchedData);
     writeChangesToDom(newRankingInnerHTML);
-    writeDateToDomElement();
+    writeDateToDomElement('go-back-in-time-date-ranking', currentRankingDate);
 }
 
-function calculateDateToGetDataFor(direction, step) {
-    switch (direction) {
-        case 'today':
-            currentDate = new Date();
-            break;
 
-        case 'back':
-            switch (step) {
-                case 'day':
-                    currentDate.setDate(currentDate.getDate() - 1);
-                    break;
-                case 'month':
-                    currentDate.setMonth(currentDate.getMonth() - 1);
-                    break;
-                case 'year':
-                    currentDate.setFullYear(currentDate.getFullYear() - 1);
-                    break;
-            }
-            break;
-        case 'forth':
-            switch (step) {
-                case 'day':
-                    currentDate.setDate(currentDate.getDate() + 1);
-                    break;
-                case 'month':
-                    currentDate.setMonth(currentDate.getMonth() + 1);
-                    break;
-                case 'year':
-                    currentDate.setFullYear(currentDate.getFullYear() + 1);
-                    break;
-            }
-            break;
-    }
-
-    if (currentDate > new Date()) {
-        currentDate = new Date();
-    }
-
-    return currentDate.toISOString();
-}
-
-function writeDateToDomElement() {
-    document.getElementById('go-back-in-time-date').innerHTML = currentDate.toLocaleDateString();
-}
 
 
 function prepareSiteForRanking() {
@@ -148,12 +103,11 @@ function processRankingData(fetchedData) {
 
 function showRanking() {
     document.getElementsByClassName("graphContent")[0].style.display = "none";
-    rankingFunction(0);
+    rankingFunction('today');
 }
 
 
 function hideRanking() {
     document.getElementsByClassName("ranking")[0].style.display = "none";
     document.getElementsByClassName("graphContent")[0].style.display = "block";
-    fetchChartsSite();
 }

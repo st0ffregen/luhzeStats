@@ -31,4 +31,51 @@ function getRandomHexColorArray(length) {
 function topFunction() {
   document.body.scrollTop = 0; // For Safari
   document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
-} 
+}
+
+
+function calculateDateToGetDataFor(direction, step, date) {
+
+    switch (direction) {
+        case 'today':
+            date = new Date();
+            break;
+
+        case 'back':
+            switch (step) {
+                case 'day':
+                    date.setDate(date.getDate() - 1);
+                    break;
+                case 'month':
+                    date.setMonth(date.getMonth() - 1);
+                    break;
+                case 'year':
+                    date.setFullYear(date.getFullYear() - 1);
+                    break;
+            }
+            break;
+        case 'forth':
+            switch (step) {
+                case 'day':
+                    date.setDate(date.getDate() + 1);
+                    break;
+                case 'month':
+                    date.setMonth(date.getMonth() + 1);
+                    break;
+                case 'year':
+                    date.setFullYear(date.getFullYear() + 1);
+                    break;
+            }
+            break;
+    }
+
+    if (date > new Date()) {
+        date = new Date();
+    }
+
+    return date;
+}
+
+function writeDateToDomElement(elementId, date) {
+    document.getElementById(elementId).innerHTML = date.toLocaleDateString();
+}

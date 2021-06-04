@@ -1,7 +1,3 @@
-window.onresize = function() { //traffic aufwending
-	displayGoogleChart();
-}
-
 function googleTimeline(container, dataArrayAttr) {
 
 	google.charts.load("current", {packages:["timeline"]});

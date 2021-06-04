@@ -20,7 +20,7 @@
 		<p class="header" >
 			<a href="javascript:hideRanking()" class="takeMeBack">< Zu den Grafiken</a>
 			<span class="go-back-in-time-span">
-				Daten vom <span id="go-back-in-time-date">X</span>.
+				Daten vom <span id="go-back-in-time-date-ranking">X</span>.
 				Gehe zurück:
 				<a href="javascript:rankingFunction('back', 'day')">ein Tag</a>,
 				<a href="javascript:rankingFunction('back', 'month')">ein Monat</a>,
@@ -60,6 +60,8 @@
 		<p id="dateP">Zuletzt aktualisiert:</p>
 		<p><a href="javascript:showRanking()" class="takeMeForth">> Zum Ranking</a></p>
 
+
+
 		<h1 class="luhzeSprichtHeader">Darüber spricht luhze.de</h1>
 		<div id="luhzeSpricht">
 			<div id="luhzeSprichtInput">
@@ -71,6 +73,22 @@
 				<canvas id="wordOccurrenceChart"></canvas><br>
 			</div>
 		</div>
+
+		<p class="header go-back-in-time-graph-content" >
+			<span class="go-back-in-time-span">
+				Daten vom <span id="go-back-in-time-date-graph-content">X</span>.
+				Gehe zurück:
+				<a href="javascript:displayGraphContent('back', 'day')">ein Tag</a>,
+				<a href="javascript:displayGraphContent('back', 'month')">ein Monat</a>,
+				<a href="javascript:displayGraphContent('back', 'year')">ein Jahr</a>.
+				<span class="go-forth-in-time-span">Gehe vor:
+					<a href="javascript:displayGraphContent('today')">heute</a>,
+					<a href="javascript:displayGraphContent('forth', 'day')">ein Tag</a>,
+					<a href="javascript:displayGraphContent('forth', 'month')">ein Monat</a>,
+					<a href="javascript:displayGraphContent('forth', 'year')">ein Jahr</a>.
+			</span>
+			</span>
+		</p>
 
 		<canvas id="articlesTimelineChart"></canvas><br>
 		<canvas id="articlesTimelineDerivativeChart"></canvas><br>
@@ -89,9 +107,9 @@
 		<p class="chartjs">Ressorts Timeline</p>
 		<div class="googleChartRessort" id="ressortTimelineChart"></div><br>
 		<canvas id="ressortTopListChart"></canvas><br>
-		<p class="chartjs">Anzahl von Artikel pro Ressort (Klick auf ein Ressort zum anzeigen/ausblenden)</p>
+		<p class="chartjs">Anzahl von Artikel pro Ressort (Klicke auf ein Ressort zum anzeigen/ausblenden)</p>
 		<canvas id="ressortArticlesTimelineChart"></canvas><br>
-		<p class="chartjs">Anzahl von Artikel pro Ressort pro Quartal (Klick auf ein Ressort zum anzeigen/ausblenden)</p>
+		<p class="chartjs">Anzahl von Artikel pro Ressort pro Quartal (Klicke auf ein Ressort zum anzeigen/ausblenden)</p>
 		<canvas id="ressortArticlesTimelineDerivativeChart"></canvas><br>
 		<div id="chartjs-tooltip"></div>
 		<canvas id="ressortAverageChart"></canvas><br>

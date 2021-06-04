@@ -1,12 +1,15 @@
 from flask import g
 
 
-def createYearAndMonthArray():
-    g.cur.execute('SELECT YEAR(MIN(publishedDate)), MONTH(MIN(publishedDate)) FROM articles')
+def createYearAndMonthArray(dateBackInTime):
+    g.cur.execute('SELECT YEAR(MIN(publishedDate)), MONTH(MIN(publishedDate)) FROM articles where publishedDate <= %s', [dateBackInTime])
     minDate = g.cur.fetchone()
 
-    g.cur.execute('SELECT YEAR(MAX(publishedDate)), MONTH(MAX(publishedDate)) FROM articles')
+    g.cur.execute('SELECT YEAR(MAX(publishedDate)), MONTH(MAX(publishedDate)) FROM articles where publishedDate <= %s', [dateBackInTime])
     maxDate = g.cur.fetchone()
+
+    if minDate[0] is None:
+        return []
 
     monthArray = []
     minYear, minMonth = minDate
@@ -23,12 +26,15 @@ def createYearAndMonthArray():
     return monthArray
 
 
-def createYearAndQuarterArray():
-    g.cur.execute('SELECT YEAR(MIN(publishedDate)), QUARTER(MIN(publishedDate)) FROM articles')
+def createYearAndQuarterArray(dateBackInTime):
+    g.cur.execute('SELECT YEAR(MIN(publishedDate)), QUARTER(MIN(publishedDate)) FROM articles where publishedDate <= %s', [dateBackInTime])
     minDate = g.cur.fetchone()
 
-    g.cur.execute('SELECT YEAR(MAX(publishedDate)), QUARTER(MAX(publishedDate)) FROM articles')
+    g.cur.execute('SELECT YEAR(MAX(publishedDate)), QUARTER(MAX(publishedDate)) FROM articles where publishedDate <= %s', [dateBackInTime])
     maxDate = g.cur.fetchone()
+
+    if minDate[0] is None:
+        return []
 
     quarterArray = []
     minYear, minQuarter = minDate

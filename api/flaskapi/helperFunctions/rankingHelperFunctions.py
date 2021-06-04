@@ -1,6 +1,7 @@
 from flask import g
 import math
 from datetime import timedelta
+import pydevd_pycharm
 
 # szenario: wenig aktive Person: ZeitZumLetztenArtikel=120*-0.5=-60, ArtikelAnzahl=10*5=50, CPD=150*1=150, insgesamt = 140
 # szenario: sehr aktive Person: ZeitZumLetztenArtikel=15*-0.5=-7, ArtikelAnzahl=35*5=175, CPD=400*1=400, insgesamt = 400
@@ -42,24 +43,24 @@ def getWrittenCharacters(authorId, dateBackInTime):
     g.cur.execute(
         'SELECT sum(charcount) from (select distinct(link), d.charCount as charCount, authorId from articles ar join documents d on ar.documentId=d.id where authorId = %s and publishedDate <= %s) as sub',
         [str(authorId), str(dateBackInTime)])
-    charsPerDayResult = g.cur.fetchone()[0]
-    if charsPerDayResult == "NULL" or charsPerDayResult is None:  # den autor gabs damals noch nicht
+    writtenCharacters = g.cur.fetchone()[0]
+    if writtenCharacters == "NULL" or writtenCharacters is None:  # den autor gabs damals noch nicht
         return None
 
-    return charsPerDayResult
+    return writtenCharacters
 
 
 def getDaysSinceFirstArticle(authorId, dateBackInTime):
     g.cur.execute(
-        'SELECT DATEDIFF(%s, MIN(publishedDate))+1 from articles where authorId=%s',
-        [str(dateBackInTime), str(authorId)])
+        'SELECT DATEDIFF(%s, MIN(publishedDate))+1 from articles where authorId=%s and publishedDate <= %s',
+        [str(dateBackInTime), str(authorId), str(dateBackInTime)])
     return g.cur.fetchone()[0]
 
 
 def getDaysSinceLastArticle(authorId, dateBackInTime):
     g.cur.execute(
-        'SELECT DATEDIFF(%s, MAX(publishedDate))+1 from articles where authorId=%s',
-        [str(dateBackInTime), str(authorId)])
+        'SELECT DATEDIFF(%s, MAX(publishedDate))+1 from articles where authorId=%s and publishedDate <= %s',
+        [str(dateBackInTime), str(authorId), str(dateBackInTime)])
     return g.cur.fetchone()[0]
 
 
@@ -71,6 +72,9 @@ def getArticleCount(authorId, dateBackInTime):
 
 
 def calculateValues(authorId, authorName, dateBackInTime):
+    #ip = '192.168.1.56'
+    #port = 41135
+    #pydevd_pycharm.settrace(ip, port=port, stdoutToServer=True, stderrToServer=True)
     writtenCharacters = getWrittenCharacters(authorId, dateBackInTime)
 
     if writtenCharacters is None:
@@ -80,7 +84,7 @@ def calculateValues(authorId, authorName, dateBackInTime):
     daysSinceLastArticle = getDaysSinceLastArticle(authorId, dateBackInTime)
     articleCount = getArticleCount(authorId, dateBackInTime)
 
-    writtenCharactersTwoMonthsBefore = getWrittenCharacters(authorId, dateBackInTime + timedelta(60))
+    writtenCharactersTwoMonthsBefore = getWrittenCharacters(authorId, dateBackInTime - timedelta(60))
 
     if writtenCharactersTwoMonthsBefore is None:
         writtenCharactersTwoMonthsBefore = 0
@@ -88,9 +92,9 @@ def calculateValues(authorId, authorName, dateBackInTime):
         daysSinceLastArticleTwoMonthsBefore = 0
         articleCountTwoMonthsBefore = 0
     else:
-        daysSinceFirstArticleTwoMonthsBefore = getDaysSinceFirstArticle(authorId, dateBackInTime + timedelta(60))
-        daysSinceLastArticleTwoMonthsBefore = getDaysSinceLastArticle(authorId, dateBackInTime + timedelta(60))
-        articleCountTwoMonthsBefore = getArticleCount(authorId, dateBackInTime + timedelta(60))
+        daysSinceFirstArticleTwoMonthsBefore = getDaysSinceFirstArticle(authorId, dateBackInTime - timedelta(60))
+        daysSinceLastArticleTwoMonthsBefore = getDaysSinceLastArticle(authorId, dateBackInTime - timedelta(60))
+        articleCountTwoMonthsBefore = getArticleCount(authorId, dateBackInTime - timedelta(60))
 
     try:
         writtenCharactersPerDay = round(writtenCharacters / daysSinceFirstArticle)
