@@ -1,6 +1,4 @@
-from flask import Response
 from flask import g
-import json
 import math
 
 # szenario: wenig aktive Person: ZeitZumLetztenArtikel=120*-0.5=-60, ArtikelAnzahl=10*5=50, CPD=150*1=150, insgesamt = 140

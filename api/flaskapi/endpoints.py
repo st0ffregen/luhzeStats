@@ -2,14 +2,16 @@ from flask import jsonify
 from flask import Response
 from flask import request
 from flask import g
+import datetime
+from datetime import date
 import json
 from flaskapi import app
 from flaskapi.helperFunctions.rankingHelperFunctions import calculateRankingForAllAuthors, calculateValues
-from flaskapi.helperFunctions.wordOccurenceHelperFunctions import getOccurrences, getTotalOccurrences, sumOccurrences
-
+from flaskapi.helperFunctions.wordOccurenceHelperFunctions import getOccurrences, getTotalOccurrences
+from flaskapi.helperFunctions.helperFunctions import createYearAndMonthArray, createYearAndQuarterArray
 import pydevd_pycharm
 
-minCountOfArticlesAuthorsNeedToHaveToBeDisplayed = 10
+minCountOfArticlesAuthorsNeedToHaveToBeDisplayed = 12
 minCountOfArticlesRessortsNeedToHaveToBeDisplayed = 5
 
 
@@ -25,6 +27,11 @@ def date():
 @app.route('/api/minAuthor', methods=['GET'])
 def minAuthor():
     return Response(json.dumps({'minAuthor': minCountOfArticlesAuthorsNeedToHaveToBeDisplayed}), mimetype='application/json')
+
+
+@app.route('/api/minRessort', methods=['GET'])
+def minRessort():
+    return Response(json.dumps({'minRessort': minCountOfArticlesRessortsNeedToHaveToBeDisplayed}), mimetype='application/json')
 
 
 @app.route('/api/oldestArticle', methods=['GET'])
@@ -43,17 +50,16 @@ def newestArticle():
 
 @app.route('/api/activeMembers', methods=['GET'])
 def activeMembers():
-    g.cur.execute('SELECT authorId FROM articles GROUP BY authorId')
-    authorIdArray = g.cur.fetchall()
+    yearAndQuarterArray = createYearAndQuarterArray()
     responseDict = []
-    for authorId in authorIdArray:
-        g.cur.execute('SELECT publishedDate FROM articles WHERE authorId =%s GROUP BY link', [authorId[0]])
-        fetchedDateArray = g.cur.fetchall()
-        dateArray = []
-        for d in fetchedDateArray:
-            dateArray.append(d[0].strftime('%Y-%m-%d %H:%M:%S'))
-        responseDict.append({'name': authorId[0], 'articles': dateArray})
-    return Response(json.dumps(responseDict), mimetype='application/json')
+    for yearAndQuarter in yearAndQuarterArray:
+        year, quarter = yearAndQuarter
+        g.cur.execute(
+            'select cast(date_format(publishedDate,\'%%Y-%%m-01\') as date), count(distinct authorId) from articles where YEAR(publishedDate) = %s and QUARTER(publishedDate) = %s',
+            [year, quarter])
+        responseDict.append(g.cur.fetchone())
+
+    return Response(json.dumps(adjustFormatDate(responseDict)), mimetype='application/json')
 
 
 @app.route('/api/ressortTopList', methods=['GET'])
@@ -68,25 +74,24 @@ def ressortTopList():
 @app.route('/api/ressortArticlesTimeline', methods=['GET'])
 def ressortArticlesTimeline():
     # respone: [{ressort: hopo, articles: [{date: some month, 5},{date: some month, 4}]}]
-    g.cur.execute(
-        'SELECT ressort, cast(date_format(publishedDate,\'%%Y-%%m-01\') as date),count(distinct link) as countPerMonth from articles'
-        ' where ressort in (select ressort from articles group by ressort having count(distinct link) >= %s) '
-        'group by ressort, year(publishedDate), month(publishedDate)',
-        [str(minCountOfArticlesRessortsNeedToHaveToBeDisplayed)])
-    fetchedRessortDateCountPerMonthArray = g.cur.fetchall()
+    yearAndMonthArray = createYearAndMonthArray()
     responseDict = []
-    ressort = fetchedRessortDateCountPerMonthArray[0][0]  # set ressort to first in fetched list
-    monthArray = []
-    for e in fetchedRessortDateCountPerMonthArray:
-        if ressort == e[0]:
-            monthArray.append({'date': e[1].strftime('%Y-%m-%d %H:%M:%S'), 'count': e[2]})
-        else:
-            responseDict.append({'ressort': ressort, 'countPerMonth': monthArray})
-            monthArray = [{'date': e[1].strftime('%Y-%m-%d %H:%M:%S'), 'count': e[2]}]
-            ressort = e[0]
+    g.cur.execute('SELECT ressort FROM articles GROUP BY ressort HAVING count(distinct link) > %s', [minCountOfArticlesRessortsNeedToHaveToBeDisplayed])
+    allRessorts = g.cur.fetchall()
 
-        if e == fetchedRessortDateCountPerMonthArray[len(fetchedRessortDateCountPerMonthArray) - 1]:  # if it is last element
-            responseDict.append({'ressort': ressort, 'countPerMonth': monthArray})
+    for ressort in allRessorts:
+        ressortDict = []
+        for yearAndMonth in yearAndMonthArray:
+            year, month = yearAndMonth
+            g.cur.execute(
+                'select cast(date_format(publishedDate,\'%%Y-%%m-01\') as date), count(distinct link) from articles where YEAR(publishedDate) = %s and MONTH(publishedDate) = %s and ressort = %s',
+                [year, month, ressort[0]])
+            entry = g.cur.fetchone()
+            if entry[0] is None:
+                entry = (datetime.date(year, month, 1), 0)
+            ressortDict.append(entry)
+
+        responseDict.append({'ressort': ressort[0], 'articles': adjustFormatDate(ressortDict)})
 
     return Response(json.dumps(responseDict), mimetype='application/json')
 
@@ -133,12 +138,19 @@ def authorTimeline():
 
 @app.route('/api/articlesTimeline', methods=['GET'])
 def articlesTimeline():
-    g.cur.execute(
-        'select cast(date_format(publishedDate,\'%Y-%m-01\') as date),count(distinct link) as countPerMonth from articles'
-        ' group by year(publishedDate),month(publishedDate) order by 1 asc')
-    responseDict = g.cur.fetchall()
+    yearAndMonthArray = createYearAndMonthArray()
+    responseDict = []
+    for yearAndMonth in yearAndMonthArray:
+        year, month = yearAndMonth
+        g.cur.execute(
+            'select cast(date_format(publishedDate,\'%%Y-%%m-01\') as date), count(distinct link) from articles where YEAR(publishedDate) = %s and MONTH(publishedDate) = %s',
+            [year, month])
+        entry = g.cur.fetchone()
+        if entry[0] is None:
+            entry = (datetime.date(year, month, 1), 0)
+        responseDict.append(entry)
 
-    return Response(json.dumps(adjustFormatDate(responseDict)[::-1]), mimetype='application/json')
+    return Response(json.dumps(adjustFormatDate(responseDict)), mimetype='application/json')
 
 
 @app.route('/api/mostArticlesPerTime', methods=['GET'])
@@ -197,7 +209,7 @@ def ressortAverage():
 @app.route('/api/authorTopList', methods=['GET'])
 def authorTopList():
     g.cur.execute(
-        'SELECT ar.authorId, au.name, count(distinct link) FROM articles ar join authors au on ar.authorId=au.id GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY 3 DESC', [str(minAuthor)])
+        'SELECT ar.authorId, au.name, count(distinct link) as count FROM articles ar join authors au on ar.authorId=au.id GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY 3 DESC', [str(minCountOfArticlesAuthorsNeedToHaveToBeDisplayed)])
     responseDict = g.cur.fetchall()
 
     return Response(json.dumps(adjustFormatNameStartOnSecondIndex(responseDict)), mimetype='application/json')
@@ -206,7 +218,8 @@ def authorTopList():
 @app.route('/api/ressortTimeline', methods=['GET'])
 def ressortTimeline():
     g.cur.execute(
-        'SELECT ressort, MIN(publishedDate), MAX(publishedDate) FROM articles GROUP BY ressort ORDER BY count(distinct link) DESC')
+        'SELECT ressort, MIN(publishedDate), MAX(publishedDate) FROM articles GROUP BY ressort HAVING count(distinct link) >= %s ORDER BY count(distinct link) DESC',
+        [minCountOfArticlesRessortsNeedToHaveToBeDisplayed])
     entries = g.cur.fetchall()
     responseDict = []
     for e in entries:
@@ -254,13 +267,10 @@ def maxYearAndQuarter():
 @app.route('/api/wordOccurrence', methods=['GET'])
 def wordOccurrence():
     word = request.args.get('word', type=str)
-    if word is None:
+    if word is None or word == '':
         return jsonify('no string word parameter given for wordOccurrence endpoint')
 
-    word = word.upper()
-    splitWordArray = word.split('+++')
-
-    responseDict = getOccurrences(word, splitWordArray)
+    responseDict = getOccurrences(word)
 
     if responseDict is None or len(responseDict) == 0:
         return jsonify('Error. The word does not exist.')
@@ -270,22 +280,13 @@ def wordOccurrence():
 
 @app.route('/api/autocomplete', methods=['GET'])
 def autocomplete():
-    pydevd_pycharm.settrace('192.168.1.56', port=42259, stdoutToServer=True, stderrToServer=True)
     word = request.args.get('word', type=str)
-    if word is None:
+    if word is None or word == '':
         return jsonify('no string word parameter given for totalWordOccurrence endpoint')
 
-    word = word.upper()
-    splitWordArray = word.split('+++')
+    occurrences = getTotalOccurrences(word)
 
-    occurrences = getOccurrences(word, splitWordArray)
-
-    responseDict = sumOccurrences(occurrences)
-
-    if responseDict is None:
-        return jsonify('error. The word does not exist.')
-
-    return Response(json.dumps(responseDict),  mimetype='application/json')
+    return Response(json.dumps(occurrences),  mimetype='application/json')
 
 
 def adjustFormatDate(entries):

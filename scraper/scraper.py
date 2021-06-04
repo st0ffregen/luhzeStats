@@ -10,6 +10,7 @@ from scrapingFunctions import scrapeRessort, scrapeAuthor, scrapeTitle, scrapeDa
     readInSite, getLinksToSingleArticlesFromOverviewPages
 from databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
 
+
 luhzeArticleOverviewPageUrl = 'https://www.luhze.de/page/'
 numberOfOverviewPagesToScrapeAgain = int(os.environ['NUMBERS_OF_OVERVIEW_PAGES_TO_SCRAPE_AGAIN'])
 
@@ -55,11 +56,17 @@ def scrapeAllInformation(linkToArticle):
             'document': document}
 
 
-def main():
-    pydevd_pycharm.settrace('192.168.1.56', port=46575, stdoutToServer=True, stderrToServer=True)
+def connectToDebugger():
+    ip = os.environ['DEBUGGING_IP']
+    port = 36045#int(os.environ['DEBUGGING_PORT'])
+    pydevd_pycharm.settrace(ip, port=port, stdoutToServer=True, stderrToServer=True)
 
-    con = connectToDB()
-    cur = con.cursor()
+
+def main():
+    if os.environ['DEBUGGING_ENABLED'] == 'true':
+        connectToDebugger()
+
+    con, cur = connectToDB()
 
     linkToArticleArray = getLinksToSingleArticlesFromOverviewPages(numberOfOverviewPagesToScrapeAgain,
                                                                    luhzeArticleOverviewPageUrl)

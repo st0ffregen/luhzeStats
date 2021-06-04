@@ -24,7 +24,7 @@ services:
     env_file:
       - .env
     ports:
-      - "7123:3306"
+      - "3306:3306"
     
   api:
     build: api/

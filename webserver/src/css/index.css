@@ -12,15 +12,6 @@ body {
   
 }
 
-.autorinnenSeite {
-	display: none;
-	 -webkit-animation: fadein 2s; /* Safari, Chrome and Opera > 12.1 */
-       -moz-animation: fadein 2s; /* Firefox < 16 */
-        -ms-animation: fadein 2s; /* Internet Explorer */
-         -o-animation: fadein 2s; /* Opera < 12.1 */
-            animation: fadein 2s;
-}
-
 .ranking {
 	display: none;
     -webkit-animation: fadein 2s; /* Safari, Chrome and Opera > 12.1 */
@@ -46,37 +37,15 @@ body {
     flex-grow: 0.9;
 }
 
-/*
-.twitterShareButton {
-    order: 2;
-
-}
-#twitterShareIcon {
-    min-height: 100%;
-}
-
-*/
-.hideYearsButton {
-    order: 1;
-    background-color: white;
-    padding: 0 2vw;
-  text-align: center;
-  text-decoration: none;
-   border: none;
-
-
-}
-
 .footer {
 	left: 0;
 	bottom: 0;
-	margin-top: vh;
+	margin-top: 2vh;
 	width: 100%;
 	text-align: center;
 }
 
 .graphContent {
- 
 	-webkit-animation: fadein 1.5s; /* Safari, Chrome and Opera > 12.1 */
     -moz-animation: fadein 1.5s; /* Firefox < 16 */
     -ms-animation: fadein 1.5s; /* Internet Explorer */

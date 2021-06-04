@@ -7,7 +7,7 @@
 	left: 55%;
 }
 
-.rankAdjective {
+.rankDescription {
 	left: 63%;
 }
 
@@ -93,12 +93,6 @@ hr {
 .danger > .ranks {
 	background-color: inherit;
 
-}
-
-.linkToAutorinnenSeite {
-	font-family: "Helvetica", "Arial", sans-serif;
-	color: #555;
-	text-decoration: none;
 }
 
 

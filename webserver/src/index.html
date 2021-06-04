@@ -2,131 +2,105 @@
 <html>
 <head>
 	<title>Spaß mit Daten</title>
-
 	<meta http-equiv="content-type" content="text/html; charset=utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<meta name="robots" content="noindex,nofollow">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+	<meta name="robots" content="noindex,nofollow">
 
-<link rel="stylesheet" type="text/css" href="css/canvas.css">
-<link rel="stylesheet" type="text/css" href="css/index.css">
-<link rel="stylesheet" type="text/css" href="css/ranking.css">
-<link rel="stylesheet" type="text/css" href="css/autocomplete.css">
+	<link rel="stylesheet" type="text/css" href="css/canvas.css">
+	<link rel="stylesheet" type="text/css" href="css/index.css">
+	<link rel="stylesheet" type="text/css" href="css/ranking.css">
+	<link rel="stylesheet" type="text/css" href="css/autocomplete.css">
 
 </head>
 <body>
 
 <div class="containter">
 
+	<div class="ranking">
+		<p class="header" >
+			<a href="javascript:hideRanking()" class="takeMeBack">< Zu den Grafiken</a>
+			<span>Gehe zurück in der Zeit: <a href="javascript:rankingFunction(0)">Jetzt</a> <a href="javascript:rankingFunction(1)">Ein Monat</a> <a href="javascript:rankingFunction(2)">Ein Jahr</a> <a href="javascript:rankingFunction(3)">Zwei Jahre</a> <a href="javascript:rankingFunction(4)">Fünf Jahre</a></span>
+		</p>
+		<div class="rankingSection"></div>
 
+		<div class="upArrowButtonDiv">
+			<a href="javascript:topFunction()" class="upArrowButton" title="Spring zum Seitenanfang"><img src="images/arrowUp.png"></a>
+		</div>
 
-<div class="ranking">
-	<p class="header" >
-		<a href="javascript:hideRanking()" class="takeMeBack">< Zu den Grafiken</a>
-		<span>Gehe zurück in der Zeit: <a href="javascript:rankingFunction(0)">Jetzt</a> <a href="javascript:rankingFunction(1)">Ein Monat</a> <a href="javascript:rankingFunction(2)">Ein Jahr</a> <a href="javascript:rankingFunction(3)">Zwei Jahre</a> <a href="javascript:rankingFunction(4)">Fünf Jahre</a></span>
-	</p>
-	<div class="rankingSection"></div>
-
-	<div class="upArrowButtonDiv">
-		<a href="javascript:topFunction()" class="upArrowButton" title="Spring zum Seitenanfang"><img src="pictures/arrowUp.png"></a>
+		<div class="footer">
+			<a href="privacy.html">Datenschutz</a> | <a href="about.html">Impressum</a>
+		</div>
 	</div>
 
-	<div class="footer">
-		<a href="privacy.html">Datenschutz</a> | <a href="about.html">Impressum</a>
+	<div class="graphContent">
+
+		<div class="socialmedia">
+			<ul class="socialmedialist">
+				<li><a href="https://github.com/st0ffregen/luhzeStats" title="Schau dir den Code auf GitHub an"><img src="images/github.png"></a></li>
+				<li><a href="https://twitter.com/st0ffregen" title="Folge mir auf Twitter"><img src="images/twitter.png"></a></li>
+			</ul>
+		</div>
+
+		<h1>Spaß mit Daten</h1>
+
+		<p id="authorP">Nur Autor*innen mit mehr als X Artikeln miteinbezogen</p>
+		<p id="ressortP">Nur Ressorts mit mehr als Y Artikeln miteinbezogen</p>
+		<p id="dateP">Zuletzt aktualisiert:</p>
+		<p><a href="javascript:showRanking()" class="takeMeForth">> Zum Ranking</a></p>
+
+		<h1 class="luhzeSprichtHeader">Darüber spricht luhze.de</h1>
+		<div id="luhzeSpricht">
+			<div id="luhzeSprichtInput">
+				<form id="luhzeSprichtForm" autocomplete="off" action="">
+					<div class="autocomplete" style="width:100%;">
+						<input id="wordOccurrenceInput" type="text" name="word" placeholder="Gib einen Begriff ein">
+					</div>
+				</form>
+				<canvas id="wordOccurrenceChart"></canvas><br>
+			</div>
+		</div>
+
+		<canvas id="articlesTimelineChart"></canvas><br>
+		<canvas id="articlesTimelineDerivativeChart"></canvas><br>
+
+		<h2>Autor*innen</h2>
+		<p class="chartjs">Autor*innen Timeline</p>
+		<div id="authorTimelineChart" class="googleChartAuthor"></div><br>
+		<canvas id="activeMembersChart"></canvas><br>
+		<canvas id="authorTopListChart"></canvas><br>
+		<canvas id="authorAverageChart"></canvas><br>
+		<canvas id="mostArticlesPerTimeChart"></canvas><br>
+		<canvas id="averageCharactersPerDayChart"></canvas><br>
+
+
+		<h2>Ressorts</h2>
+		<p class="chartjs">Ressorts Timeline</p>
+		<div class="googleChartRessort" id="ressortTimelineChart"></div><br>
+		<canvas id="ressortTopListChart"></canvas><br>
+		<p class="chartjs">Anzahl von Artikel pro Ressort (Klick auf ein Ressort zum anzeigen/ausblenden)</p>
+		<canvas id="ressortArticlesTimelineChart"></canvas><br>
+		<p class="chartjs">Anzahl von Artikel pro Ressort pro Quartal (Klick auf ein Ressort zum anzeigen/ausblenden)</p>
+		<canvas id="ressortArticlesTimelineDerivativeChart"></canvas><br>
+		<div id="chartjs-tooltip"></div>
+		<canvas id="ressortAverageChart"></canvas><br>
+
+
+		<div class="upArrowButtonDiv">
+			<a href="javascript:topFunction()" class="upArrowButton" title="Springe zum Seitenanfang"><img src="images/arrowUp.png"></a>
+		</div>
+
+		<div class="footer">
+			<a href="privacy.html">Datenschutz</a> | <a href="about.html">Impressum</a>
+		</div>
 	</div>
-</div>
-
-<div class="autorinnenSeite">
-
-	<h1 class="autorinnenName"></h1>
-	<h2 class="backInTimeHeader"></h2>
-	<a href="javascript:showRanking()" class="takeMeBack">< Zum Ranking</a>
-	<canvas id="tslaChart"></canvas><br>
-	<div class="mathDiv" id="tslaMathDiv"><p></p></div>
-	<canvas id="cpdChart"></canvas><br>
-	<div class="mathDiv" id="cpdMathDiv"></div>
-	<canvas id="acChart"></canvas><br>
-	<div class="mathDiv" id="acMathDiv"></div>
-	<div class="mathDiv" id="calculationMathDiv"></div>
-
-
-
-</div>
-<div class="graphContent">
-
-<div class="socialmedia">
-<ul class="socialmedialist">
-	<li><a href="https://github.com/st0ffregen/luhzeStats" title="Schau dir den Code auf GitHub an"><img src="pictures/github.png"></a></li>
-	<li><a href="https://twitter.com/st0ffregen" title="Folge mir auf Twitter"><img src="pictures/twitter.png"></a></li>
-</ul>
-</div>
-
-
-<h1>Spaß mit Daten</h1>
-
-<p id="authorP">Nur Autor*innen mit mehr als Artikeln miteinbezogen</p>
-<p>Nur Ressorts mit mehr als 14 Artikeln miteinbezogen</p>
-<p id="dateP">Zuletzt aktualisiert <a href="javascript:showRanking()" class="takeMeForth">> Zum Ranking</a></p>
-
-
-<h1 class="luhzeSprichtHeader">Darüber spricht luhze.de</h1>
-	<div id="luhzeSpricht">
-		<div id="luhzeSprichtInput">
-	<form id="luhzeSprichtForm" autocomplete="off" action="">
-	  <div class="autocomplete" style="width:100%;">
-		<input id="wordInput" type="text" name="word" placeholder="Geben Sie einen Begriff ein">
-	  </div>
-
-	</form><button class="hideYearsButton" title="Die Daten vor dem 2. Quartal 2015 sind durch wenige und unregelmäßig Erscheinungen wenig aussagekräftig." onclick="javascript:hideOrShowDateBeforeYear(myLine, document.getElementsByClassName('hideYearsButton')[0])">Verberge Daten vor 2015, 2. Quartal</button>
-		<!--<a class="twitterShareButton" title="Twittere diese Grafik"
-  href="https://twitter.com/intent/tweet?text=Hello%20world">
-<img id="twitterShareIcon" src="pictures/twitterLogo.png"></a>--></div>
-<canvas id="wordOccurenceChart"></canvas><br>
-	</div>
-<canvas id="articlesTimelineChart"></canvas><br>
-<canvas id="articlesTimelineDerivativeChart"></canvas><br>
-
-
-<h2>Autor*innen</h2>
-<p class="chartjs">Autor*innen Timeline</p>
-<div id="authorTimelineChart" class="googleChartAuthor"></div><br>
-<canvas id="activeMembersChart"></canvas><br>
-<canvas id="authorTopListChart"></canvas><br>
-<canvas id="authorAverageChart"></canvas><br>
-<canvas id="mostArticlesPerTimeChart"></canvas><br>
-<canvas id="averageCharactersPerDayChart"></canvas><br>
-
-
-<h2>Ressorts</h2>
-<p class="chartjs">Ressorts Timeline</p>
-<div class="googleChartRessort" id="ressortTimelineChart"></div><br>
-<canvas id="ressortTopListChart"></canvas><br>
-<p class="chartjs">Anzahl von Artikel pro Ressort (Klick auf ein Ressort zum anzeigen/ausblenden)</p>
-<canvas id="ressortArticlesTimelineChart"></canvas><br>
-<p class="chartjs">Anzahl von Artikel pro Ressort pro Quartal (Klick auf ein Ressort zum anzeigen/ausblenden)</p>
-<canvas id="ressortArticlesTimelineDerivativeChart"></canvas><br>
-<div id="chartjs-tooltip"></div>
-<canvas id="ressortAverageChart"></canvas><br>
-
-
-<div class="upArrowButtonDiv">
-	<a href="javascript:topFunction()" class="upArrowButton" title="Springe zum Seitenanfang"><img src="pictures/arrowUp.png"></a>
-</div>
-
-<div class="footer">
-	<a href="privacy.html">Datenschutz</a> | <a href="about.html">Impressum</a>
-</div>
-
-
-</div>
 </div>
 
 
 
 <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
-<script type="text/javascript" src="luhzeJs/ranking.js"></script>
-<script type="text/javascript" src="luhzeJs/autorinnenSeite.js"></script>
-<script type="text/javascript" src="chartJs/Chart.js"></script>
+<script type="text/javascript" src="js/ranking/ranking.js"></script>
+<script type="text/javascript" src="js/external/Chart.js"></script>
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/luxon@1.19.3"></script>
@@ -134,16 +108,16 @@
 
 
 
-<script type="text/javascript" src="luhzeJs/helperFunctions.js"></script>
-<script type="text/javascript" src="luhzeJs/financialCharts.js"></script>
-<script type="text/javascript" src="luhzeJs/googleCharts.js"></script>
-<script type="text/javascript" src="luhzeJs/barCharts.js"></script>
-<script type="text/javascript" src="luhzeJs/fetchApi.js"></script>
-<script type="text/javascript" src="luhzeJs/wordOccurence/wordOccurence.js"></script>
-<script type="text/javascript" src="luhzeJs/wordOccurence/autocomplete.js"></script>
-<script type="text/javascript" src="luhzeJs/main.js"></script>
+<script type="text/javascript" src="js/helperFunctions/helperFunctions.js"></script>
+<script type="text/javascript" src="js/staticCharts/financialCharts.js"></script>
+<script type="text/javascript" src="js/staticCharts/googleCharts.js"></script>
+<script type="text/javascript" src="js/staticCharts/barCharts.js"></script>
+<script type="text/javascript" src="js/helperFunctions/fetchApi.js"></script>
+<script type="text/javascript" src="js/staticCharts/displayStaticCharts.js"></script>
+<script type="text/javascript" src="js/wordOccurence/wordOccurrence.js"></script>
+<script type="text/javascript" src="js/wordOccurence/autocomplete.js"></script>
+<script type="text/javascript" src="js/main.js"></script>
 
 
-<script>showAutorinnenSeite("Theresa", "Moosmann", "Default");</script>
 </body>
 </html>

@@ -174,12 +174,14 @@ def getLinksToSingleArticlesFromOverviewPages(numberOfOverviewPagesToScrapeAgain
 
     linksToArticleArray = []
 
-    for i in range(110, numberOfOverviewPagesToScrapeAgain + 1):
+    for i in range(0, 60):#numberOfOverviewPagesToScrapeAgain + 1):
         parsedPage = readInSite(luhzeArticleOverviewPageUrl + str(i))
         articlePreviews = parsedPage.findAll('article')
 
         for preview in articlePreviews[::-1]:
             linkToArticle = preview.find('a')['href']
+            if not linkToArticle.startswith('https://www.luhze.de'):  # advertisement
+                continue
             linksToArticleArray.append(linkToArticle)
 
     return linksToArticleArray
