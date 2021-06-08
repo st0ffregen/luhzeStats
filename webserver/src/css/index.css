@@ -208,46 +208,41 @@ a {
     }
 
     h1 {
-        font-size: 3.5px;
+        font-size: 25px;
     }
 
     h2 {
-        margin-top: 3.5px;
-        font-size: 3.5px;
+        margin-top: 20px;
+
     }
 
     p {
-        font-size: 2.3px;
+        font-size: 15px;
     }
 
     .upArrowButton img {
-        max-width: 5.5em;
-    }
-
-    .socialmedialist li {
-
-        margin-left: 1vw;
+        max-width: 60px;
     }
 
     .upArrowButtonDiv {
+        margin-top: 40px;
+    }
 
-        margin-top: 1px;
+    .socialmedialist li {
+        margin-left: 10px;
     }
 
     .socialmedia img {
-        max-width: 2.8vw;
+        max-width: 40px;
     }
 
     .luhzeSprichtHeader {
-        margin-bottom: 1px;
-    }
-
-    #luhzeSprichtInput {
-        margin-bottom: 1px;
+        margin-bottom: 30px;
+        margin-top: 40px;
     }
 
     .footer {
-        margin-top: 2px;
+        margin-top: 5px;
     }
 }
 

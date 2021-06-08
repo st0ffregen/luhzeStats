@@ -12,38 +12,20 @@
 }
 
 
-
 @media (min-width: 200px) {
-    .canvas-container {
-        height: 300px;
-        margin-top: 30px;
-    }
-
-    .small-canvas-container {
-        height: 100px;
-        max-width: 150px;
-    }
-
-    .many-label-canvas-container {
-        height: 500px;
-        margin-top: 0;
-    }
 
     .word-occurrence-canvas-container {
         height: 400px;
         margin-top: 0;
     }
 
-    .small-canvas-label {
-        font-size: 10px;
-    }
-
     .go-back-in-time-graph-content {
         margin-top: 30px;
     }
 
-    .first-chart {
-        margin-top: 10px;
+    .canvas-container {
+        height: 300px;
+        margin-top: 30px;
     }
 
     .chart-label {
@@ -51,6 +33,10 @@
         margin-top: 30px;
     }
 
+    .first-chart {
+        margin-top: 10px;
+    }
+
     .googleChartAuthor {
         width: 100%;
         height: 400px;
@@ -61,31 +47,68 @@
         height: 400px;
     }
 
+    .small-canvas-container {
+        height: 100px;
+        max-width: 150px;
+    }
+
+    .small-canvas-label {
+        font-size: 10px;
+    }
+
+    .many-label-canvas-container {
+        height: 500px;
+        margin-top: 0;
+    }
 }
 
 @media (min-width: 375px) {
-    .canvas-container {
+
+    .word-occurrence-canvas-container {
         height: 400px;
-        margin-top: 20px;
+        margin-top: 0;
+    }
+
+    .go-back-in-time-graph-content {
+        margin-top: 30px;
+    }
+
+    .canvas-container {
+        height: 350px;
+        margin-top: 40px;
+    }
+
+    .chart-label {
+        margin-bottom: 0;
+        margin-top: 30px;
+    }
+
+    .first-chart {
+        margin-top: 15px;
+    }
+
+    .googleChartAuthor {
+        width: 100%;
+        height: 450px;
+    }
+
+    .googleChartRessort {
+        width: 100%;
+        height: 450px;
     }
 
     .small-canvas-container {
-        height: 125px;
+        height: 150px;
         max-width: 200px;
     }
 
     .small-canvas-label {
-        font-size: 13px;
+        font-size: 15px;
     }
 
-    .googleChartAuthor {
-        width: 100%;
-        min-height: 70px;
-    }
-
-    .googleChartRessort {
-        width: 100%;
-        min-height: 80px;
+    .many-label-canvas-container {
+        height: 500px;
+        margin-top: 0;
     }
 }
 
