@@ -169,16 +169,7 @@ function barChart(chartElement, data, type, label, tooltipBoolean, customTooltip
 		  	legend: {
 		  		labels: {
 		  			fontFamily: "'Helvetica', 'Arial', sans-serif",
-		  			fontColor: '#555',
-		  			font: function(context) {
-                        let width = context.chart.width;
-                        let size = Math.round(width / 32);
-
-                        return {
-                            weight: 'bold',
-                            size: size
-                        };
-                    }
+		  			fontColor: '#555'
 		  		}
 		  	},
 			responsive: true,

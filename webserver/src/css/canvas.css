@@ -43,12 +43,12 @@
 
     .googleChartAuthor {
         width: 100%;
-        height: 400px;
+        height: 300px;
     }
 
     .googleChartRessort {
         width: 100%;
-        height: 400px;
+        height: 300px;
     }
 
     .small-canvas-container {
@@ -167,54 +167,100 @@
 }
 
 @media (min-width: 768px) {
+    .word-occurrence-canvas-container {
+        height: 500px;
+        margin-top: 20px;
+    }
+
+    .go-back-in-time-graph-content {
+        margin-top: 30px;
+    }
+
     .canvas-container {
-        height: 400px;
+        height: 450px;
         margin-top: 40px;
     }
 
-    .small-canvas-container {
-        height: 200px;
-        max-width: 300px;
+    .chart-label {
+        margin-bottom: 10px;
+        margin-top: 40px;
     }
 
-    .small-canvas-label {
-        font-size: 16px;
+    .first-chart {
+        margin-top: 20px;
     }
 
     .googleChartAuthor {
         width: 100%;
-        min-height: 70px;
+        height: 500px;
     }
 
     .googleChartRessort {
         width: 100%;
-        min-height: 80px;
+        height: 500px;
+    }
+
+    .small-canvas-container {
+        height: 170px;
+        max-width: 250px;
+    }
+
+    .small-canvas-label {
+        font-size: 17px;
+    }
+
+    .many-label-canvas-container {
+        height: 500px;
+        margin-top: 0;
     }
 }
 
 @media (min-width: 992px) {
+    .word-occurrence-canvas-container {
+        height: 550px;
+        margin-top: 30px;
+    }
+
+    .go-back-in-time-graph-content {
+        margin-top: 40px;
+    }
+
     .canvas-container {
         height: 500px;
-        margin-top: 45px;
+        margin-top: 50px;
     }
 
-    .small-canvas-container {
-        height: 250px;
-        max-width: 350px;
+    .chart-label {
+        margin-bottom: 10px;
+        margin-top: 40px;
     }
 
-    .small-canvas-label {
-        font-size: 16px;
+    .first-chart {
+        margin-top: 20px;
     }
 
     .googleChartAuthor {
         width: 100%;
-        min-height: 70px;
+        height: 550px;
     }
 
     .googleChartRessort {
         width: 100%;
-        min-height: 80px;
+        height: 550px;
+    }
+
+    .small-canvas-container {
+        height: 190px;
+        max-width: 270px;
+    }
+
+    .small-canvas-label {
+        font-size: 17px;
+    }
+
+    .many-label-canvas-container {
+        height: 550px;
+        margin-top: 0;
     }
 }
 

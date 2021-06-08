@@ -217,15 +217,6 @@ async function initWordOccurrenceChart(chart, initWordArray) {
                 labels: {
                     fontFamily: "'Helvetica', 'Arial', sans-serif",
                     fontColor: '#555',
-                    font: function(context) {
-                        let width = context.chart.width;
-                        let size = Math.round(width / 32);
-
-                        return {
-                            weight: 'bold',
-                            size: size
-                        };
-                    }
                 }
             },
             responsive: true,

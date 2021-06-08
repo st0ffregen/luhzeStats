@@ -142,10 +142,6 @@ a {
     color: red;
 }
 
-#luhzeSprichtForm {
-    order: 0;
-    flex-grow: 0.9;
-}
 
 .footer {
     left: 0;
@@ -169,6 +165,7 @@ a {
     }
 
     h2 {
+        font-size: 17px;
         margin-top: 17px;
 
     }
@@ -216,6 +213,7 @@ a {
     }
 
     h2 {
+        font-size: 22px;
         margin-top: 20px;
 
     }
@@ -263,6 +261,7 @@ a {
     }
 
     h2 {
+        font-size: 27px;
         margin-top: 25px;
 
     }
@@ -303,10 +302,10 @@ a {
         margin-right: 30px;
         z-index: 99;
         background-color: #eee;
+        padding: 5px;
     }
 
 }
-
 
 @media (min-width: 768px) {
     body {
@@ -317,32 +316,32 @@ a {
     }
 
     h1 {
-        font-size: 30px;
+        font-size: 35px;
     }
 
     h2 {
-        margin-top: 25px;
-
+        font-size: 32px;
+        margin-top: 30px;
     }
 
     p {
-        font-size: 17px;
+        font-size: 18px;
     }
 
     .upArrowButton img {
-        max-width: 80px;
+        max-width: 90px;
     }
 
     .upArrowButtonDiv {
-        margin-top: 45px;
+        margin-top: 50px;
     }
 
     .socialmedialist li {
-        margin-left: 15px;
+        margin-left: 20px;
     }
 
     .socialmedia img {
-        max-width: 50px;
+        max-width: 60px;
     }
 
     .luhzeSprichtHeader {
@@ -351,7 +350,7 @@ a {
     }
 
     .footer {
-        margin-top: 5px;
+        margin-top: 10px;
     }
 
     .sticky {
@@ -361,9 +360,8 @@ a {
         margin-right: 30px;
         z-index: 99;
         background-color: #eee;
+        padding: 7px;
     }
-
-
 }
 
 @media (min-width: 992px) {
@@ -375,49 +373,53 @@ a {
     }
 
     h1 {
-        font-size: 3.7px;
+        font-size: 40px;
     }
 
     h2 {
-        margin-top: 3.7px;
-        font-size: 3.7px;
+        font-size: 37px;
+        margin-top: 35px;
     }
 
     p {
-        font-size: 2.4px;
+        font-size: 20px;
     }
 
     .upArrowButton img {
-        max-width: 5.5em;
-    }
-
-    .socialmedialist li {
-
-        margin-left: 1vw;
+        max-width: 100px;
     }
 
     .upArrowButtonDiv {
+        margin-top: 50px;
+    }
 
-        margin-top: 1px;
+    .socialmedialist li {
+        margin-left: 20px;
     }
 
     .socialmedia img {
-        max-width: 2.8vw;
+        max-width: 65px;
     }
 
     .luhzeSprichtHeader {
-        margin-bottom: 1px;
-    }
-
-    #luhzeSprichtInput {
-        margin-bottom: 1px;
+        margin-bottom: 40px;
+        margin-top: 45px;
     }
 
     .footer {
-        margin-top: 2px;
+        margin-top: 10px;
+    }
+
+    .sticky {
+        position: fixed;
+        top: 0;
+        margin-top: 20px;
+        margin-right: 100px;
+        z-index: 99;
+        background-color: #eee;
+        padding: 9px;
     }
 }
-
 
 @media (min-width: 1200px) {
     body {

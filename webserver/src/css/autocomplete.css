@@ -49,6 +49,9 @@ input[type=submit] {
   color: #ffffff;
 }
 
+#wordOccurrenceInput {
+  padding-right: 0;
+}
 
 @media (min-width: 200px) {
   input {
@@ -72,15 +75,43 @@ input[type=submit] {
   }
 
 }
+
 @media (min-width: 576px) {
+  input {
+      padding: 9px;
+      font-size: 16px;
+  }
+  .autocomplete-items div {
+    padding: 8px;
+    font-size: 16px;
+  }
 
 }
+
 @media (min-width: 768px) {
+  input {
+      padding: 11px;
+      font-size: 17px;
+  }
+  .autocomplete-items div {
+    padding: 10px;
+    font-size: 17px;
+  }
 
 }
+
 @media (min-width: 992px) {
+  input {
+      padding: 12px;
+      font-size: 18px;
+  }
+  .autocomplete-items div {
+    padding: 11px;
+    font-size: 18px;
+  }
 
 }
+
 @media (min-width: 1200px) {
 
 }

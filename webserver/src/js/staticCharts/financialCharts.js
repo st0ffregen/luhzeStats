@@ -120,17 +120,7 @@ function financialChart(chartElement, data, tooltipFormat) {
 
                 labels: {
                     fontFamily: "'Helvetica', 'Arial', sans-serif",
-                    fontColor: '#555',
-                    /* Adjust data label font size according to chart size */
-                    font: function(context) {
-                        let width = context.chart.width;
-                        let size = Math.round(width / 32);
-
-                        return {
-                            weight: 'bold',
-                            size: size
-                        };
-                    }
+                    fontColor: '#555'
                 }
             },
             responsive: true,
