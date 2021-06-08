@@ -266,6 +266,11 @@ a {
 
     }
 
+    .go-back-in-time-graph-content {
+        margin-top: 30px;
+        padding: 5px;
+    }
+
     p {
         font-size: 17px;
     }
@@ -302,7 +307,6 @@ a {
         margin-right: 30px;
         z-index: 99;
         background-color: #eee;
-        padding: 5px;
     }
 
 }
@@ -326,6 +330,11 @@ a {
 
     p {
         font-size: 18px;
+    }
+
+    .go-back-in-time-graph-content {
+        margin-top: 30px;
+        padding: 7px;
     }
 
     .upArrowButton img {
@@ -360,7 +369,6 @@ a {
         margin-right: 30px;
         z-index: 99;
         background-color: #eee;
-        padding: 7px;
     }
 }
 
@@ -383,6 +391,11 @@ a {
 
     p {
         font-size: 20px;
+    }
+
+    .go-back-in-time-graph-content {
+        margin-top: 40px;
+        padding: 9px;
     }
 
     .upArrowButton img {
@@ -417,7 +430,6 @@ a {
         margin-right: 100px;
         z-index: 99;
         background-color: #eee;
-        padding: 9px;
     }
 }
 
@@ -425,51 +437,60 @@ a {
     body {
         line-height: 1.5;
         max-width: 100%;
-        margin-left: 200px;
-        margin-right: 200px;
+        margin-left: 150px;
+        margin-right: 150px;
     }
 
     h1 {
-        font-size: 4px;
+        font-size: 40px;
     }
 
     h2 {
-        margin-top: 4px;
-        font-size: 4px;
+        font-size: 37px;
+        margin-top: 35px;
     }
 
     p {
-        font-size: 2.5px;
+        font-size: 20px;
+    }
+
+    .go-back-in-time-graph-content {
+        margin-top: 45px;
+        padding: 9px;
     }
 
     .upArrowButton img {
-        max-width: 5.5em;
-    }
-
-    .socialmedialist li {
-
-        margin-left: 1vw;
+        max-width: 100px;
     }
 
     .upArrowButtonDiv {
+        margin-top: 50px;
+    }
 
-        margin-top: 1px;
+    .socialmedialist li {
+        margin-left: 20px;
     }
 
     .socialmedia img {
-        max-width: 2.8vw;
+        max-width: 65px;
     }
 
     .luhzeSprichtHeader {
-        margin-bottom: 1px;
-    }
-
-    #luhzeSprichtInput {
-        margin-bottom: 1px;
+        margin-bottom: 40px;
+        margin-top: 45px;
     }
 
     .footer {
-        margin-top: 2px;
+        margin-top: 10px;
+    }
+
+    .sticky {
+        position: fixed;
+        top: 0;
+        margin-top: 20px;
+        margin-right: 150px;
+        z-index: 99;
+        background-color: #eee;
     }
 }
 

@@ -113,6 +113,14 @@ input[type=submit] {
 }
 
 @media (min-width: 1200px) {
+  input {
+      padding: 12px;
+      font-size: 18px;
+  }
+  .autocomplete-items div {
+    padding: 11px;
+    font-size: 18px;
+  }
 
 }
 @media (min-width: 1600px) {

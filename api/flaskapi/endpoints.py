@@ -10,7 +10,7 @@ from flaskapi.helperFunctions.wordOccurenceHelperFunctions import getOccurrences
 from flaskapi.helperFunctions.helperFunctions import createYearAndMonthArray, createYearAndQuarterArray
 import pydevd_pycharm
 
-minCountOfArticlesAuthorsNeedToHaveToBeDisplayed = 12
+minCountOfArticlesAuthorsNeedToHaveToBeDisplayed = 14
 minCountOfArticlesRessortsNeedToHaveToBeDisplayed = 5
 
 
@@ -66,8 +66,8 @@ def activeMembers():
             'select cast(date_format(publishedDate,\'%%Y-%%m-01\') as date), count(distinct authorId) from articles where YEAR(publishedDate) = %s and QUARTER(publishedDate) = %s and publishedDate <= %s',
             [year, quarter, dateBackInTime])
         entry = g.cur.fetchone()
-        if entry is None:
-            return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+        if entry[0] is None:
+            entry = (datetime.date(year, (quarter-1) * 3 + 1, 1), 0)
 
         responseDict.append(entry)
 

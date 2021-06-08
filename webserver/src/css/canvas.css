@@ -123,10 +123,6 @@
         margin-top: 20px;
     }
 
-    .go-back-in-time-graph-content {
-        margin-top: 30px;
-    }
-
     .canvas-container {
         height: 400px;
         margin-top: 40px;
@@ -170,10 +166,6 @@
     .word-occurrence-canvas-container {
         height: 500px;
         margin-top: 20px;
-    }
-
-    .go-back-in-time-graph-content {
-        margin-top: 30px;
     }
 
     .canvas-container {
@@ -221,10 +213,6 @@
         margin-top: 30px;
     }
 
-    .go-back-in-time-graph-content {
-        margin-top: 40px;
-    }
-
     .canvas-container {
         height: 500px;
         margin-top: 50px;
@@ -265,28 +253,47 @@
 }
 
 @media (min-width: 1200px) {
+    .word-occurrence-canvas-container {
+        height: 650px;
+        margin-top: 30px;
+    }
+
     .canvas-container {
         height: 600px;
-        margin-top: 50px;
+        margin-top: 70px;
     }
 
-    .small-canvas-container {
-        height: 300px;
-        max-width: 400px;
+    .chart-label {
+        margin-bottom: 10px;
+        margin-top: 40px;
     }
 
-    .small-canvas-label {
-        font-size: 16px;
+    .first-chart {
+        margin-top: 20px;
     }
 
     .googleChartAuthor {
         width: 100%;
-        min-height: 70px;
+        height: 610px;
     }
 
     .googleChartRessort {
         width: 100%;
-        min-height: 80px;
+        height: 650px;
+    }
+
+    .small-canvas-container {
+        height: 210px;
+        max-width: 290px;
+    }
+
+    .small-canvas-label {
+        font-size: 17px;
+    }
+
+    .many-label-canvas-container {
+        height: 650px;
+        margin-top: 0;
     }
 }
 
