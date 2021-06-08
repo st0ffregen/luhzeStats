@@ -1,26 +1,267 @@
-/*#canvas-holder { weiss nicht was das hier ist
-	width: 100%;
-	margin-top: 50px;
-	text-align: center;
-} */
+.small-canvas-container {
+    min-width: 100%;
+}
+
+.chart-label {
+    text-align: center;
+}
+
+.chart-label-with-heading {
+    text-align: center;
+    margin-top: 0;
+}
+
+
+
+@media (min-width: 200px) {
+    .canvas-container {
+        height: 300px;
+        margin-top: 30px;
+    }
+
+    .small-canvas-container {
+        height: 100px;
+        max-width: 150px;
+    }
+
+    .many-label-canvas-container {
+        height: 500px;
+        margin-top: 0;
+    }
+
+    .word-occurrence-canvas-container {
+        height: 400px;
+        margin-top: 0;
+    }
+
+    .small-canvas-label {
+        font-size: 10px;
+    }
+
+    .go-back-in-time-graph-content {
+        margin-top: 30px;
+    }
+
+    .first-chart {
+        margin-top: 10px;
+    }
+
+    .chart-label {
+        margin-bottom: 0;
+        margin-top: 30px;
+    }
+
+    .googleChartAuthor {
+        width: 100%;
+        height: 400px;
+    }
+
+    .googleChartRessort {
+        width: 100%;
+        height: 400px;
+    }
+
+}
+
+@media (min-width: 375px) {
+    .canvas-container {
+        height: 400px;
+        margin-top: 20px;
+    }
+
+    .small-canvas-container {
+        height: 125px;
+        max-width: 200px;
+    }
+
+    .small-canvas-label {
+        font-size: 13px;
+    }
+
+    .googleChartAuthor {
+        width: 100%;
+        min-height: 70px;
+    }
+
+    .googleChartRessort {
+        width: 100%;
+        min-height: 80px;
+    }
+}
+
+@media (min-width: 576px) {
+    .canvas-container {
+        height: 400px;
+        margin-top: 30px;
+    }
+
+    .small-canvas-container {
+        height: 150px;
+        max-width: 250px;
+    }
+
+    .small-canvas-label {
+        font-size: 15px;
+    }
+
+    .googleChartAuthor {
+        width: 100%;
+        min-height: 70px;
+    }
+
+    .googleChartRessort {
+        width: 100%;
+        min-height: 80px;
+    }
+}
+
+@media (min-width: 768px) {
+    .canvas-container {
+        height: 400px;
+        margin-top: 40px;
+    }
+
+    .small-canvas-container {
+        height: 200px;
+        max-width: 300px;
+    }
+
+    .small-canvas-label {
+        font-size: 16px;
+    }
+
+    .googleChartAuthor {
+        width: 100%;
+        min-height: 70px;
+    }
+
+    .googleChartRessort {
+        width: 100%;
+        min-height: 80px;
+    }
+}
+
+@media (min-width: 992px) {
+    .canvas-container {
+        height: 500px;
+        margin-top: 45px;
+    }
+
+    .small-canvas-container {
+        height: 250px;
+        max-width: 350px;
+    }
+
+    .small-canvas-label {
+        font-size: 16px;
+    }
+
+    .googleChartAuthor {
+        width: 100%;
+        min-height: 70px;
+    }
+
+    .googleChartRessort {
+        width: 100%;
+        min-height: 80px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .canvas-container {
+        height: 600px;
+        margin-top: 50px;
+    }
+
+    .small-canvas-container {
+        height: 300px;
+        max-width: 400px;
+    }
+
+    .small-canvas-label {
+        font-size: 16px;
+    }
+
+    .googleChartAuthor {
+        width: 100%;
+        min-height: 70px;
+    }
+
+    .googleChartRessort {
+        width: 100%;
+        min-height: 80px;
+    }
+}
+
+@media (min-width: 1600px) {
+    .canvas-container {
+        height: 700px;
+        margin-top: 70px;
+    }
+
+    .small-canvas-container {
+        height: 400px;
+        max-width: 500px;
+    }
+
+    .small-canvas-label {
+        font-size: 17px;
+    }
+
+    .googleChartAuthor {
+        width: 100%;
+        min-height: 70px;
+    }
+
+    .googleChartRessort {
+        width: 100%;
+        min-height: 80px;
+    }
+}
+
+@media (min-width: 2000px) {
+    .canvas-container {
+        height: 800px;
+        margin-top: 100px;
+    }
+
+    .small-canvas-container {
+        height: 500px;
+        max-width: 600px;
+    }
+
+    .small-canvas-label {
+        font-size: 18px;
+    }
+
+    .googleChartAuthor {
+        width: 100%;
+        min-height: 70px;
+    }
+
+    .googleChartRessort {
+        width: 100%;
+        min-height: 80px;
+    }
+}
+
 #chartjs-tooltip {
-	opacity: 1;
-	position: absolute;
-	background: #eee;
-	border-radius: 3px;
-	-webkit-transition: all .1s ease;
-	transition: all .1s ease;
-	pointer-events: none;
-	-webkit-transform: translate(-50%, 0);
-	transform: translate(-50%, 0);
+    opacity: 1;
+    position: absolute;
+    background: #eee;
+    border-radius: 3px;
+    -webkit-transition: all .1s ease;
+    transition: all .1s ease;
+    pointer-events: none;
+    -webkit-transform: translate(-50%, 0);
+    transform: translate(-50%, 0);
 }
 
 .chartjs-tooltip-key {
-	display: inline-block;
-	width: 10px;
-	height: 10px;
-	margin-right: 10px;
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 10px;
 }
 
 
-		

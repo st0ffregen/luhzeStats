@@ -1,119 +1,4 @@
-Chart.defaults.global.defaultFontColor = '#555';
 var DateTime = luxon.DateTime;
-
-
-function customTooltip(data) {
-    return function(tooltip) {
-        let displayData = [];
-        let displayLabel = [];
-        let colorArray = [];
-
-        //parse data to data array
-        for (let i = 0; i < data.length; i++) {
-            if (data[i]['ressort'] === tooltip.title[0]) {
-
-                for (let k = 0; k < data[i]['authors'].length; k++) {
-                    colorArray.push(getSingleRandomColor(alpha));
-                    displayData.push(data[i]['authors'][k]['count']);
-                    //split name
-                    let split = data[i]['authors'][k]['name'].split(" ");
-                    let firstName = "";
-
-                    for (let l = 0; l < split.length - 1; l++) {
-                        firstName += split[l] + " ";
-
-                    }
-
-                    let name = firstName + split[split.length - 1].charAt(0) + ".";
-                    displayLabel.push(name);
-                }
-                break;
-            }
-        }
-
-        // Tooltip Element
-        let tooltipEl = document.getElementById('chartjs-tooltip');
-
-        // Hide if no tooltip
-        if (tooltip.opacity === 0) {
-            tooltipEl.style.opacity = 0;
-            return;
-        }
-
-        while (tooltipEl.firstChild) {
-            tooltipEl.removeChild(tooltipEl.firstChild);
-        }
-
-        let label = document.createElement('p');
-
-        if (displayData.length > 0) {
-            label.innerHTML = tooltip.title[0] + ": " + tooltip.dataPoints[0].yLabel + "; Top Autor*innen:";
-            label.className = "chartjs";
-            tooltipEl.appendChild(label);
-            let child = document.createElement('canvas');
-            child.id = 'tooltipChart';
-            tooltipEl.appendChild(child);
-        } else {
-            label.innerHTML = tooltip.title[0] + ": " + tooltip.dataPoints[0].yLabel;
-            tooltipEl.appendChild(label);
-        }
-
-        // Set caret Position
-        tooltipEl.classList.remove('above', 'below', 'no-transform');
-        if (tooltip.yAlign) {
-            tooltipEl.classList.add(tooltip.yAlign);
-        } else {
-            tooltipEl.classList.add('no-transform');
-        }
-
-        // Set Text
-        if (tooltip.body && displayData.length > 0) {
-
-            let chart = tooltipEl.children[1].getContext('2d');
-            // For a pie chart
-            new Chart(chart, {
-                type: 'bar',
-                data: {
-                    datasets: [{
-                        data: displayData,
-                        label: displayLabel,
-                        borderWidth: 1,
-                        fill: false,
-                        backgroundColor: colorArray,
-                    }],
-                    labels: displayLabel,
-
-
-                }, options: {
-                    tooltips: {
-                        enabled: false
-                    },
-                    legend: false,
-                    scales: {
-                        yAxes: [{
-                            ticks: {
-                                beginAtZero: true,
-                                precision: 0
-                            }
-                        }]
-                    }
-                }
-            });
-        }
-
-        let positionY = this._chart.canvas.offsetTop;
-        let positionX = this._chart.canvas.offsetLeft + 50; //+50 so the most left chart wont be cut of by the computer screen
-
-        // Display, position, and set styles for font
-        tooltipEl.style.opacity = 1;
-        tooltipEl.style.left = positionX + tooltip.caretX + 'px';
-        tooltipEl.style.top = positionY + tooltip.caretY + 'px';
-        tooltipEl.style.fontFamily = tooltip._bodyFontFamily;
-        tooltipEl.style.fontSize = tooltip.bodyFontSize + 'px';
-        tooltipEl.style.fontStyle = tooltip._bodyFontStyle;
-        tooltipEl.style.padding = tooltip.yPadding + 'px ' + tooltip.xPadding + 'px';
-    };
-}
 
 function convertFinancialDataDerivative(data, label, color = '#ff6384', hidden = 0) {
 
@@ -236,10 +121,20 @@ function financialChart(chartElement, data, tooltipFormat) {
                 labels: {
                     fontFamily: "'Helvetica', 'Arial', sans-serif",
                     fontColor: '#555',
-                    fontSize: 15,
-                }
-            }
+                    /* Adjust data label font size according to chart size */
+                    font: function(context) {
+                        let width = context.chart.width;
+                        let size = Math.round(width / 32);
 
+                        return {
+                            weight: 'bold',
+                            size: size
+                        };
+                    }
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false
         }
     };
 

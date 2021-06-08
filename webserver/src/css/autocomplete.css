@@ -12,8 +12,7 @@
 input {
   border: 1px solid transparent;
   background-color: #f1f1f1;
-  padding: 10px;
-  font-size: 16px;
+
 }
 input[type=text] {
   background-color: #fff;
@@ -35,7 +34,7 @@ input[type=submit] {
   right: 0;
 }
 .autocomplete-items div {
-  padding: 10px;
+
   cursor: pointer;
   background-color: #fff;
   border-bottom: 1px solid #d4d4d4;
@@ -48,4 +47,38 @@ input[type=submit] {
   /*when navigating through the items using the arrow keys:*/
   background-color: DodgerBlue !important;
   color: #ffffff;
+}
+
+
+@media (min-width: 200px) {
+  input {
+      padding: 6px;
+      font-size: 13px;
+  }
+  .autocomplete-items div {
+    padding: 5px;
+    font-size: 13px;
+  }
+
+}
+@media (min-width: 375px) {
+
+}
+@media (min-width: 576px) {
+
+}
+@media (min-width: 768px) {
+
+}
+@media (min-width: 992px) {
+
+}
+@media (min-width: 1200px) {
+
+}
+@media (min-width: 1600px) {
+
+}
+@media (min-width: 2000px) {
+
 }

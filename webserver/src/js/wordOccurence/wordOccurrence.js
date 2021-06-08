@@ -217,10 +217,19 @@ async function initWordOccurrenceChart(chart, initWordArray) {
                 labels: {
                     fontFamily: "'Helvetica', 'Arial', sans-serif",
                     fontColor: '#555',
-                    fontSize: 15,
-                }
-            }
+                    font: function(context) {
+                        let width = context.chart.width;
+                        let size = Math.round(width / 32);
 
+                        return {
+                            weight: 'bold',
+                            size: size
+                        };
+                    }
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false,
         }
     };
     window.luhzeChart = new Chart(chart.getContext("2d"), luhzeChartConfig);
