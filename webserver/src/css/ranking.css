@@ -51,8 +51,38 @@
 
 
 @media (min-width: 1px) {
+	.go-back-in-time-span-ranking {
+		margin-bottom: 20px;
+	}
+
 	.danger {
-		padding-bottom: 20px;
+		padding-bottom: 5px;
+		padding-top: 5px;
+	}
+
+	.rankingSection {
+		margin-top: 30px;
+	}
+
+	.danger-zone {
+		margin-bottom: 30px;
+		font-size: 20px;
+	}
+
+	.ranks {
+		margin-left: 5px;
+		margin-right: 5px;
+		margin-bottom: 9px;
+		border-radius: 4px;
+		padding-left: 0;
+	}
+
+	.ranks > span {
+		font-size: 14px;
+	}
+
+	.rankAdjective {
+		display: none;
 	}
 }
 
