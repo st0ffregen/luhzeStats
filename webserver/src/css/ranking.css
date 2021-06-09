@@ -72,8 +72,13 @@
 }
 
 @media (min-width: 1200px) {
+	.go-back-in-time-span-ranking {
+		margin-bottom: 20px;
+	}
+
 	.danger {
-		padding-bottom: 20px;
+		padding-bottom: 15px;
+		padding-top: 15px;
 	}
 
 	.rankingSection {
@@ -82,13 +87,13 @@
 
 	.danger-zone {
 		margin-bottom: 50px;
-		font-size: 60px;
+		font-size: 50px;
 	}
 
 	.ranks {
 		margin-left: 10px;
 		margin-right: 10px;
-		margin-bottom: 10px;
+		margin-bottom: 20px;
 		border-radius: 5px;
 		padding-left: 10px;
 	}
@@ -116,7 +121,7 @@
 	.ranks {
 		margin-left: 10px;
 		margin-right: 10px;
-		margin-bottom: 10px;
+		margin-bottom: 20px;
 		border-radius: 5px;
 		padding-left: 10px;
 	}
