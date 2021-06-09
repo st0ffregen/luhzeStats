@@ -86,7 +86,7 @@ function sumUpWordArray(fetchedData, arrayToFill) {
             });
         } else {
             arrayToFill[index]['occurrence'] += row['occurrence'];
-            arrayToFill[index]['word'] += ' \u274C ' + row['word'];
+            arrayToFill[index]['word'] += ' \u2795 ' + row['word'];
         }
     }
 
