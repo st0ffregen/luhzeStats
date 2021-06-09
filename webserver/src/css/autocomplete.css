@@ -12,8 +12,7 @@
 input {
   border: 1px solid transparent;
   background-color: #f1f1f1;
-  padding: 10px;
-  font-size: 16px;
+
 }
 input[type=text] {
   background-color: #fff;
@@ -35,7 +34,7 @@ input[type=submit] {
   right: 0;
 }
 .autocomplete-items div {
-  padding: 10px;
+
   cursor: pointer;
   background-color: #fff;
   border-bottom: 1px solid #d4d4d4;
@@ -48,4 +47,100 @@ input[type=submit] {
   /*when navigating through the items using the arrow keys:*/
   background-color: DodgerBlue !important;
   color: #ffffff;
+}
+
+#wordOccurrenceInput {
+  padding-right: 0;
+}
+
+@media (min-width: 1px) {
+  input {
+      padding: 6px;
+      font-size: 13px;
+  }
+  .autocomplete-items div {
+    padding: 5px;
+    font-size: 13px;
+  }
+
+}
+@media (min-width: 375px) {
+  input {
+      padding: 8px;
+      font-size: 15px;
+  }
+  .autocomplete-items div {
+    padding: 7px;
+    font-size: 15px;
+  }
+
+}
+
+@media (min-width: 576px) {
+  input {
+      padding: 9px;
+      font-size: 16px;
+  }
+  .autocomplete-items div {
+    padding: 8px;
+    font-size: 16px;
+  }
+
+}
+
+@media (min-width: 768px) {
+  input {
+      padding: 11px;
+      font-size: 17px;
+  }
+  .autocomplete-items div {
+    padding: 10px;
+    font-size: 17px;
+  }
+
+}
+
+@media (min-width: 992px) {
+  input {
+      padding: 12px;
+      font-size: 18px;
+  }
+  .autocomplete-items div {
+    padding: 11px;
+    font-size: 18px;
+  }
+
+}
+
+@media (min-width: 1200px) {
+  input {
+      padding: 12px;
+      font-size: 18px;
+  }
+  .autocomplete-items div {
+    padding: 11px;
+    font-size: 18px;
+  }
+
+}
+@media (min-width: 1600px) {
+  input {
+      padding: 12px;
+      font-size: 20px;
+  }
+  .autocomplete-items div {
+    padding: 11px;
+    font-size: 20px;
+  }
+
+}
+@media (min-width: 2000px) {
+  input {
+      padding: 14px;
+      font-size: 21px;
+  }
+  .autocomplete-items div {
+    padding: 13px;
+    font-size: 21px;
+  }
 }

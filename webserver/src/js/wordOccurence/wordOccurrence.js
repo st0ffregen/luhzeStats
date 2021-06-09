@@ -164,6 +164,8 @@ function convertData(dataArray) {
 
 async function initWordOccurrenceChart(chart, initWordArray) {
 
+    let chartFontSize = calculateChartFontSize();
+
     let data = await fetchWordOccurrenceData(initWordArray);
     let datasets = convertData(data);
 
@@ -217,10 +219,11 @@ async function initWordOccurrenceChart(chart, initWordArray) {
                 labels: {
                     fontFamily: "'Helvetica', 'Arial', sans-serif",
                     fontColor: '#555',
-                    fontSize: 15,
+                    fontSize: chartFontSize
                 }
-            }
-
+            },
+            responsive: true,
+            maintainAspectRatio: false,
         }
     };
     window.luhzeChart = new Chart(chart.getContext("2d"), luhzeChartConfig);

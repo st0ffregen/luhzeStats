@@ -3,34 +3,25 @@ import math
 from datetime import timedelta
 import pydevd_pycharm
 
-# szenario: wenig aktive Person: ZeitZumLetztenArtikel=120*-0.5=-60, ArtikelAnzahl=10*5=50, CPD=150*1=150, insgesamt = 140
-# szenario: sehr aktive Person: ZeitZumLetztenArtikel=15*-0.5=-7, ArtikelAnzahl=35*5=175, CPD=400*1=400, insgesamt = 400
-
-rankingTimeSinceLastArticleWeight = 1.4
-rankingCharactersPerDayWeight = 1.4
-rankingArticlesCountWeight = 1
-
 
 def tslaFunction(daysSinceLastArticle):
-    # function is using months not days so:
-    monthsSinceLastArticle = daysSinceLastArticle / 30.5
     # to avoid math overflow when passing month thats to big
-    if monthsSinceLastArticle > 6:  # also letzter artikel älter als 5 monate
-        result = (-1.4 / 100) * monthsSinceLastArticle  # linear loosing points over time
+    if daysSinceLastArticle > 180:  # also letzter artikel älter als 6 monate
+        result = (-50 / 100) * daysSinceLastArticle + 107  # linear loosing points over time
     else:
         result = 100 * math.exp(-0.01 * daysSinceLastArticle)
 
-    return result * rankingTimeSinceLastArticleWeight
+    return result
 
 
 def cpdFunction(charactersPerDay):
     result = -100 * (math.exp(-0.01 * charactersPerDay) - 1)
-    return result * rankingCharactersPerDayWeight
+    return result
 
 
 def acFunction(articleCount):
     result = -100 * (math.exp(-0.1 * articleCount) - 1)
-    return result * rankingArticlesCountWeight
+    return result
 
 
 def getDistinctAuthorIdAndName():

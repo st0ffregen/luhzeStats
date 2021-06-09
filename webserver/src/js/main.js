@@ -13,7 +13,7 @@ window.onload = async function () {
     let wordOccurrenceInput = document.getElementById("wordOccurrenceInput");
     let wordOccurrenceChart = document.getElementById('wordOccurrenceChart');
 
-    initWordOccurrenceAutocomplete(wordOccurrenceInput);
+     initWordOccurrenceAutocomplete(wordOccurrenceInput);
     await initWordOccurrenceChart(wordOccurrenceChart, sampleData[index]);
 
     displayGraphContent('today');

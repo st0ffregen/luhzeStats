@@ -87,3 +87,23 @@ function removeLoader() {
 function showLoader() {
     document.getElementById('loader').style.display = 'block';
 }
+
+function calculateChartFontSize() {
+    if (screen.width >= 2000 ){
+        return 21;
+    } else if (screen.width >= 1600) {
+        return 19;
+    } else if (screen.width >= 1200) {
+        return 18;
+    } else if (screen.width >= 992) {
+       return 16;
+    } else if (screen.width >= 768) {
+       return 14;
+    } else if (screen.width >= 576) {
+       return 12;
+    } else if (screen.width >= 375) {
+       return 10;
+    } else {
+        return 9;
+    }
+}
