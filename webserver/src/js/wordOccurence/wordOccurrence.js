@@ -164,6 +164,8 @@ function convertData(dataArray) {
 
 async function initWordOccurrenceChart(chart, initWordArray) {
 
+    let chartFontSize = calculateChartFontSize();
+
     let data = await fetchWordOccurrenceData(initWordArray);
     let datasets = convertData(data);
 
@@ -217,6 +219,7 @@ async function initWordOccurrenceChart(chart, initWordArray) {
                 labels: {
                     fontFamily: "'Helvetica', 'Arial', sans-serif",
                     fontColor: '#555',
+                    fontSize: chartFontSize
                 }
             },
             responsive: true,

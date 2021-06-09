@@ -47,7 +47,7 @@ function convertFinancialData(data, label, color = '#ff6384', hidden = 0) {
     ];
 }
 
-function financialChart(chartElement, data, tooltipFormat) {
+function financialChart(chartElement, data, tooltipFormat, chartFontSize) {
 
     let configForFinancialCharts = {
         data: {
@@ -120,7 +120,8 @@ function financialChart(chartElement, data, tooltipFormat) {
 
                 labels: {
                     fontFamily: "'Helvetica', 'Arial', sans-serif",
-                    fontColor: '#555'
+                    fontColor: '#555',
+                    fontSize: chartFontSize
                 }
             },
             responsive: true,

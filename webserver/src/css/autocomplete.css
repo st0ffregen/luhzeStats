@@ -53,7 +53,7 @@ input[type=submit] {
   padding-right: 0;
 }
 
-@media (min-width: 200px) {
+@media (min-width: 1px) {
   input {
       padding: 6px;
       font-size: 13px;
@@ -124,6 +124,14 @@ input[type=submit] {
 
 }
 @media (min-width: 1600px) {
+  input {
+      padding: 12px;
+      font-size: 20px;
+  }
+  .autocomplete-items div {
+    padding: 11px;
+    font-size: 20px;
+  }
 
 }
 @media (min-width: 2000px) {

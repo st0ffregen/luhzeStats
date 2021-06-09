@@ -124,7 +124,7 @@ function customTooltip(data) {
     };
 }
 
-function barChart(chartElement, data, type, label, tooltipBoolean, customTooltip) {
+function barChart(chartElement, data, type, label, chartFontSize, tooltipBoolean, customTooltip) {
 
 	let colorArray = [];
 	let nameArray = [];
@@ -169,7 +169,8 @@ function barChart(chartElement, data, type, label, tooltipBoolean, customTooltip
 		  	legend: {
 		  		labels: {
 		  			fontFamily: "'Helvetica', 'Arial', sans-serif",
-		  			fontColor: '#555'
+		  			fontColor: '#555',
+                    fontSize: chartFontSize
 		  		}
 		  	},
 			responsive: true,
