@@ -275,7 +275,31 @@
 }
 
 @media (min-width: 2000px) {
+	.danger {
+		padding-bottom: 20px;
+		padding-top: 20px;
+	}
 
+	.rankingSection {
+		margin-top: 30px;
+	}
+
+	.danger-zone {
+		margin-bottom: 55px;
+		font-size: 70px;
+	}
+
+	.ranks {
+		margin-left: 12px;
+		margin-right: 12px;
+		margin-bottom: 25px;
+		border-radius: 7px;
+		padding-left: 12px;
+	}
+
+	.ranks > span {
+		font-size: 60px;
+	}
 }
 
 
