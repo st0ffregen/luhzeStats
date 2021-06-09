@@ -336,28 +336,48 @@
 }
 
 @media (min-width: 2000px) {
+    .word-occurrence-canvas-container {
+        height: 750px;
+        margin-top: 30px;
+        margin-bottom: 40px;
+    }
+
     .canvas-container {
-        height: 800px;
-        margin-top: 100px;
+        height: 700px;
+        margin-top: 70px;
     }
 
-    .small-canvas-container {
-        height: 500px;
-        max-width: 600px;
+    .chart-label {
+        margin-bottom: 10px;
+        margin-top: 40px;
     }
 
-    .small-canvas-label {
-        font-size: 18px;
+    .first-chart {
+        margin-top: 30px;
     }
 
     .googleChartAuthor {
         width: 100%;
-        min-height: 70px;
+        height: 610px;
     }
 
     .googleChartRessort {
         width: 100%;
-        min-height: 80px;
+        height: 670px;
+    }
+
+    .small-canvas-container {
+        height: 250px;
+        max-width: 330px;
+    }
+
+    .small-canvas-label {
+        font-size: 19px;
+    }
+
+    .many-label-canvas-container {
+        height: 700px;
+        margin-top: 10px;
     }
 }
 

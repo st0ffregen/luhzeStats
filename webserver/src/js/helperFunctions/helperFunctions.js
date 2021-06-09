@@ -90,7 +90,7 @@ function showLoader() {
 
 function calculateChartFontSize() {
     if (screen.width >= 2000 ){
-        return 22;
+        return 21;
     } else if (screen.width >= 1600) {
         return 19;
     } else if (screen.width >= 1200) {

@@ -569,56 +569,65 @@ a {
     }
 }
 
-
 @media (min-width: 2000px) {
-    body {
+     body {
         line-height: 1.5;
         max-width: 100%;
-        margin-left: 400px;
-        margin-right: 400px;
+        margin-left: 350px;
+        margin-right: 350px;
     }
 
     h1 {
-        font-size: 4px;
+        font-size: 50px;
     }
 
     h2 {
-        margin-top: 4px;
-        font-size: 4px;
+        font-size: 45px;
+        margin-top: 40px;
     }
 
     p {
-        font-size: 2.5px;
+        font-size: 21px;
+    }
+
+    .go-back-in-time-graph-content {
+        margin-top: 50px;
+        padding: 10px;
     }
 
     .upArrowButton img {
-        max-width: 5.5em;
-    }
-
-    .socialmedialist li {
-
-        margin-left: 1vw;
+        max-width: 100px;
     }
 
     .upArrowButtonDiv {
+        margin-top: 70px;
+    }
 
-        margin-top: 1px;
+    .socialmedialist li {
+        margin-left: 25px;
     }
 
     .socialmedia img {
-        max-width: 2.8vw;
+        max-width: 90px;
     }
 
     .luhzeSprichtHeader {
-        margin-bottom: 1px;
-    }
-
-    #luhzeSprichtInput {
-        margin-bottom: 1px;
+        margin-bottom: 40px;
+        margin-top: 45px;
     }
 
     .footer {
-        margin-top: 2px;
+        margin-top: 10px;
+    }
+
+    .sticky {
+        position: fixed;
+        top: 0;
+        margin-top: 20px;
+        margin-right: 350px;
+        margin-left: 350px;
+        z-index: 99;
+        background-color: #eee;
     }
 }
 
