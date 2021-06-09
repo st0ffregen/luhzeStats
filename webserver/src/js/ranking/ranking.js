@@ -53,7 +53,7 @@ function processRankingData(fetchedData) {
         let color = '';
 
         if (diff >= 50) {
-            description = 'rising underdog';
+            description = 'rising';
             color = "#32CD32";
         } else if (diff >= 10) {
             description = 'ascending';
@@ -62,7 +62,7 @@ function processRankingData(fetchedData) {
             description = 'stagnating';
             color = "#FFA500";
         } else if (diff <= -50) {
-            description = 'free falling';
+            description = 'falling';
             color = "#FF0000";
         } else if (diff <= -10) {
             description = 'decending';
@@ -86,14 +86,15 @@ function processRankingData(fetchedData) {
         return b.score - a.score;
     });
 
+    let scoreOfLastDataIndex = 0;
+
     for (let i = 0; i < authorArray.length; i++) {
-        let scoreOfLastDataIndex = 0;
 
         if (i !== 0 && authorArray[i]['score'] < 0 && scoreOfLastDataIndex >= 0) { //put danger zone
-            newRankingInnerHTML += '<hr><h1 class="dangerZone">!!!DANGER ZONE!!!</h1><div class=\"danger\">';
+            newRankingInnerHTML += '<hr><h1 class="danger-zone">!!!DANGER ZONE!!!</h1><div class=\"danger\">';
         }
 
-        newRankingInnerHTML += '<div class="ranks"><div class="rankName">' + authorArray[i]['name'] + '</div><div class="rankDescription">' + authorArray[i]['score'] + '</div><div class="rankAdjective" style="color: ' + authorArray[i]['color'] + ';">' + authorArray[i]['description'] + '</div><div class="rankDiff">' + authorArray[i]['diff'] + ' </div></div>';
+        newRankingInnerHTML += '<div class="ranks"><span class="rankName">' + authorArray[i]['name'] + '</span><span class="rankDescription">' + authorArray[i]['score'] + '</span><span class="rankAdjective" style="color: ' + authorArray[i]['color'] + ';">' + authorArray[i]['description'] + '</span><span class="rankDiff">' + authorArray[i]['diff'] + ' </span></div>';
         scoreOfLastDataIndex = authorArray[i]['score'];
     }
 
@@ -105,11 +106,15 @@ function processRankingData(fetchedData) {
 function showRanking() {
 
     document.getElementsByClassName("graphContent")[0].style.display = "none";
+    topFunction();
     rankingFunction('today');
+
 }
 
 
 function hideRanking() {
     document.getElementsByClassName("ranking")[0].style.display = "none";
     document.getElementsByClassName("graphContent")[0].style.display = "block";
+    topFunction();
 }
+

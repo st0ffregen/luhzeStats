@@ -1,52 +1,25 @@
-.header {
-	margin-bottom: 20vw;
+.rankingSection {
+	display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    width: 100%;
 }
 
-
-.rankDiff {
-	left: 55%;
+.danger {
+	background-image: linear-gradient(to bottom, #dddddd, #fa4c4c);
 }
 
-.rankDescription {
-	left: 63%;
-}
-
-.rankScore {
-	left: 90%;
-}
-
-.rankName {
-	left: 1%;
-}
-
-hr {
-	
-	margin-top: 4vh;
-}
-
-.dangerzone {
+.danger-zone {
 	color: red;
 	text-align: center;
-	margin-bottom: 5vh;
-	font-size: 10vh;
-
-}
-
-.ranks > div {
-	display: inline;
-	position: absolute;
 }
 
 .ranks {
-	min-height: 8vw;
-	position: relative;
-	margin-left: 1vw;
-	margin-right: 1vw;
-	font-size: 5vw;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
 	background-color: #dddddd;
-	margin-bottom: 1.5vw;
 	border: 1px solid black;
-	border-radius: 5px;
 	-webkit-animation: fadein 1.5s; /* Safari, Chrome and Opera > 12.1 */
 		   -moz-animation: fadein 1.5s; /* Firefox < 16 */
 			-ms-animation: fadein 1.5s; /* Internet Explorer */
@@ -54,48 +27,114 @@ hr {
 				animation: fadein 1.5s;
 }
 
-@media only screen and (min-width: 768px) {
-	.header {
-		margin-bottom: 2vw;
-	}
-	.ranks {
-		min-height: 5vw;
-		font-size: 3vw;
-		margin-bottom: 1vw;
-	}
-
-	.rankDiff {
-		left: 63%;
-	}
-
-	.rankAdjective {
-		left: 73%;
-	}
-
-	.rankScore {
-		left: 93%;
-	}
-
-	.rankName {
-		left: 1%;
-	}
-}
-
-.math {
-	font-size: 1.8em;
-}
-
-.danger {
-	background-image: linear-gradient(to bottom, rgba(255,0,0,0), rgb(255, 0, 0));
-	padding-bottom: 2vh;
-
-}
 .danger > .ranks {
 	background-color: inherit;
 
 }
 
+.rankName {
+	flex-basis: 50%;
+}
 
+.rankDiff {
+	flex-basis: 12%;
+}
+
+.rankDescription {
+	flex-basis: 13%;
+}
+
+.rankAdjective {
+	flex-basis: 25%;
+}
+
+
+@media (min-width: 1px) {
+	.danger {
+		padding-bottom: 20px;
+	}
+}
+
+@media (min-width: 375px) {
+
+}
+
+@media (min-width: 576px) {
+
+}
+
+@media (min-width: 768px) {
+
+}
+
+@media (min-width: 992px) {
+
+}
+
+@media (min-width: 1200px) {
+	.danger {
+		padding-bottom: 20px;
+	}
+
+	.rankingSection {
+		margin-top: 30px;
+	}
+
+	.danger-zone {
+		margin-bottom: 50px;
+		font-size: 60px;
+	}
+
+	.ranks {
+		margin-left: 10px;
+		margin-right: 10px;
+		margin-bottom: 10px;
+		border-radius: 5px;
+		padding-left: 10px;
+	}
+
+	.ranks > span {
+		font-size: 43px;
+	}
+}
+
+@media (min-width: 1600px) {
+	.danger {
+		padding-bottom: 15px;
+		padding-top: 15px;
+	}
+
+	.rankingSection {
+		margin-top: 30px;
+	}
+
+	.danger-zone {
+		margin-bottom: 50px;
+		font-size: 60px;
+	}
+
+	.ranks {
+		margin-left: 10px;
+		margin-right: 10px;
+		margin-bottom: 10px;
+		border-radius: 5px;
+		padding-left: 10px;
+	}
+
+	.ranks > span {
+		font-size: 55px;
+	}
+}
+
+@media (min-width: 2000px) {
+
+}
+
+
+
+hr {
+	margin-top: 4vh;
+}
 
 
 
