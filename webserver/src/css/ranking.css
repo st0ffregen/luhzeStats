@@ -34,6 +34,7 @@
 
 .rankName {
 	flex-basis: 50%;
+	text-align: left;
 }
 
 .rankDiff {
@@ -56,7 +57,35 @@
 }
 
 @media (min-width: 375px) {
+	.go-back-in-time-span-ranking {
+		margin-bottom: 20px;
+	}
 
+	.danger {
+		padding-bottom: 5px;
+		padding-top: 5px;
+	}
+
+	.rankingSection {
+		margin-top: 30px;
+	}
+
+	.danger-zone {
+		margin-bottom: 30px;
+		font-size: 25px;
+	}
+
+	.ranks {
+		margin-left: 8px;
+		margin-right: 8px;
+		margin-bottom: 10px;
+		border-radius: 5px;
+		padding-left: 2px;
+	}
+
+	.ranks > span {
+		font-size: 17px;
+	}
 }
 
 @media (min-width: 576px) {
