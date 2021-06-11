@@ -34,7 +34,6 @@ input[type=submit] {
   right: 0;
 }
 .autocomplete-items div {
-
   cursor: pointer;
   background-color: #fff;
   border-bottom: 1px solid #d4d4d4;
@@ -53,6 +52,26 @@ input[type=submit] {
   padding-right: 0;
 }
 
+.add-word-button {
+  border: 1px solid transparent;
+  background-color: #fff;
+  text-decoration: none;
+  flex-basis: 5%;
+  font-size: 20px;
+  padding: 12px;
+  text-align: center;
+}
+
+#luhzeSprichtInput {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#luhzeSprichtForm {
+  flex-basis: 90%;
+}
+
 @media (min-width: 1px) {
   input {
       padding: 6px;
@@ -62,7 +81,9 @@ input[type=submit] {
     padding: 5px;
     font-size: 13px;
   }
-
+  .add-word-button {
+    padding: 10px;
+  }
 }
 @media (min-width: 375px) {
   input {
