@@ -14,7 +14,7 @@ http {
         server_name localhost 127.0.0.1;
         root /usr/share/nginx/html;
 
-        location /api {
+        location /luhzeStats/api {
 			proxy_pass http://api:5000/api;
 			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;

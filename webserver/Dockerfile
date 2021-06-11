@@ -1,6 +1,6 @@
 FROM nginx:1.20.0
 ARG APP_ENVIRONMENT
-COPY ./src /usr/share/nginx/html
+COPY ./src /usr/share/nginx/html/luhzeStats
 COPY ./nginx.conf.production /etc/nginx/nginx.conf.production
 COPY ./nginx.conf.development /etc/nginx/nginx.conf.development
 WORKDIR /etc/nginx/
