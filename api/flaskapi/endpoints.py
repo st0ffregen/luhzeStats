@@ -116,6 +116,35 @@ def ressortArticlesTimeline():
     return Response(json.dumps(responseDict), mimetype='application/json')
 
 
+@app.route('/api/ressortArticlesTimelineDerivative', methods=['GET'])
+def ressortArticlesTimelineDerivative():
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    # respone: [{ressort: hopo, articles: [{date: some month, 5},{date: some month, 4}]}]
+    yearAndQuarterArray = createYearAndQuarterArray(dateBackInTime)
+    responseDict = []
+    g.cur.execute('SELECT ressort FROM articles where publishedDate <= %s GROUP BY ressort HAVING count(distinct link) > %s', [dateBackInTime, minCountOfArticlesRessortsNeedToHaveToBeDisplayed])
+    allRessorts = g.cur.fetchall()
+
+    if len(allRessorts) == 0:
+        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+
+    for ressort in allRessorts:
+        ressortDict = []
+        for yearAndQuarter in yearAndQuarterArray:
+            year, quarter = yearAndQuarter
+            g.cur.execute(
+                'select cast(date_format(publishedDate,\'%%Y-%%m-01\') as date), count(distinct link) from articles where YEAR(publishedDate) = %s and QUARTER(publishedDate) = %s and ressort = %s and publishedDate <= %s',
+                [year, quarter, ressort[0], dateBackInTime])
+            entry = g.cur.fetchone()
+            if entry[0] is None:
+                entry = (datetime.date(year, (quarter-1) * 3 + 1, 1), 0)
+            ressortDict.append(entry)
+
+        responseDict.append({'ressort': ressort[0], 'articles': adjustFormatDate(ressortDict)})
+
+    return Response(json.dumps(responseDict), mimetype='application/json')
+
+
 @app.route('/api/topAuthorsPerRessort', methods=['GET'])
 def topAuthorsPerRessort():
     dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
