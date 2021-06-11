@@ -33,6 +33,10 @@ let maxWordsToBeDisplayed = 5;
 function deleteChart() {
     window.luhzeChart.destroy();
 
+    for (const color of colorArray) {
+            color['isUsed'] = false;
+    }
+
     let wordOccurrenceChart = document.getElementById('wordOccurrenceChart');
 
     blowUpWordOccurrenceChart([], wordOccurrenceChart);
