@@ -4,7 +4,7 @@ from flask import g
 def getOccurrences(word):
     responseDict = []
 
-    g.cur.execute('SELECT year, quarter, occurrence, quarterWordCount FROM wordOccurrence WHERE word = %s;', [word])
+    g.cur.execute('SELECT year, quarter, occurrence, quarterWordCount FROM wordOccurrence WHERE word = %s', [word.upper()])
     entries = g.cur.fetchall()
 
     if entries is None or len(entries) == 0:

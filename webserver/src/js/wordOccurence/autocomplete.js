@@ -18,7 +18,17 @@ function initWordOccurrenceAutocomplete(inputField) {
         /*append the DIV element as a child of the autocomplete container:*/
         this.parentNode.appendChild(a);
 
-        const response = await fetch('http://localhost/api/autocomplete?word=' + val.toUpperCase());
+        const split = val.split('\u2795');
+        let word = split[split.length - 1].trim();
+        let firstPartOfWord = '';
+
+        for (let i=0; i<split.length -1; i++) {
+            firstPartOfWord += split[i] + ' \u2795 ';
+        }
+
+        firstPartOfWord = firstPartOfWord.toUpperCase();
+
+        const response = await fetch('http://localhost/api/autocomplete?word=' + word);
         const data = await response.json();
 
         /*for each item in the array...*/
@@ -31,14 +41,14 @@ function initWordOccurrenceAutocomplete(inputField) {
                 //unterteilen der zahl mit punkten
                 let numberString = data[i]['occurrence'].toLocaleString("de-DE");
 
-                b.innerHTML = "<strong>" + data[i]['word'].substr(0, val.length) + "</strong>"; //
+                b.innerHTML = "<strong>" + firstPartOfWord + data[i]['word'].substr(0, val.length) + "</strong>"; //
                 b.innerHTML += data[i]['word'].substr(val.length) + "<span class=\"autocomplete-occurrence\">" + numberString + "</span>";
                 /*insert a input field that will hold the current array item's value:*/
-                b.innerHTML += "<input type='hidden' value='" + data[i]['word'] + "'>";
+                b.innerHTML += "<input type='hidden' value='" + firstPartOfWord + data[i]['word'] + "'>";
                 /*execute a function when someone clicks on the item value (DIV element):*/
                 b.addEventListener("click", function (e) {
                     /*insert the value for the autocomplete text field:*/
-                    addDataToWordOccurrenceChart(this.getElementsByTagName("input")[0].value,);
+                    addDataToWordOccurrenceChart(this.getElementsByTagName("input")[0].value);
                     /*close the list of autocompleted values,
                     (or any other open lists of autocompleted values:*/
                     inputField.value = "";

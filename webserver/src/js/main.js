@@ -4,9 +4,9 @@ window.onload = async function () {
     let sampleData = [
         ['STUDENT', 'STUDENTIN'],
         ['LUHZE', 'STUDENT!'],
-        [['FRAU', 'FRAUEN', 'DAME', 'DAMEN'], ['MANN', 'MÄNNER', 'HERR', 'HERREN']],
-        ['STUDENTEN', ['STUDIERENDE', 'STUDIERENDEN']],
-        ['KRISE', ['CORONA', 'PANDEMIE', 'CORONA-PANDEMIE'], ['KLIMA', 'KLIMAWANDEL', 'KLIMAKRISE']]
+        ['FRAU \u2795 FRAUEN \u2795 DAME \u2795 DAMEN', 'MANN \u2795 MÄNNER \u2795 HERR \u2795 HERREN'],
+        ['STUDENTEN', 'STUDIERENDE \u2795 STUDIERENDEN'],
+        ['KRISE', 'CORONA \u2795 PANDEMIE \u2795 CORONA-PANDEMIE', 'KLIMA \u2795 KLIMAWANDEL \u2795 KLIMAKRISE']
     ];
     let index = Math.floor(Math.random() * sampleData.length);
 

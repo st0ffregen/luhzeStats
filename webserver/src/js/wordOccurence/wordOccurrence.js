@@ -30,6 +30,13 @@ var DateTime = luxon.DateTime;
 let maxWordsToBeDisplayed = 5;
 
 
+function addEmojiToInput() {
+    let inputElement = document.getElementById('wordOccurrenceInput');
+    inputElement.value = inputElement.value + ' ' + String.fromCodePoint(0x2795) + ' ';
+    inputElement.focus();
+}
+
+
 function pickNewColor() {
     for (const color of colorArray) {
         if (color['isUsed'] === false) {
@@ -48,11 +55,33 @@ function setColorFree(colorToSetFree) {
     }
 }
 
+function splitWordIntoArray(input) {
+
+    if (input.includes('\u2795')) {
+        let split = input.split('\u2795');
+        let wordArray = [];
+
+        for (const word of split) {
+            wordArray.push(word.trim());
+        }
+
+        return wordArray;
+    }
+
+    return [input];
+}
+
 async function addDataToWordOccurrenceChart(word) {
+
+    let termArray = word;
+    let term = splitWordIntoArray(word);
+
+    if (!Array.isArray(word)) termArray = [word];
+
     if (window.luhzeChart.data.datasets.length < maxWordsToBeDisplayed) {
 
-        let data = await fetchWordOccurrenceData([word]);
-        let dataset = convertData(data);
+        let data = await fetchWordOccurrenceData([term]);
+        let dataset = convertData(data, termArray);
 
         window.luhzeChart.data.datasets.push(dataset.pop());
         window.luhzeChart.update();
@@ -86,7 +115,7 @@ function sumUpWordArray(fetchedData, arrayToFill) {
             });
         } else {
             arrayToFill[index]['occurrence'] += row['occurrence'];
-            arrayToFill[index]['word'] += ' \u274C ' + row['word'];
+            arrayToFill[index]['word'] += ' \u2795 ' + row['word'];
         }
     }
 
@@ -104,7 +133,7 @@ async function fetchWordOccurrenceData(wordArray) {
         if (Array.isArray(word)) { // if term contains several words which should be summed up
             let summedWordArray = [];
             for (const w of word) {
-                let data = await fetchApi('wordOccurrence', 'word', w.toUpperCase())
+                let data = await fetchApi('wordOccurrence', 'word', w)
                 if (data.includes('error')) {
                     continue;
                 }
@@ -112,7 +141,7 @@ async function fetchWordOccurrenceData(wordArray) {
             }
             array.push(summedWordArray);
         } else {
-            let data = await fetchApi('wordOccurrence', 'word', word.toUpperCase());
+            let data = await fetchApi('wordOccurrence', 'word', word);
 
             if (data.includes('error')) {
                 continue;
@@ -123,9 +152,14 @@ async function fetchWordOccurrenceData(wordArray) {
     return array;
 }
 
-function convertData(dataArray) {
+function convertData(dataArray, termArray) {
+    console.log(termArray);
+    console.log(dataArray);
     let datasets = [];
+    let i = 0;
+
     for (const word of dataArray) {
+
         let chartData = [];
         for (const row of word) {
             let date = '';
@@ -147,7 +181,7 @@ function convertData(dataArray) {
         let [color, colorAlpha] = pickNewColor();
 
         datasets.push({
-            label: word[0]['word'].toUpperCase(),
+            label: termArray[i].toUpperCase(),
             borderColor: color,
             backgroundColor: colorAlpha,
             data: chartData,
@@ -157,6 +191,7 @@ function convertData(dataArray) {
             lineTension: 0,
             borderWidth: 2
         });
+        i++;
     }
 
     return datasets;
@@ -164,10 +199,16 @@ function convertData(dataArray) {
 
 async function initWordOccurrenceChart(chart, initWordArray) {
 
+    let wordArray = [];
+
+    for (const word of initWordArray) {
+        wordArray.push(splitWordIntoArray(word));
+    }
+
     let chartFontSize = calculateChartFontSize();
 
-    let data = await fetchWordOccurrenceData(initWordArray);
-    let datasets = convertData(data);
+    let data = await fetchWordOccurrenceData(wordArray);
+    let datasets = convertData(data, initWordArray);
 
     let luhzeChartConfig = {
         data: {
