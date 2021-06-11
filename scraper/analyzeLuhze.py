@@ -3,6 +3,7 @@
 import re
 import sys
 import os
+import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
@@ -33,6 +34,9 @@ def createYearAndQuarterArray(cur, lastModifiedDate):
         'SELECT cast(date_format(MIN(publishedDate),"%%Y-%%m-01") as date) FROM articles WHERE publishedDate > %s',
         [lastModifiedDate])
     minDate = cur.fetchone()[0]
+
+    if minDate < datetime.date(2015, 4, 1):
+        minDate = datetime.date(2015, 4, 1)  # min date should be 2015-04-01 because data before that is unreliable
 
     cur.execute(
         'SELECT cast(date_format(MAX(publishedDate),"%%Y-%%m-01") as date) FROM articles WHERE publishedDate > %s',
@@ -188,7 +192,7 @@ def calculateWordOccurrence(cur, lastModifiedDate):
     sqlStatements = []
 
     cur.execute('SELECT YEAR(a.publishedDate) as year, QUARTER(a.publishedDate) as quarter FROM articles a join documents d '
-                'on a.documentId=d.id WHERE d.updatedAt > %s group by year, quarter',
+                'on a.documentId=d.id WHERE d.updatedAt > %s and d.updatedAt > \'2015-04-01T00:00:00\' group by year, quarter',
                 [lastModifiedDate])
     yearAndQuartersWithUpdatedDocumentsArray = cur.fetchall()
 
