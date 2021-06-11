@@ -30,6 +30,14 @@ var DateTime = luxon.DateTime;
 let maxWordsToBeDisplayed = 5;
 
 
+function deleteChart() {
+    window.luhzeChart.destroy();
+
+    let wordOccurrenceChart = document.getElementById('wordOccurrenceChart');
+
+    blowUpWordOccurrenceChart([], wordOccurrenceChart);
+}
+
 function addEmojiToInput() {
     let inputElement = document.getElementById('wordOccurrenceInput');
     inputElement.value = inputElement.value + ' ' + String.fromCodePoint(0x2795) + ' ';
@@ -153,8 +161,7 @@ async function fetchWordOccurrenceData(wordArray) {
 }
 
 function convertData(dataArray, termArray) {
-    console.log(termArray);
-    console.log(dataArray);
+
     let datasets = [];
     let i = 0;
 
@@ -197,20 +204,11 @@ function convertData(dataArray, termArray) {
     return datasets;
 }
 
-async function initWordOccurrenceChart(chart, initWordArray) {
-
-    let wordArray = [];
-
-    for (const word of initWordArray) {
-        wordArray.push(splitWordIntoArray(word));
-    }
+function blowUpWordOccurrenceChart(datasets, chart) {
 
     let chartFontSize = calculateChartFontSize();
 
-    let data = await fetchWordOccurrenceData(wordArray);
-    let datasets = convertData(data, initWordArray);
-
-    let luhzeChartConfig = {
+        let luhzeChartConfig = {
         data: {
             datasets: datasets
         },
@@ -268,6 +266,20 @@ async function initWordOccurrenceChart(chart, initWordArray) {
         }
     };
     window.luhzeChart = new Chart(chart.getContext("2d"), luhzeChartConfig);
+}
+
+async function initWordOccurrenceChart(chart, initWordArray) {
+
+    let wordArray = [];
+
+    for (const word of initWordArray) {
+        wordArray.push(splitWordIntoArray(word));
+    }
+
+    let data = await fetchWordOccurrenceData(wordArray);
+    let datasets = convertData(data, initWordArray);
+
+    blowUpWordOccurrenceChart(datasets, chart);
 }
 
 function deleteDataFromWordOccurrenceChart(word) {
