@@ -139,7 +139,7 @@ function displayRessortArticlesTimelineDerivativeChart(colorArray, fetchedData, 
         }
     }
 
-    financialChart(ressortArticlesTimelineDerivativeChart, datasets, 'MMM yyyy', chartFontSize);
+    financialChart(ressortArticlesTimelineDerivativeChart, datasets, 'q yyyy', chartFontSize);
 }
 
 function displayRessortArticlesTimelineChart(colorArray, fetchedData, firstRessortToBeDisplayed, secondRessortToBeDisplayed, chartFontSize) {
@@ -164,6 +164,7 @@ async function displayRessortArticlesTimelineCharts(date, chartFontSize) {
     chartFontSize = chartFontSize - 1; // many labels
 
     let fetchedData = await fetchApi('ressortArticlesTimeline', 'dateBackInTime', date);
+    let fetchedDerivativeData = await fetchApi('ressortArticlesTimelineDerivative', 'dateBackInTime', date);
 
     if (fetchedData.includes('error')) return;
 
@@ -177,7 +178,7 @@ async function displayRessortArticlesTimelineCharts(date, chartFontSize) {
     } while (firstRessortToBeDisplayed === secondRessortToBeDisplayed);
 
     displayRessortArticlesTimelineChart(colorArray, fetchedData, firstRessortToBeDisplayed, secondRessortToBeDisplayed, chartFontSize);
-    displayRessortArticlesTimelineDerivativeChart(colorArray, fetchedData, firstRessortToBeDisplayed, secondRessortToBeDisplayed, chartFontSize);
+    displayRessortArticlesTimelineDerivativeChart(colorArray, fetchedDerivativeData, firstRessortToBeDisplayed, secondRessortToBeDisplayed, chartFontSize);
 }
 
 async function displayRessortAverageChart(date, chartFontSize) {
