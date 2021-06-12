@@ -35,29 +35,29 @@ def minRessort():
 
 @app.route('/api/oldestArticle', methods=['GET'])
 def oldestArticle():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     g.cur.execute('SELECT MIN(publishedDate) FROM articles where publishedDate <= %s', [dateBackInTime])
     entries = g.cur.fetchall()
     if len(entries) == 0:
-        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d'))
 
     return Response(json.dumps({'oldestArticle': entries[0][0]}, default=str), mimetype='application/json')
 
 
 @app.route('/api/newestArticle', methods=['GET'])
 def newestArticle():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     g.cur.execute('SELECT MAX(publishedDate) FROM articles where publishedDate <= %s', [dateBackInTime])
     entries = g.cur.fetchall()
     if len(entries) == 0:
-        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d'))
 
     return Response(json.dumps({'newestArticle': entries[0][0]}, default=str), mimetype='application/json')
 
 
 @app.route('/api/activeMembers', methods=['GET'])
 def activeMembers():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     yearAndQuarterArray = createYearAndQuarterArray(dateBackInTime)
     responseDict = []
     for yearAndQuarter in yearAndQuarterArray:
@@ -76,20 +76,20 @@ def activeMembers():
 
 @app.route('/api/ressortTopList', methods=['GET'])
 def ressortTopList():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     g.cur.execute(
         'SELECT ressort, count(distinct link) FROM articles where publishedDate <= %s GROUP BY ressort HAVING count(distinct link) >= %s ORDER BY 2 DESC',
         [dateBackInTime, minCountOfArticlesRessortsNeedToHaveToBeDisplayed])
     responseDict = g.cur.fetchall()
     if len(responseDict) == 0:
-        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d'))
 
     return Response(json.dumps(adjustFormatName(responseDict)), mimetype='application/json')
 
 
 @app.route('/api/ressortArticlesTimeline', methods=['GET'])
 def ressortArticlesTimeline():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     # respone: [{ressort: hopo, articles: [{date: some month, 5},{date: some month, 4}]}]
     yearAndMonthArray = createYearAndMonthArray(dateBackInTime)
     responseDict = []
@@ -97,7 +97,7 @@ def ressortArticlesTimeline():
     allRessorts = g.cur.fetchall()
 
     if len(allRessorts) == 0:
-        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d'))
 
     for ressort in allRessorts:
         ressortDict = []
@@ -118,7 +118,7 @@ def ressortArticlesTimeline():
 
 @app.route('/api/ressortArticlesTimelineDerivative', methods=['GET'])
 def ressortArticlesTimelineDerivative():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     # respone: [{ressort: hopo, articles: [{date: some month, 5},{date: some month, 4}]}]
     yearAndQuarterArray = createYearAndQuarterArray(dateBackInTime)
     responseDict = []
@@ -126,7 +126,7 @@ def ressortArticlesTimelineDerivative():
     allRessorts = g.cur.fetchall()
 
     if len(allRessorts) == 0:
-        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d'))
 
     for ressort in allRessorts:
         ressortDict = []
@@ -147,7 +147,7 @@ def ressortArticlesTimelineDerivative():
 
 @app.route('/api/topAuthorsPerRessort', methods=['GET'])
 def topAuthorsPerRessort():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     # response: [{ressort: hopo, authors: [{name: theresa, count:5},{name: someone, count:2}]}]
     g.cur.execute(
         'SELECT ressort, ar.authorId, au.name, count(link) as count '
@@ -157,7 +157,7 @@ def topAuthorsPerRessort():
         [dateBackInTime, dateBackInTime, minCountOfArticlesRessortsNeedToHaveToBeDisplayed])
     entries = g.cur.fetchall()
     if len(entries) == 0:
-        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d'))
 
     responseDict = []
     ressort = entries[0][0]  # set ressort to first in fetched list
@@ -178,13 +178,13 @@ def topAuthorsPerRessort():
 
 @app.route('/api/authorTimeline', methods=['GET'])
 def authorTimeline():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     g.cur.execute(
         'SELECT ar.authorId, au.name, MIN(publishedDate), MAX(publishedDate) FROM articles ar join authors au on ar.authorId=au.id where publishedDate <= %s GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY count(distinct link) DESC',
         [dateBackInTime, minCountOfArticlesAuthorsNeedToHaveToBeDisplayed])
     entries = g.cur.fetchall()
     if len(entries) == 0:
-        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d'))
 
     responseDict = []
     for e in entries:
@@ -195,7 +195,7 @@ def authorTimeline():
 
 @app.route('/api/articlesTimeline', methods=['GET'])
 def articlesTimeline():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     yearAndMonthArray = createYearAndMonthArray(dateBackInTime)
     responseDict = []
     for yearAndMonth in yearAndMonthArray:
@@ -213,21 +213,21 @@ def articlesTimeline():
 
 @app.route('/api/mostArticlesPerTime', methods=['GET'])
 def mostArticlesPerTime():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     g.cur.execute(
         'SELECT ar.authorId, au.name, ROUND(((DATEDIFF(MAX(publishedDate),MIN(publishedDate)))/count(distinct link)),1) as diff '
         'FROM articles ar join authors au on ar.authorId=au.id where publishedDate <= %s GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY diff',
         [dateBackInTime, minCountOfArticlesAuthorsNeedToHaveToBeDisplayed])
     responseDict = g.cur.fetchall()
     if len(responseDict) == 0:
-        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d'))
 
     return Response(json.dumps(adjustFormatNameStartOnSecondIndex(responseDict)), mimetype='application/json')
 
 
 @app.route('/api/authorAverage', methods=['GET'])
 def authorAverage():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     g.cur.execute(
         'SELECT ar.authorId, au.name, round(avg(charCount)) as count '
         'from (select distinct(link), d.charCount as charCount, authorId from articles art join documents d on art.documentId=d.id '
@@ -236,14 +236,14 @@ def authorAverage():
         [dateBackInTime, dateBackInTime, minCountOfArticlesAuthorsNeedToHaveToBeDisplayed])
     responseDict = g.cur.fetchall()
     if len(responseDict) == 0:
-        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d'))
 
     return Response(json.dumps(adjustFormatNameStartOnSecondIndex(responseDict)), mimetype='application/json')
 
 
 @app.route('/api/averageCharactersPerDay', methods=['GET'])
 def averageCharactersPerDay():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     g.cur.execute(
         'SELECT ar.authorId, au.name, sum(charCount) as count from '
         '(select distinct(link), d.charCount as charCount, authorId from articles art join documents d on art.documentId=d.id '
@@ -251,7 +251,7 @@ def averageCharactersPerDay():
         'join authors as au on ar.authorId=au.id group by authorId order by count desc', [dateBackInTime, dateBackInTime, minCountOfArticlesAuthorsNeedToHaveToBeDisplayed])
     entries = g.cur.fetchall()
     if len(entries) == 0:
-        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d'))
     responseDict = []
     for e in entries:
         g.cur.execute('SELECT DATEDIFF(MAX(publishedDate),MIN(publishedDate)) as average from articles where authorId=%s and publishedDate <= %s', [str(e[0]), dateBackInTime])
@@ -263,7 +263,7 @@ def averageCharactersPerDay():
 
 @app.route('/api/ressortAverage', methods=['GET'])
 def ressortAverage():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     g.cur.execute(
         'SELECT ressort, round(avg(charcount)) as count from (select distinct(link), d.charCount as charCount,'
         ' ressort from articles ar join documents as d on ar.documentId=d.id where publishedDate <= %s and ressort in'
@@ -271,33 +271,33 @@ def ressortAverage():
         'group by ressort order by count desc', [dateBackInTime, dateBackInTime, minCountOfArticlesRessortsNeedToHaveToBeDisplayed])
     responseDict = g.cur.fetchall()
     if len(responseDict) == 0:
-        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d'))
 
     return Response(json.dumps(adjustFormatName(responseDict)), mimetype='application/json')
 
 
 @app.route('/api/authorTopList', methods=['GET'])
 def authorTopList():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     g.cur.execute(
         'SELECT ar.authorId, au.name, count(distinct link) as count FROM articles ar join authors au on ar.authorId=au.id where publishedDate <= %s GROUP BY authorId HAVING count(distinct link) >= %s ORDER BY 3 DESC',
         [dateBackInTime, minCountOfArticlesAuthorsNeedToHaveToBeDisplayed])
     responseDict = g.cur.fetchall()
     if len(responseDict) == 0:
-        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d'))
 
     return Response(json.dumps(adjustFormatNameStartOnSecondIndex(responseDict)), mimetype='application/json')
 
 
 @app.route('/api/ressortTimeline', methods=['GET'])
 def ressortTimeline():
-    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%dT%H:%M:%S')
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
     g.cur.execute(
         'SELECT ressort, MIN(publishedDate), MAX(publishedDate) FROM articles where publishedDate <= %s GROUP BY ressort HAVING count(distinct link) >= %s ORDER BY count(distinct link) DESC',
         [dateBackInTime, minCountOfArticlesRessortsNeedToHaveToBeDisplayed])
     entries = g.cur.fetchall()
     if len(entries) == 0:
-        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d %H:%M:%S'))
+        return jsonify('error: no data for requested date ' + dateBackInTime.strftime('%Y-%m-%d'))
 
     responseDict = []
     for e in entries:
@@ -309,7 +309,7 @@ def ressortTimeline():
 @app.route('/api/ranking', methods=['GET'])
 def ranking():
     dateBackInTime = request.args.get('dateBackInTime', type=str)
-    return Response(json.dumps(calculateRankingForAllAuthors(datetime.datetime.strptime(dateBackInTime, '%Y-%m-%dT%H:%M:%S'))), mimetype='application/json')
+    return Response(json.dumps(calculateRankingForAllAuthors(datetime.datetime.strptime(dateBackInTime, '%Y-%m-%d'))), mimetype='application/json')
 
 
 @app.route('/api/singleRanking', methods=['GET'])
@@ -320,7 +320,7 @@ def singleRanking():
     g.cur.execute('SELECT distinct(ar.authorId), au.name  from articles ar join authors au on ar.authorId=au.id where au.name = %s', [name])
     authorId = g.cur.fetchone()[0]
 
-    return calculateValues(authorId, name, datetime.datetime.strptime(dateBackInTime, '%Y-%m-%dT%H:%M:%S'))
+    return calculateValues(authorId, name, datetime.datetime.strptime(dateBackInTime, '%Y-%m-%d'))
 
 
 @app.route('/api/firstYearAndQuarter', methods=['GET'])

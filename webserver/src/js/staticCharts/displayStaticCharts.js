@@ -219,7 +219,7 @@ function displayGraphContent(direction, step) {
     let chartFontSize = calculateChartFontSize();
     currentGraphContentDate = calculateDateToGetDataFor(direction, step, currentGraphContentDate);
     writeDateToDomElement('go-back-in-time-date-graph-content', currentGraphContentDate);
-    generateGraphs(currentGraphContentDate.toISOString().slice(0, -5), chartFontSize);
+    generateGraphs(currentGraphContentDate.toISOString().slice(0, -14), chartFontSize);
 }
 
 function destroyAllExistingCharts() {
@@ -230,7 +230,7 @@ function destroyAllExistingCharts() {
 
 
 window.onresize = function() { //traffic aufwending
-    let date = currentGraphContentDate.toISOString().slice(0, -5);
+    let date = currentGraphContentDate.toISOString().slice(0, -14);
 	displayGoogleAuthorTimelineChart(date);
 	displayGoogleRessortTimelineChart(date);
 }
