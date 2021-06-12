@@ -28,7 +28,7 @@ function initWordOccurrenceAutocomplete(inputField) {
 
         firstPartOfWord = firstPartOfWord.toUpperCase();
 
-        const response = await fetch('http://localhost/api/autocomplete?word=' + word);
+        const response = await fetch('api/autocomplete?word=' + word);
         const data = await response.json();
 
         /*for each item in the array...*/

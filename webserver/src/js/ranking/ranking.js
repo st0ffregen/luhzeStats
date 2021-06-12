@@ -5,7 +5,7 @@ async function rankingFunction(direction, step = null) {
     currentRankingDate = calculateDateToGetDataFor(direction, step, currentRankingDate);
     prepareSiteForRanking();
 
-    const response = await fetch('http://localhost/api/ranking?dateBackInTime=' + currentRankingDate.toISOString().slice(0, -5)); //slices .400Z
+    const response = await fetch('api/ranking?dateBackInTime=' + currentRankingDate.toISOString().slice(0, -5)); //slices .400Z
     const fetchedData = await response.json();
 
     let newRankingInnerHTML = processRankingData(fetchedData);
