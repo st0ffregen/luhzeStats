@@ -3,13 +3,13 @@
 from datetime import datetime
 import sys
 import os
+import logging
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 import pydevd_pycharm
 from analyzeLuhze import analyzeNewData
 from scrapingFunctions import scrapeRessort, scrapeAuthor, scrapeTitle, scrapeDate, scrapeWordcountAndText, \
     readInSite, getLinksToSingleArticlesFromOverviewPages
 from databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
-
 
 luhzeArticleOverviewPageUrl = 'https://www.luhze.de/page/'
 numberOfOverviewPagesToScrapeAgain = int(os.environ['NUMBERS_OF_OVERVIEW_PAGES_TO_SCRAPE_AGAIN'])
@@ -37,7 +37,9 @@ def prepareSQLStatements(link, title, authorArray, ressortArray, wordcount, docu
     return preparedSQLStatements
 
 
-def scrapeAllInformation(linkToArticle):
+def scrapeAllInformation(linkToArticle, logger):
+
+    logger.info('Scrape information from ' + linkToArticle)
 
     parsedArticlePage = readInSite(linkToArticle)
     title = scrapeTitle(parsedArticlePage)
@@ -62,9 +64,28 @@ def connectToDebugger():
     pydevd_pycharm.settrace(ip, port=port, stdoutToServer=True, stderrToServer=True)
 
 
+def configureLogger():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+
+    formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+
+    file_handler = logging.FileHandler('logs/scraper.log')
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+
+    return logger
+
+
 def main():
-    if os.environ['DEBUGGING_ENABLED'] == 'true':
-        connectToDebugger()
+    logger = configureLogger()
+
+    logger.info('Start scraper')
+
+    ip = '192.168.1.56'
+    port = 33849
+    pydevd_pycharm.settrace(ip, port=port, stdoutToServer=True, stderrToServer=True)
 
     con, cur = connectToDB()
 
@@ -76,7 +97,7 @@ def main():
 
     for linkToArticle in reversedLinkToSingleArticlesArray:
 
-        informationDict = scrapeAllInformation(linkToArticle)
+        informationDict = scrapeAllInformation(linkToArticle, logger)
 
         sqlStatements.extend(prepareSQLStatements(
             linkToArticle,
@@ -88,10 +109,16 @@ def main():
             informationDict['date']
         ))
 
+    logger.info('Execute SQL')
+
     executeSQL(sqlStatements, con, cur)
     closeConnectionToDB(con, cur)
 
+    logger.info('Terminate scraper')
+
     analyzeNewData()
+
+    logger.info('Terminate application')
 
 
 if __name__ == '__main__':

@@ -4,6 +4,7 @@ import re
 import sys
 import os
 import datetime
+import logging
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from databaseFunctions import executeSQL, connectToDB, closeConnectionToDB
@@ -14,6 +15,10 @@ wantedPunctuatedWords = ['STUDENT!']
 
 
 def analyzeNewData():
+    logger = configureLogger()
+
+    logger.info('Start analyzer')
+
     con, cur = connectToDB()
 
     lastModifiedDate = getLastModifiedDate(cur)
@@ -22,11 +27,28 @@ def analyzeNewData():
         lastModifiedDate = '0001-01-01 00:00:01'
     else:
         lastModifiedDate = lastModifiedDate.strftime('%Y-%m-%d %H:%M:%S')
+    logger.info('Last modified date is ' + lastModifiedDate)
 
-    executeSQL(calculateWordOccurrence(cur, lastModifiedDate), con, cur)
-    executeSQL(fillDbWithMissingYearsAndQuarters(cur, '0001-01-01 00:00:01'), con, cur)
+    executeSQL(calculateWordOccurrence(cur, lastModifiedDate, logger), con, cur)
+    executeSQL(fillDbWithMissingYearsAndQuarters(cur, '0001-01-01 00:00:01', logger), con, cur)
 
     closeConnectionToDB(con, cur)
+
+    logger.info('Terminate analyzer')
+
+
+def configureLogger():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+
+    formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+
+    file_handler = logging.FileHandler('logs/scraper.log')
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+
+    return logger
 
 
 def createYearAndQuarterArray(cur, lastModifiedDate):
@@ -68,16 +90,12 @@ def createYearAndQuarterArray(cur, lastModifiedDate):
     return quarterArray
 
 
-def getWords(cur, offset, limit):
-    cur.execute('select distinct(word) from wordOccurrence limit %s offset %s', [limit, offset])
-    return cur.fetchall()
-
-
-def prepareSQLForMissingYearAndQuarters(cur, fetchedWords, yearAndQuarterArray):
+def prepareSQLForMissingYearAndQuarters(cur, fetchedWords, yearAndQuarterArray, logger):
     sqlStatements = []
 
     for yearAndQuarter in yearAndQuarterArray:
         year, quarter = yearAndQuarter
+        logger.info('Fill missing rows in year ' + str(year) + ' and quarter ' + str(quarter))
         cur.execute('select max(quarterWordCount) from wordOccurrence where year = %s and quarter = %s',
                     [year, quarter])
         quarterWordCount = cur.fetchone()[0]
@@ -91,18 +109,14 @@ def prepareSQLForMissingYearAndQuarters(cur, fetchedWords, yearAndQuarterArray):
     return sqlStatements
 
 
-def fillDbWithMissingYearsAndQuarters(cur, lastModifiedDate):
+def fillDbWithMissingYearsAndQuarters(cur, lastModifiedDate, logger):
     yearAndQuarterArray = createYearAndQuarterArray(cur, lastModifiedDate)
-
-    offset = 0
     sqlStatements = []
 
-    while True:
-        fetchedRows = getWords(cur, offset, 5000)
-        if len(fetchedRows) == 0:
-            break
-        sqlStatements.extend(prepareSQLForMissingYearAndQuarters(cur, fetchedRows, yearAndQuarterArray))
-        offset += 5000
+    cur.execute('select distinct(word) from wordOccurrence')
+    fetchedRows = cur.fetchall()
+
+    sqlStatements.extend(prepareSQLForMissingYearAndQuarters(cur, fetchedRows, yearAndQuarterArray, logger))
 
     return sqlStatements
 
@@ -179,7 +193,7 @@ def removeLeadingPunctuations(w):
         return w
 
 
-def calculateWordOccurrence(cur, lastModifiedDate):
+def calculateWordOccurrence(cur, lastModifiedDate, logger):
     # Four cases need to be addressed
     # 1) The document is new to the documents table (same updated and created date)
     # 1.1) the document is published in a new yearAndQuarter
@@ -197,6 +211,7 @@ def calculateWordOccurrence(cur, lastModifiedDate):
     yearAndQuartersWithUpdatedDocumentsArray = cur.fetchall()
 
     for yearAndQuarter in yearAndQuartersWithUpdatedDocumentsArray:
+        logger.info('Calculate date for year ' + str(yearAndQuarter[0]) + ' and quarter ' + str(yearAndQuarter[1]))
         sqlStatements.extend(calculateWordOccurrenceForWholeYearAndQuarter(cur, yearAndQuarter[0], yearAndQuarter[1]))
 
     return sqlStatements
