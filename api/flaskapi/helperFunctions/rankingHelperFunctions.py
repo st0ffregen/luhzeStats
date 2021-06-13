@@ -63,9 +63,6 @@ def getArticleCount(authorId, dateBackInTime):
 
 
 def calculateValues(authorId, authorName, dateBackInTime):
-    #ip = '192.168.1.56'
-    #port = 41135
-    #pydevd_pycharm.settrace(ip, port=port, stdoutToServer=True, stderrToServer=True)
     writtenCharacters = getWrittenCharacters(authorId, dateBackInTime)
 
     if writtenCharacters is None:
@@ -104,12 +101,18 @@ def calculateValues(authorId, authorName, dateBackInTime):
 
     rankingScoreNow = round(rankingTsla + rankingCpd + rankingAc)
 
-    rankingTslaTwoMonthsBefore = tslaFunction(daysSinceLastArticleTwoMonthsBefore)
-    rankingCpdTwoMonthsBefore = cpdFunction(writtenCharactersPerDayTwoMonthsBefore)
-    rankingAcTwoMonthsBefore = acFunction(articleCountTwoMonthsBefore)
+    if articleCountTwoMonthsBefore == 0:
+        rankingTslaTwoMonthsBefore = 0
+        rankingCpdTwoMonthsBefore = 0
+        rankingAcTwoMonthsBefore = 0
+        rankingScoreTwoMonhtsBefore = 0
+    else:
+        rankingTslaTwoMonthsBefore = tslaFunction(daysSinceLastArticleTwoMonthsBefore)
+        rankingCpdTwoMonthsBefore = cpdFunction(writtenCharactersPerDayTwoMonthsBefore)
+        rankingAcTwoMonthsBefore = acFunction(articleCountTwoMonthsBefore)
 
-    rankingScoreTwoMonhtsBefore = round(
-        rankingTslaTwoMonthsBefore + rankingCpdTwoMonthsBefore + rankingAcTwoMonthsBefore)
+        rankingScoreTwoMonhtsBefore = round(
+            rankingTslaTwoMonthsBefore + rankingCpdTwoMonthsBefore + rankingAcTwoMonthsBefore)
 
     rankingScoreDiff = rankingScoreNow - rankingScoreTwoMonhtsBefore
 
