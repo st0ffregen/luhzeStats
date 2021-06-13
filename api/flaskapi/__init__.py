@@ -15,13 +15,13 @@ else:
     app.config['FLASK_ENV'] = 'production'
 
 
-if not app.debug and False:
+if not app.debug:
     file_handler = FileHandler('logs/error.log')
     file_handler.setFormatter(
-        Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
+        Formatter('%(asctime)s %(levelname)s: %(message)s')
     )
-    app.logger.setLevel(logging.INFO)
-    file_handler.setLevel(logging.INFO)
+    app.logger.setLevel(logging.WARNING)
+    file_handler.setLevel(logging.WARNING)
     app.logger.addHandler(file_handler)
     app.logger.info('errors')
 
