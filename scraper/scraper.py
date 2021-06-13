@@ -83,9 +83,8 @@ def main():
 
     logger.info('Start scraper')
 
-    ip = '192.168.1.56'
-    port = 33849
-    pydevd_pycharm.settrace(ip, port=port, stdoutToServer=True, stderrToServer=True)
+    if os.environ['DEBUGGING_ENABLED'] == 'true':
+        connectToDebugger()
 
     con, cur = connectToDB()
 
