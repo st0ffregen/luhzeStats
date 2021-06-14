@@ -153,7 +153,7 @@ def topAuthorsPerRessort():
         'SELECT ressort, ar.authorId, au.name, count(link) as count '
         'from articles ar join authors au on ar.authorId=au.id where publishedDate <= %s and ressort in'
         ' (select ressort from articles where publishedDate <= %s group by ressort having count(distinct link) >= %s) '
-        'group by ressort, authorId having count >= 5 order by 1 asc,4 desc',
+        'group by ressort, authorId order by 1 asc, 4 desc',
         [dateBackInTime, dateBackInTime, minCountOfArticlesRessortsNeedToHaveToBeDisplayed])
     entries = g.cur.fetchall()
     if len(entries) == 0:
