@@ -1,6 +1,7 @@
 from flask import g
 import math
 from datetime import timedelta
+from dateutil.relativedelta import relativedelta
 import pydevd_pycharm
 
 
@@ -72,7 +73,7 @@ def calculateValues(authorId, authorName, dateBackInTime):
     daysSinceLastArticle = getDaysSinceLastArticle(authorId, dateBackInTime)
     articleCount = getArticleCount(authorId, dateBackInTime)
 
-    writtenCharactersTwoMonthsBefore = getWrittenCharacters(authorId, dateBackInTime - timedelta(60))
+    writtenCharactersTwoMonthsBefore = getWrittenCharacters(authorId, dateBackInTime - relativedelta(months=2))
 
     if writtenCharactersTwoMonthsBefore is None:
         writtenCharactersTwoMonthsBefore = 0
@@ -80,9 +81,9 @@ def calculateValues(authorId, authorName, dateBackInTime):
         daysSinceLastArticleTwoMonthsBefore = 0
         articleCountTwoMonthsBefore = 0
     else:
-        daysSinceFirstArticleTwoMonthsBefore = getDaysSinceFirstArticle(authorId, dateBackInTime - timedelta(60))
-        daysSinceLastArticleTwoMonthsBefore = getDaysSinceLastArticle(authorId, dateBackInTime - timedelta(60))
-        articleCountTwoMonthsBefore = getArticleCount(authorId, dateBackInTime - timedelta(60))
+        daysSinceFirstArticleTwoMonthsBefore = getDaysSinceFirstArticle(authorId, dateBackInTime - relativedelta(months=2))
+        daysSinceLastArticleTwoMonthsBefore = getDaysSinceLastArticle(authorId, dateBackInTime - relativedelta(months=2))
+        articleCountTwoMonthsBefore = getArticleCount(authorId, dateBackInTime - relativedelta(months=2))
 
     try:
         writtenCharactersPerDay = round(writtenCharacters / daysSinceFirstArticle)
