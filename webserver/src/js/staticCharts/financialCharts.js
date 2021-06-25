@@ -70,7 +70,7 @@ function financialChart(chartElement, data, tooltipFormat, chartFontSize) {
                             enabled: true,
                             fontStyle: 'bold'
                         },
-                        source: 'data',
+                        source: 'auto',
                         autoSkip: true,
                         autoSkipPadding: 75,
                         maxRotation: 0,

@@ -233,7 +233,7 @@ function blowUpWordOccurrenceChart(datasets, chart) {
                             enabled: true,
                             fontStyle: 'bold'
                         },
-                        source: 'data',
+                        source: 'auto',
                         autoSkip: true,
                         autoSkipPadding: 75,
                         maxRotation: 0,
