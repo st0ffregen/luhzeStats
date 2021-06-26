@@ -133,11 +133,14 @@ def ressortArticlesTimelineDerivative():
         for yearAndQuarter in yearAndQuarterArray:
             year, quarter = yearAndQuarter
             g.cur.execute(
-                'select cast(date_format(publishedDate,\'%%Y-%%m-01\') as date), count(distinct link) from articles where YEAR(publishedDate) = %s and QUARTER(publishedDate) = %s and ressort = %s and publishedDate <= %s',
+                'select count(distinct link) from articles where YEAR(publishedDate) = %s and QUARTER(publishedDate) = %s and ressort = %s and publishedDate <= %s',
                 [year, quarter, ressort[0], dateBackInTime])
             entry = g.cur.fetchone()
-            if entry[0] is None:
-                entry = (datetime.date(year, (quarter-1) * 3 + 1, 1), 0)
+            count = entry[0]
+            if count is None:
+                count = 0
+
+            entry = (datetime.date(year, (quarter-1) * 3 + 1, 1), count)
             ressortDict.append(entry)
 
         responseDict.append({'ressort': ressort[0], 'articles': adjustFormatDate(ressortDict)})
