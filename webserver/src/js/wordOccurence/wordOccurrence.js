@@ -34,7 +34,7 @@ function deleteChart() {
     window.luhzeChart.destroy();
 
     for (const color of colorArray) {
-            color['isUsed'] = false;
+        color['isUsed'] = false;
     }
 
     let wordOccurrenceChart = document.getElementById('wordOccurrenceChart');
@@ -212,7 +212,7 @@ function blowUpWordOccurrenceChart(datasets, chart) {
 
     let chartFontSize = calculateChartFontSize();
 
-        let luhzeChartConfig = {
+    let luhzeChartConfig = {
         data: {
             datasets: datasets
         },
@@ -238,9 +238,9 @@ function blowUpWordOccurrenceChart(datasets, chart) {
                         autoSkipPadding: 75,
                         maxRotation: 0,
                         sampleSize: 100,
-                        maxTicksLimit: 7,
+                        maxTicksLimit: 5,
                     },
-                    afterBuildTicks: afterDeleteTicksFunction
+                    afterBuildTicks: afterBuildTicksFunction
                 }],
                 yAxes: [{
                     scaleLabel: {
@@ -300,31 +300,31 @@ function deleteDataFromWordOccurrenceChart(word) {
 }
 
 
-function afterDeleteTicksFunction (scale, ticks) {
-                        if (ticks != null) {
-                            let majorUnit = scale._majorUnit;
-                            let firstTick = ticks[0];
-                            let i, ilen, val, tick, currMajor, lastMajor;
+function afterBuildTicksFunction(scale, ticks) {
+    if (ticks != null) {
+        let majorUnit = scale._majorUnit;
+        let firstTick = ticks[0];
+        let i, ilen, val, tick, currMajor, lastMajor;
 
-                            val = DateTime.fromISO(ticks[0].value);
-                            if ((majorUnit === 'minute' && val.second === 0)
-                                || (majorUnit === 'hour' && val.minute === 0)
-                                || (majorUnit === 'day' && val.hour === 9)
-                                || (majorUnit === 'month' && val.day <= 3 && val.weekday === 1)
-                                || (majorUnit === 'year' && val.month === 0)) {
-                                firstTick.major = true;
-                            } else {
-                                firstTick.major = false;
-                            }
-                            lastMajor = val.get(majorUnit);
+        val = DateTime.fromISO(ticks[0].value);
+        if ((majorUnit === 'minute' && val.second === 0)
+            || (majorUnit === 'hour' && val.minute === 0)
+            || (majorUnit === 'day' && val.hour === 9)
+            || (majorUnit === 'month' && val.day <= 3 && val.weekday === 1)
+            || (majorUnit === 'year' && val.month === 0)) {
+            firstTick.major = true;
+        } else {
+            firstTick.major = false;
+        }
+        lastMajor = val.get(majorUnit);
 
-                            for (i = 1, ilen = ticks.length; i < ilen; i++) {
-                                tick = ticks[i];
-                                val = DateTime.fromISO(tick.value);
-                                currMajor = val.get(majorUnit);
-                                tick.major = currMajor !== lastMajor;
-                                lastMajor = currMajor;
-                            }
-                            return ticks;
-                        }
-                    }
+        for (i = 1, ilen = ticks.length; i < ilen; i++) {
+            tick = ticks[i];
+            val = DateTime.fromISO(tick.value);
+            currMajor = val.get(majorUnit);
+            tick.major = currMajor !== lastMajor;
+            lastMajor = currMajor;
+        }
+        return ticks;
+    }
+}
