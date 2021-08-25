@@ -57,6 +57,16 @@ async function displayActiveMembers(date, chartFontSize) {
     financialChart(activeMembersChart, chartData, 'q yyyy', chartFontSize);
 }
 
+async function displayActiveMembersWithFourArticles(date, chartFontSize) {
+    let fetchedData = await fetchApi('activeMembersWithFourArticles', 'dateBackInTime', date);
+
+    if (fetchedData.includes('error')) return;
+
+    let activeMembersWithFourArticlesChart = document.getElementById('activeMembersWithFourArticlesChart');
+    let chartData = convertFinancialDataDerivative(fetchedData, 'Aktive mit mind. 4 Artikeln in dem Quartal');
+    financialChart(activeMembersWithFourArticlesChart, chartData, 'q yyyy', chartFontSize);
+}
+
 async function displayGoogleAuthorTimelineChart(date) {
     let fetchedData = await fetchApi('authorTimeline', 'dateBackInTime', date);
 
@@ -201,6 +211,7 @@ function generateGraphs(date, chartFontSize) {
     displayArticlesTimeline(date, chartFontSize);
     displayArticlesTimelineDerivative(date, chartFontSize);
     displayActiveMembers(date, chartFontSize);
+    displayActiveMembersWithFourArticles(date, chartFontSize);
     displayGoogleAuthorTimelineChart(date);
     displayAuthorTopListChart(date, chartFontSize);
     displayAuthorAverageChart(date, chartFontSize);

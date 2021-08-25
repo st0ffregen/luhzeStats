@@ -74,6 +74,29 @@ def activeMembers():
     return Response(json.dumps(adjustFormatDate(responseDict)), mimetype='application/json')
 
 
+@app.route('/api/activeMembersWithFourArticles', methods=['GET'])
+def activeMembersWithFourArticles():
+    dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
+    yearAndQuarterArray = createYearAndQuarterArray(dateBackInTime)
+    responseDict = []
+    for yearAndQuarter in yearAndQuarterArray:
+        year, quarter = yearAndQuarter
+        date = datetime.date(year, (quarter-1) * 3 + 1, 1)
+        g.cur.execute(
+            'select count(*) from (select authorId from articles where YEAR(publishedDate) = %s and QUARTER(publishedDate) = %s and publishedDate <= %s group by authorId having count(link) > 3) as sub',
+            [year, quarter, dateBackInTime])
+        entry = g.cur.fetchone()
+
+        if entry[0] is None:
+            entry = (date, 0)
+        else:
+            entry = (date, entry[0])
+
+        responseDict.append(entry)
+
+    return Response(json.dumps(adjustFormatDate(responseDict)), mimetype='application/json')
+
+
 @app.route('/api/ressortTopList', methods=['GET'])
 def ressortTopList():
     dateBackInTime = datetime.datetime.strptime(request.args.get('dateBackInTime', type=str), '%Y-%m-%d')
