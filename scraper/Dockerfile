@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM python:3.9.9
 COPY . /usr/src/scraper
 WORKDIR /usr/src/scraper
 RUN python -m pip install --upgrade pip
