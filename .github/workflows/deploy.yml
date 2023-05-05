@@ -3,17 +3,14 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - master
+      - fix_actions
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Deploy
-        uses: appleboy/ssh-action@master
-        env:
-          PATH: ${{ secrets.PATH }}
+        uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
@@ -21,7 +18,8 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            cd $PATH
+            cd /home/tvchybnrysnubtks/luhzeStats
             git pull
             docker-compose build
             docker-compose up -d
+
