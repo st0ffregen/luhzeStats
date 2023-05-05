@@ -9,7 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      HOME_PATH: ${{ secrets.PATH }}
+      PROJECT_PATH: ${{ secrets.PATH }}
     steps:
       - name: Deploy
         uses: appleboy/ssh-action@v0.1.10
@@ -20,5 +20,5 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            echo "TSET"
+            echo "${PROJECT_PATH}"
 
