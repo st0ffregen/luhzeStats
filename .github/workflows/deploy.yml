@@ -9,7 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      PATHHHHH: test
+      HOME_PATH: test
 
     steps:
       - name: Deploy
