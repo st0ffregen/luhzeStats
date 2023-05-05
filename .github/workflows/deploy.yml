@@ -20,6 +20,6 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            echo $PROJECT_PATH
+            echo "PATH is ${PROJECT_PATH}"
             echo "TEST"
 
