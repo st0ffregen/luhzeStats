@@ -8,8 +8,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
     steps:
       - name: Deploy
         uses: appleboy/ssh-action@v0.1.10
@@ -20,6 +18,8 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            echo "PATH is ${PROJECT_PATH}"
-            echo "TEST"
+            cd /home/tvchybnrysnubtks/luhzeStats
+            git pull
+            docker-compose build
+            docker-compose up -d
 
