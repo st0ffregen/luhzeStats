@@ -9,7 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      PATH: ${{ secrets.PATH }}
+      PATH: test
 
     steps:
       - name: Deploy
