@@ -12,8 +12,6 @@ jobs:
     steps:
       - name: Deploy
         uses: appleboy/ssh-action@v0.1.10
-        env:
-          PATH: ${{ secrets.PATH }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
@@ -21,6 +19,5 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            cd $PATH
-            git pull
+            echo "TSET"
 
