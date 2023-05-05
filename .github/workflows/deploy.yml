@@ -8,12 +8,12 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      PATH: ${{ secrets.PATH }}
 
     steps:
       - name: Deploy
         uses: appleboy/ssh-action@v0.1.10
-        env:
-          PATH: ${{ secrets.PATH }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
