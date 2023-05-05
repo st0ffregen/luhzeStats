@@ -20,8 +20,4 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           port: ${{ secrets.SSH_PORT }}
-          shell: bash # Specify bash as the shell to be used
-          script: |
-            echo "TEST"
-            cd $PATH
-            git pull
+          script: whoami
