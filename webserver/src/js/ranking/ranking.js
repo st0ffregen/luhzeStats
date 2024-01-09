@@ -65,7 +65,7 @@ function processRankingData(fetchedData) {
             description = 'falling';
             color = "#FF0000";
         } else if (diff <= -10) {
-            description = 'decending';
+            description = 'descending';
             color = "#8B0000";
         }
 
