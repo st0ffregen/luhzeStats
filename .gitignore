@@ -4,7 +4,7 @@ resetAll.sh
 .idea/*
 .env
 mariadb/data/
-scraper/logs/*
-api/logs/*
-webserver/logs/*
+scraper/logs/*.log
+api/logs/*.log
+webserver/logs/*.log
 rankingFunctions.py
