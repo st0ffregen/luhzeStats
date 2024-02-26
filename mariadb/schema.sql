@@ -35,7 +35,7 @@ CREATE TABLE articles (
 );
 
 CREATE TABLE wordOccurrence (
-	word VARCHAR(128) NOT NULL,
+	word VARCHAR(256) NOT NULL,
 	year INT NOT NULL,
 	quarter INT NOT NULL,
 	occurrence INT NOT NULL,
