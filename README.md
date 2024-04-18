@@ -20,12 +20,14 @@ For a local environment building the project is as simple as
 $ cp .env.example .env  
 $ docker-compose up
 ```
+Both local and production are running on port 52123.
 
 ## Production
 Copy the ```.env.example``` to ```.env```, change the passwords and stage to production
 ```
 $ docker-compose up
 ```
+Both local and production are running on port 52123.
 
 # Testing
 * there are no tests available yet

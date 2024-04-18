@@ -6,7 +6,7 @@ services:
       args:
         APP_ENVIRONMENT: ${APP_ENVIRONMENT}
     ports:
-      - "127.0.0.1:80:80"
+      - "127.0.0.1:52123:80"
     volumes:
       - ./webserver/src:/usr/share/nginx/html/luhzeStats:ro
       - ./webserver/logs:/var/log/nginx
