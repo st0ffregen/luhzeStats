@@ -4,7 +4,7 @@ Jinja2==3.1.3
 MarkupSafe==2.1.2
 itsdangerous==2.1.2
 click==8.1.3
-gunicorn==20.1.0
+gunicorn==22.0.0
 mysqlclient==2.1.1
 pydevd-pycharm==213.6461.77
 python-dateutil==2.8.2
