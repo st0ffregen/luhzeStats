@@ -10,8 +10,8 @@ from flaskapi.helperFunctions.wordOccurenceHelperFunctions import getOccurrences
 from flaskapi.helperFunctions.helperFunctions import createYearAndMonthArray, createYearAndQuarterArray
 import pydevd_pycharm
 
-minCountOfArticlesAuthorsNeedToHaveToBeDisplayed = 14
-minCountOfArticlesRessortsNeedToHaveToBeDisplayed = 5
+minCountOfArticlesAuthorsNeedToHaveToBeDisplayed = 16
+minCountOfArticlesRessortsNeedToHaveToBeDisplayed = 7
 
 
 @app.route('/api/date', methods=['GET'])

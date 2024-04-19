@@ -189,6 +189,9 @@ function convertData(dataArray, termArray) {
             });
         }
 
+        // order chartArray by t
+        chartData.sort((a, b) => a.t - b.t);
+
         let [color, colorAlpha] = pickNewColor();
 
         datasets.push({
