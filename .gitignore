@@ -8,3 +8,4 @@ scraper/logs/*.log
 api/logs/*.log
 webserver/logs/*.log
 rankingFunctions.py
+venv/

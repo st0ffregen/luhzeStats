@@ -1,4 +1,4 @@
-FROM nginx:1.21.5
+FROM nginx:1.29.0
 ARG APP_ENVIRONMENT
 COPY ./src /usr/share/nginx/html/luhzeStats
 COPY ./nginx.conf.production /etc/nginx/nginx.conf.production

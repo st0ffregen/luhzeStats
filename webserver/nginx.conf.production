@@ -33,7 +33,7 @@ http {
 		}
 
 		location ~* \.(images|javascript|js|css|flash|media|static)/  {
-            expires 10d;
+            expires 1y;
             add_header Cache-Control public;
             add_header Pragma public;
         }

@@ -16,7 +16,7 @@ services:
       - api
 
   db:
-    image: mariadb:10.7.1
+    image: mariadb:11.8.2
     restart: always
     volumes:
       - ./mariadb/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro

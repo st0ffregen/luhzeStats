@@ -1,4 +1,4 @@
-FROM python:3.9.9
+FROM python:3.13.5
 ARG APP_ENVIRONMENT
 COPY . /usr/src/api
 RUN python -m pip install --upgrade pip
