@@ -19,6 +19,8 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd /home/tvchybnrysnubtks/luhzeStats
+            git fetch --all
+            git reset --hard origin/master
             git pull
             docker compose down --remove-orphans
             docker compose build --no-cache
