@@ -23,16 +23,16 @@ def prepareSQLStatements(link, title, authorArray, ressortArray, wordcount, docu
 
     preparedSQLStatements.append(['DELETE FROM articles WHERE link=%s', [link]])
 
-    preparedSQLStatements.append(['INSERT INTO documents VALUES(%s,%s,%s,%s,%s)',
-                                  [None, document, wordcount, None, None]])
+    preparedSQLStatements.append(['INSERT INTO documents (document, charCount) VALUES(%s,%s)',
+                                  [document, wordcount]])
 
     for author in authorArray:
 
-        preparedSQLStatements.append(['INSERT IGNORE INTO authors VALUES(%s,%s,%s,%s)', [None, author, None, None]])
+        preparedSQLStatements.append(['INSERT IGNORE INTO authors (name) VALUES(%s)', [author]])
         for ressort in ressortArray:
             preparedSQLStatements.append([
-                'INSERT INTO articles VALUES(%s,%s,%s,(SELECT id FROM authors WHERE name=%s),%s,%s,(SELECT id FROM documents WHERE document=%s),%s,%s)',
-                [None, link, title, author, ressort, date, document, None, None]])
+                'INSERT INTO articles (link, title, authorId, ressort, publishedDate, documentId) VALUES(%s,%s,(SELECT id FROM authors WHERE name=%s),%s,%s,(SELECT id FROM documents WHERE document=%s))',
+                [link, title, author, ressort, date, document]])
 
     return preparedSQLStatements
 
